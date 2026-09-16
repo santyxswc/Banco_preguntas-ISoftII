@@ -50,9 +50,6 @@
                 <version>3.2.5</version>
             </plugin>
 
-            <!-- Ejecutar la aplicación (mvn exec:java): composition
-                 root en ClientMain. La app es Swing puro, por eso se
-                 usa exec-maven-plugin. -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
