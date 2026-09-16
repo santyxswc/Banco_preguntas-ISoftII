@@ -8,7 +8,7 @@ Laboratorio de Ingeniería de Software II, Universidad del Cauca
 
 ## Tecnologías
 
-- Java 21 (ajustable a 25 en `pom.xml` si tu entorno lo soporta,
+- Java 21
   igual que el proyecto de referencia)
 - Maven
 - Swing
@@ -118,8 +118,11 @@ otras dos se actualizan automáticamente.
 
 ## Integrantes
 
-- (completar)
+- Yeferson Santiago Caicedo Orozco
+- Adrian Araujo Urbano
+- Ivan Alexander Lopez Lasso
+- Carlos Arturo Bambague Martinez
 
 ## Docente
 
-- Pablo Magé, Paola Bedoya
+- Wilson Pantoja Yepez, Paola Bedoya
