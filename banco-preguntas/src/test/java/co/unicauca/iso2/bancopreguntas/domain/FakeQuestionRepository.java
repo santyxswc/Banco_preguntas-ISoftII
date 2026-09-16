@@ -50,6 +50,42 @@ public class FakeQuestionRepository implements QuestionRepository {
     }
 
     @Override
+    public List<Question> findByAutorId(String autorId) {
+        List<Question> resultado = new ArrayList<>();
+        for (Question q : preguntas) {
+            if (autorId != null && autorId.equals(q.getAutorId())) {
+                resultado.add(q);
+            }
+        }
+        return resultado;
+    }
+
+    @Override
+    public List<Question> findByEstado(EstadoPregunta estado) {
+        List<Question> resultado = new ArrayList<>();
+        for (Question q : preguntas) {
+            if (estado != null && estado == q.getEstado()) {
+                resultado.add(q);
+            }
+        }
+        return resultado;
+    }
+
+    @Override
+    public boolean update(Question question) {
+        if (question == null || question.getId() == null) {
+            return false;
+        }
+        for (int i = 0; i < preguntas.size(); i++) {
+            if (question.getId().equals(preguntas.get(i).getId())) {
+                preguntas.set(i, question);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
     public boolean updateEstado(String id, EstadoPregunta nuevoEstado) {
 
         Question pregunta = findById(id);
