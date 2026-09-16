@@ -24,18 +24,22 @@ import java.util.Set;
 public class QuestionService extends Subject {
 
     // Longitudes mínimas/máximas para textos largos (RF01.2)
-    private static final int MIN_TEXTO_LARGO   = 20;
-    private static final int MAX_TEXTO_LARGO   = 2000;
-    private static final int MIN_ENUNCIADO     = 10;
+    private static final int MIN_TEXTO_LARGO = 20;
+    private static final int MAX_TEXTO_LARGO = 2000;
+    private static final int MIN_ENUNCIADO = 10;
     private static final int CANTIDAD_DISTRACTORES = 4;
 
     private final QuestionRepository questionRepository;
-    private final UsuarioRepository  usuarioRepository;
+    private final UsuarioRepository usuarioRepository;
+
+    public QuestionService(QuestionRepository questionRepository) {
+        this(questionRepository, null);
+    }
 
     public QuestionService(QuestionRepository questionRepository,
-                           UsuarioRepository usuarioRepository) {
+            UsuarioRepository usuarioRepository) {
         this.questionRepository = questionRepository;
-        this.usuarioRepository  = usuarioRepository;
+        this.usuarioRepository = usuarioRepository;
     }
 
     // ----------------------------------------------------------------
@@ -100,6 +104,9 @@ public class QuestionService extends Subject {
      * @return lista de posibles revisores
      */
     public List<Usuario> listarRevisoresDisponibles() {
+        if (usuarioRepository == null) {
+            return new ArrayList<>();
+        }
         return usuarioRepository.findByRol(Rol.AUTOR);
     }
 
@@ -114,7 +121,7 @@ public class QuestionService extends Subject {
      * - Campos obligatorios no vacíos.
      * - Longitud mínima/máxima de textos largos (contexto, justificación).
      * - Exactamente 4 distractores distintos entre sí y distintos de
-     *   la respuesta correcta.
+     * la respuesta correcta.
      * - Nivel de dificultad dentro del catálogo válido.
      *
      * @param q pregunta a validar
@@ -228,7 +235,7 @@ public class QuestionService extends Subject {
                     if (op.getTexto() != null
                             && !op.getId().equalsIgnoreCase(q.getRespuestaCorrecta())
                             && op.getTexto().trim().toLowerCase()
-                                 .equals(textoCorrecta)) {
+                                    .equals(textoCorrecta)) {
                         errores.add("opciones|Un distractor no puede ser igual "
                                 + "a la respuesta correcta.");
                         break;
@@ -368,12 +375,12 @@ public class QuestionService extends Subject {
      * no se revierte — el error queda registrado (RF04.5, falla no
      * bloqueante).
      *
-     * @param preguntaId  identificador de la pregunta
-     * @param revisorIds  lista de ids de los revisores asignados
+     * @param preguntaId identificador de la pregunta
+     * @param revisorIds lista de ids de los revisores asignados
      * @return true si la transición fue exitosa
      */
     public boolean asignarRevisores(String preguntaId,
-                                    List<String> revisorIds) {
+            List<String> revisorIds) {
 
         if (esVacio(preguntaId) || revisorIds == null
                 || revisorIds.isEmpty()) {
@@ -441,8 +448,7 @@ public class QuestionService extends Subject {
             return false;
         }
 
-        boolean actualizada =
-                questionRepository.updateEstado(id, nuevoEstado);
+        boolean actualizada = questionRepository.updateEstado(id, nuevoEstado);
 
         if (actualizada) {
             notifyObservers();
@@ -463,8 +469,7 @@ public class QuestionService extends Subject {
      */
     public Map<EstadoPregunta, Long> contarPorEstado() {
 
-        Map<EstadoPregunta, Long> conteo =
-                new EnumMap<>(EstadoPregunta.class);
+        Map<EstadoPregunta, Long> conteo = new EnumMap<>(EstadoPregunta.class);
 
         for (EstadoPregunta estado : EstadoPregunta.values()) {
             conteo.put(estado, 0L);
@@ -498,16 +503,13 @@ public class QuestionService extends Subject {
             total += cantidad;
         }
 
-        Map<EstadoPregunta, Double> porcentajes =
-                new EnumMap<>(EstadoPregunta.class);
+        Map<EstadoPregunta, Double> porcentajes = new EnumMap<>(EstadoPregunta.class);
 
-        for (Map.Entry<EstadoPregunta, Long> entrada
-                : conteo.entrySet()) {
+        for (Map.Entry<EstadoPregunta, Long> entrada : conteo.entrySet()) {
 
-            double porcentaje =
-                    total == 0
-                            ? 0.0
-                            : (entrada.getValue() * 100.0) / total;
+            double porcentaje = total == 0
+                    ? 0.0
+                    : (entrada.getValue() * 100.0) / total;
 
             porcentajes.put(entrada.getKey(), porcentaje);
         }
