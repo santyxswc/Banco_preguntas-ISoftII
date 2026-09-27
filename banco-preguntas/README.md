@@ -75,6 +75,8 @@ Usuarios de prueba:
 | Administrador | admin@unicauca.edu.co | admin123 |
 | Autor | autor1@unicauca.edu.co | autor123 |
 | Autor | autor2@unicauca.edu.co | autor123 |
+| Autor | autor3@unicauca.edu.co | autor123 |
+| Autor | autor4@unicauca.edu.co | autor123 |
 
 Por defecto los datos se guardan en memoria. El correo se simula en
 consola; para enviarlo de verdad se configuran las variables

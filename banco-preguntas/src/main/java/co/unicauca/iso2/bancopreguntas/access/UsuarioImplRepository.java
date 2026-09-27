@@ -23,6 +23,8 @@ import java.util.Optional;
  *   admin@unicauca.edu.co    / admin123  -> ADMINISTRADOR
  *   autor1@unicauca.edu.co   / autor123  -> AUTOR
  *   autor2@unicauca.edu.co   / autor123  -> AUTOR
+ *   autor3@unicauca.edu.co   / autor123  -> AUTOR
+ *   autor4@unicauca.edu.co   / autor123  -> AUTOR
  *   revisor1@unicauca.edu.co / rev123    -> AUTOR (docente revisor)
  *   revisor2@unicauca.edu.co / rev123    -> AUTOR (docente revisor)
  * @endcode
@@ -90,6 +92,14 @@ public class UsuarioImplRepository implements UsuarioRepository {
 
         agregar("U-005", "Diana Castro",
                 "revisor2@unicauca.edu.co", "rev123",
+                Rol.AUTOR);
+
+        agregar("U-006", "Andrés Gómez",
+                "autor3@unicauca.edu.co", "autor123",
+                Rol.AUTOR);
+
+        agregar("U-007", "Sofía Martínez",
+                "autor4@unicauca.edu.co", "autor123",
                 Rol.AUTOR);
     }
 
