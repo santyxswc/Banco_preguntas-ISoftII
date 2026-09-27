@@ -1,3 +1,8 @@
+/**
+ * @file GUIObserver1.java
+ * @brief Vista de estadísticas por estado.
+ * @author Santiago Caicedo
+ */
 package co.unicauca.iso2.bancopreguntas.presentation;
 
 import co.unicauca.iso2.bancopreguntas.domain.EstadoPregunta;
@@ -10,13 +15,9 @@ import java.awt.*;
 import java.util.Map;
 
 /**
- * Primera vista pendiente del cambio de estado de las preguntas:
- * "VISTA DE ESTADÍSTICAS" del prototipo del taller.
+ * @brief Muestra cuántas preguntas hay en cada estado.
  *
- * Muestra cuántas preguntas hay por cada estado. Implementa
- * {@link Observer} y se registra ante QuestionService (el Subject)
- * en su constructor: no necesita que nadie más la mantenga
- * actualizada, se entera sola de los cambios.
+ * Es Observer de QuestionService y se actualiza sola.
  */
 public class GUIObserver1 extends JFrame implements Observer {
 
@@ -25,7 +26,7 @@ public class GUIObserver1 extends JFrame implements Observer {
     private JLabel lblBorrador;
     private JLabel lblPendiente;
     private JLabel lblEnRevision;
-    private JLabel lblEliminada;
+    private JLabel lblArchivada;
     private JLabel lblTotal;
 
     public GUIObserver1(QuestionService questionService) {
@@ -35,9 +36,6 @@ public class GUIObserver1 extends JFrame implements Observer {
         inicializarVentana();
         crearComponentes();
 
-        // Nos registramos como observadores del sujeto: a partir de
-        // aquí, cada vez que QuestionService.notifyObservers() se
-        // ejecute, este objeto será notificado mediante actualizar().
         questionService.attach(this);
 
         renderizar();
@@ -49,8 +47,6 @@ public class GUIObserver1 extends JFrame implements Observer {
         setSize(320, 260);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocation(650, 40);
-        // Bug 3 fix: desregistrar observer al cerrar para evitar
-        // notificaciones sobre componentes ya destruidos.
         addWindowListener(new java.awt.event.WindowAdapter() {
             @Override
             public void windowClosing(java.awt.event.WindowEvent e) {
@@ -72,7 +68,7 @@ public class GUIObserver1 extends JFrame implements Observer {
         lblBorrador   = new JLabel();
         lblPendiente  = new JLabel();
         lblEnRevision = new JLabel();
-        lblEliminada  = new JLabel();
+        lblArchivada  = new JLabel();
         lblTotal      = new JLabel();
         lblTotal.setFont(new Font("Arial", Font.BOLD, 13));
 
@@ -84,7 +80,7 @@ public class GUIObserver1 extends JFrame implements Observer {
         principal.add(Box.createVerticalStrut(6));
         principal.add(lblEnRevision);
         principal.add(Box.createVerticalStrut(6));
-        principal.add(lblEliminada);
+        principal.add(lblArchivada);
         principal.add(Box.createVerticalStrut(15));
         principal.add(new JSeparator());
         principal.add(Box.createVerticalStrut(10));
@@ -93,18 +89,13 @@ public class GUIObserver1 extends JFrame implements Observer {
         setContentPane(principal);
     }
 
-    /**
-     * Método del patrón Observer: invocado por QuestionService cada
-     * vez que el estado de una pregunta cambia.
-     */
+    /** @brief Se llama cuando QuestionService notifica un cambio. */
     @Override
     public void actualizar(Subject subject) {
         renderizar();
     }
 
-    /**
-     * Recalcula y muestra el conteo de preguntas por estado.
-     */
+    /** @brief Recalcula y muestra el conteo por estado. */
     private void renderizar() {
 
         Map<EstadoPregunta, Long> conteo =
@@ -119,20 +110,20 @@ public class GUIObserver1 extends JFrame implements Observer {
         long enRevision = conteo.getOrDefault(
                 EstadoPregunta.EN_REVISION, 0L);
 
-        long eliminada =
-                conteo.getOrDefault(EstadoPregunta.ELIMINADA, 0L);
+        long archivada =
+                conteo.getOrDefault(EstadoPregunta.ARCHIVADA, 0L);
 
         lblBorrador.setText("Borrador: " + borrador);
-        lblBorrador.setForeground(EstadoPregunta.BORRADOR.getColor());
+        lblBorrador.setForeground(EstadoPregunta.BORRADOR.colorUI());
         lblPendiente.setText("Pendiente de revisión: " + pendiente);
         lblPendiente.setForeground(
-                EstadoPregunta.PENDIENTE_REVISION.getColor());
+                EstadoPregunta.PENDIENTE_REVISION.colorUI());
         lblEnRevision.setText("En revisión: " + enRevision);
         lblEnRevision.setForeground(
-                EstadoPregunta.EN_REVISION.getColor());
-        lblEliminada.setText("Eliminada: " + eliminada);
-        lblEliminada.setForeground(EstadoPregunta.ELIMINADA.getColor());
+                EstadoPregunta.EN_REVISION.colorUI());
+        lblArchivada.setText("Archivada: " + archivada);
+        lblArchivada.setForeground(EstadoPregunta.ARCHIVADA.colorUI());
         lblTotal.setText(
-                "Total: " + (borrador + pendiente + enRevision + eliminada));
+                "Total: " + (borrador + pendiente + enRevision + archivada));
     }
 }

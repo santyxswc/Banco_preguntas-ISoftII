@@ -1,3 +1,8 @@
+/**
+ * @file UsuarioImplRepository.java
+ * @brief Repositorio en memoria de usuarios.
+ * @author Santiago Caicedo
+ */
 package co.unicauca.iso2.bancopreguntas.access;
 
 import co.unicauca.iso2.bancopreguntas.domain.Rol;
@@ -11,20 +16,16 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * Implementación en memoria de {@link UsuarioRepository}.
+ * @brief Implementación en memoria de UsuarioRepository.
  *
- * Carga un conjunto de usuarios de ejemplo (un administrador,
- * varios autores/docentes) para poder probar el login y la
- * asignación de revisores sin base de datos.
- *
- * Credenciales de ejemplo:
- * <pre>
- *   admin@unicauca.edu.co  / admin123   → ADMINISTRADOR
- *   autor1@unicauca.edu.co / autor123   → AUTOR
- *   autor2@unicauca.edu.co / autor123   → AUTOR
- *   revisor1@unicauca.edu.co / rev123  → AUTOR (docente revisor)
- *   revisor2@unicauca.edu.co / rev123  → AUTOR (docente revisor)
- * </pre>
+ * Usuarios de ejemplo:
+ * @code
+ *   admin@unicauca.edu.co    / admin123  -> ADMINISTRADOR
+ *   autor1@unicauca.edu.co   / autor123  -> AUTOR
+ *   autor2@unicauca.edu.co   / autor123  -> AUTOR
+ *   revisor1@unicauca.edu.co / rev123    -> AUTOR (docente revisor)
+ *   revisor2@unicauca.edu.co / rev123    -> AUTOR (docente revisor)
+ * @endcode
  */
 public class UsuarioImplRepository implements UsuarioRepository {
 
@@ -68,10 +69,6 @@ public class UsuarioImplRepository implements UsuarioRepository {
         }
         return usuarios.get(id);
     }
-
-    // ----------------------------------------------------------------
-    // Datos de ejemplo
-    // ----------------------------------------------------------------
 
     private void cargarUsuariosDeEjemplo() {
 

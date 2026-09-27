@@ -1,5 +1,11 @@
+/**
+ * @file GUIMain.java
+ * @brief Ventana principal después del login.
+ * @author Santiago Caicedo
+ */
 package co.unicauca.iso2.bancopreguntas.presentation;
 
+import co.unicauca.iso2.bancopreguntas.domain.AsignacionService;
 import co.unicauca.iso2.bancopreguntas.domain.QuestionService;
 import co.unicauca.iso2.bancopreguntas.domain.Rol;
 import co.unicauca.iso2.bancopreguntas.domain.Usuario;
@@ -9,16 +15,11 @@ import javax.swing.*;
 import java.awt.*;
 
 /**
- * Ventana principal post-login del Banco de Preguntas.
+ * @brief Menú principal según el rol del usuario.
  *
- * Muestra un encabezado con el nombre del usuario y su rol.
- * Según el rol presenta:
- * <ul>
- *   <li><b>AUTOR</b>: botones para crear preguntas (RF01) y ver su
- *       listado con filtros (RF03/RF02).</li>
- *   <li><b>ADMINISTRADOR</b>: botón para asignar revisores (RF04) y
- *       acceso a las vistas de estadísticas (GUIObserver1/2).</li>
- * </ul>
+ *  - Autor: crear preguntas y ver sus preguntas.
+ *  - Administrador: asignar revisores, estadísticas, gráfica y listado
+ *    completo.
  */
 public class GUIMain extends JFrame {
 
@@ -36,6 +37,7 @@ public class GUIMain extends JFrame {
 
     private final QuestionService  questionService;
     private final UsuarioRepository usuarioRepository;
+    private final AsignacionService asignacionService;
     private final Usuario           usuarioActual;
 
     // Vistas observadoras (se crean al abrir las estadísticas)
@@ -43,10 +45,12 @@ public class GUIMain extends JFrame {
     private GUIObserver2 vistaGrafica;
 
     public GUIMain(QuestionService questionService,
-                   UsuarioRepository usuarioRepository) {
+                   UsuarioRepository usuarioRepository,
+                   AsignacionService asignacionService) {
 
         this.questionService   = questionService;
         this.usuarioRepository = usuarioRepository;
+        this.asignacionService = asignacionService;
         this.usuarioActual     = SessionContext.getUsuarioActual();
 
         inicializarVentana();
@@ -295,7 +299,7 @@ public class GUIMain extends JFrame {
         pie.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, BORDER_COLOR));
 
         JLabel lbl = new JLabel(
-                "Universidad del Cauca — Ingeniería de Software III © 2026");
+                "Universidad del Cauca — Ingeniería de Software II © 2026");
         lbl.setForeground(TEXT_MUTED);
         lbl.setFont(new Font("SansSerif", Font.PLAIN, 11));
         pie.add(lbl);
@@ -321,7 +325,8 @@ public class GUIMain extends JFrame {
     }
 
     private void abrirAsignarRevisores() {
-        new GUIAsignarRevisores(questionService, usuarioRepository)
+        new GUIAsignarRevisores(questionService, usuarioRepository,
+                asignacionService)
                 .setVisible(true);
     }
 
@@ -352,11 +357,9 @@ public class GUIMain extends JFrame {
         if (opcion == JOptionPane.YES_OPTION) {
             SessionContext.cerrar();
             dispose();
-            // Re-abrir el login (se construye en ClientMain, pero aquí
-            // lo delegamos al application context a través del servicio)
             SwingUtilities.invokeLater(() -> {
                 GUILogin login = new GUILogin(usuarioRepository,
-                        questionService);
+                        questionService, asignacionService);
                 login.setVisible(true);
             });
         }

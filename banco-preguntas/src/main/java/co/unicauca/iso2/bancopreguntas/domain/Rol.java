@@ -1,7 +1,12 @@
+/**
+ * @file Rol.java
+ * @brief Roles de usuario del sistema.
+ * @author Santiago Caicedo
+ */
 package co.unicauca.iso2.bancopreguntas.domain;
 
 /**
- * Roles de usuario en el sistema de banco de preguntas.
+ * @brief Rol que determina las opciones que ve cada usuario.
  */
 public enum Rol {
 
@@ -14,6 +19,7 @@ public enum Rol {
         this.etiqueta = etiqueta;
     }
 
+    /** @return nombre legible del rol */
     public String getEtiqueta() {
         return etiqueta;
     }

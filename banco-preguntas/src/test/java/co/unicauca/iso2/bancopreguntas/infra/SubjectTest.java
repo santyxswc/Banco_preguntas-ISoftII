@@ -1,3 +1,8 @@
+/**
+ * @file SubjectTest.java
+ * @brief Pruebas de Subject.
+ * @author Santiago Caicedo
+ */
 package co.unicauca.iso2.bancopreguntas.infra;
 
 import org.junit.jupiter.api.Test;
@@ -6,12 +11,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * @brief Pruebas del patrón Observer (Subject).
+ */
 class SubjectTest {
 
-    /**
-     * Subject concreto usado únicamente para poder probar la clase
-     * abstracta: expone notifyObservers() como público.
-     */
+    /** @brief Subject concreto que permite disparar la notificación. */
     private static class SubjectDePrueba extends Subject {
         void dispararNotificacion() {
             notifyObservers();

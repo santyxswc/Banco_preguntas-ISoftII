@@ -1,3 +1,8 @@
+/**
+ * @file GUIObserver2.java
+ * @brief Vista gráfica de la distribución por estado.
+ * @author Santiago Caicedo
+ */
 package co.unicauca.iso2.bancopreguntas.presentation;
 
 import co.unicauca.iso2.bancopreguntas.domain.EstadoPregunta;
@@ -11,26 +16,23 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * Segunda vista pendiente del cambio de estado de las preguntas:
- * "VISTA GRÁFICA" del prototipo del taller.
+ * @brief Gráfica de pastel con el porcentaje de preguntas por estado.
  *
- * Muestra una gráfica de pastel con el porcentaje de preguntas en
- * cada estado. Implementa {@link Observer} y se registra ante
- * QuestionService (el Subject) en su constructor.
+ * Es Observer de QuestionService y se actualiza sola.
  */
 public class GUIObserver2 extends JFrame implements Observer {
 
     private static final Color COLOR_BORRADOR =
-            new Color(66, 133, 244);
+            EstadoPregunta.BORRADOR.colorUI();
 
     private static final Color COLOR_PENDIENTE =
-            new Color(251, 188, 5);
+            EstadoPregunta.PENDIENTE_REVISION.colorUI();
 
     private static final Color COLOR_EN_REVISION =
-            new Color(30, 120, 210);
+            EstadoPregunta.EN_REVISION.colorUI();
 
-    private static final Color COLOR_ELIMINADA =
-            new Color(234, 67, 53);
+    private static final Color COLOR_ARCHIVADA =
+            EstadoPregunta.ARCHIVADA.colorUI();
 
     private final QuestionService questionService;
 
@@ -38,7 +40,7 @@ public class GUIObserver2 extends JFrame implements Observer {
     private JLabel lblLeyendaBorrador;
     private JLabel lblLeyendaPendiente;
     private JLabel lblLeyendaEnRevision;
-    private JLabel lblLeyendaEliminada;
+    private JLabel lblLeyendaArchivada;
 
     public GUIObserver2(QuestionService questionService) {
 
@@ -47,8 +49,6 @@ public class GUIObserver2 extends JFrame implements Observer {
         inicializarVentana();
         crearComponentes();
 
-        // Nos registramos como observadores del sujeto, igual que
-        // GUIObserver1: nos enteramos solos de los cambios de estado.
         questionService.attach(this);
 
         renderizar();
@@ -60,8 +60,6 @@ public class GUIObserver2 extends JFrame implements Observer {
         setSize(360, 420);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocation(650, 340);
-        // Bug 3 fix: desregistrar observer al cerrar para evitar
-        // notificaciones sobre componentes ya destruidos.
         addWindowListener(new java.awt.event.WindowAdapter() {
             @Override
             public void windowClosing(java.awt.event.WindowEvent e) {
@@ -86,14 +84,14 @@ public class GUIObserver2 extends JFrame implements Observer {
         lblLeyendaBorrador   = crearEtiquetaLeyenda(COLOR_BORRADOR);
         lblLeyendaPendiente  = crearEtiquetaLeyenda(COLOR_PENDIENTE);
         lblLeyendaEnRevision = crearEtiquetaLeyenda(COLOR_EN_REVISION);
-        lblLeyendaEliminada  = crearEtiquetaLeyenda(COLOR_ELIMINADA);
+        lblLeyendaArchivada  = crearEtiquetaLeyenda(COLOR_ARCHIVADA);
 
         JPanel leyenda = new JPanel();
         leyenda.setLayout(new BoxLayout(leyenda, BoxLayout.Y_AXIS));
         leyenda.add(lblLeyendaBorrador);
         leyenda.add(lblLeyendaPendiente);
         leyenda.add(lblLeyendaEnRevision);
-        leyenda.add(lblLeyendaEliminada);
+        leyenda.add(lblLeyendaArchivada);
 
         principal.add(titulo, BorderLayout.NORTH);
         principal.add(panelPastel, BorderLayout.CENTER);
@@ -111,19 +109,13 @@ public class GUIObserver2 extends JFrame implements Observer {
         return etiqueta;
     }
 
-    /**
-     * Método del patrón Observer: invocado por QuestionService cada
-     * vez que el estado de una pregunta cambia.
-     */
+    /** @brief Se llama cuando QuestionService notifica un cambio. */
     @Override
     public void actualizar(Subject subject) {
         renderizar();
     }
 
-    /**
-     * Recalcula los porcentajes por estado y actualiza tanto la
-     * gráfica de pastel como la leyenda de texto.
-     */
+    /** @brief Recalcula porcentajes y actualiza gráfica y leyenda. */
     private void renderizar() {
 
         Map<EstadoPregunta, Double> porcentajes =
@@ -147,16 +139,13 @@ public class GUIObserver2 extends JFrame implements Observer {
                 porcentajes.getOrDefault(
                         EstadoPregunta.EN_REVISION, 0.0)));
 
-        lblLeyendaEliminada.setText(String.format(
-                "Eliminada: %.0f%%",
+        lblLeyendaArchivada.setText(String.format(
+                "Archivada: %.0f%%",
                 porcentajes.getOrDefault(
-                        EstadoPregunta.ELIMINADA, 0.0)));
+                        EstadoPregunta.ARCHIVADA, 0.0)));
     }
 
-    /**
-     * Panel que dibuja la gráfica de pastel usando Graphics2D, sin
-     * depender de ninguna librería externa de gráficas.
-     */
+    /** @brief Panel que dibuja el pastel con Graphics2D. */
     private static class PanelPastel extends JPanel {
 
         private Map<EstadoPregunta, Double> porcentajes =
@@ -205,16 +194,16 @@ public class GUIObserver2 extends JFrame implements Observer {
             dibujarPorcion(
                     g2d, x, y, diametro, anguloInicial,
                     porcentajes.getOrDefault(
-                            EstadoPregunta.ELIMINADA, 0.0),
-                    COLOR_ELIMINADA);
+                            EstadoPregunta.ARCHIVADA, 0.0),
+                    COLOR_ARCHIVADA);
 
             g2d.setColor(Color.DARK_GRAY);
             g2d.drawOval(x, y, diametro, diametro);
         }
 
         /**
-         * Dibuja una porción del pastel y devuelve el ángulo inicial
-         * de la siguiente porción.
+         * @brief Dibuja una porción del pastel.
+         * @return ángulo donde empieza la siguiente porción
          */
         private double dibujarPorcion(
                 Graphics2D g2d, int x, int y, int diametro,
@@ -236,9 +225,7 @@ public class GUIObserver2 extends JFrame implements Observer {
         }
     }
 
-    /**
-     * Pequeño icono cuadrado de color sólido usado en la leyenda.
-     */
+    /** @brief Cuadro de color para la leyenda. */
     private record CuadradoColor(Color color) implements Icon {
 
         @Override
