@@ -3,6 +3,9 @@
 *.docx
 *.doc
 
+# Archivos de bloqueo de LibreOffice mientras un documento está abierto
+.~lock.*
+
 # Configuración local del editor
 .vscode/
 .idea/
