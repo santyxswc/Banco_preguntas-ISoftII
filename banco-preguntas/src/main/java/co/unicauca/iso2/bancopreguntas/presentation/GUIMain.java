@@ -2,6 +2,9 @@
  * @file GUIMain.java
  * @brief Ventana principal después del login.
  * @author Santiago Caicedo
+ * @author Ivan Alexander Lopez
+ * @author Adrian Araujo Urbano
+ * @author Carlos Bambague
  */
 package co.unicauca.iso2.bancopreguntas.presentation;
 

@@ -2,6 +2,9 @@
  * @file NivelDificultad.java
  * @brief Niveles de dificultad válidos para una pregunta.
  * @author Santiago Caicedo
+ * @author Ivan Alexander Lopez
+ * @author Adrian Araujo Urbano
+ * @author Carlos Bambague
  */
 package co.unicauca.iso2.bancopreguntas.domain;
 

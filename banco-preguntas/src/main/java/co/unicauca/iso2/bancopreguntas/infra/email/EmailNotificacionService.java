@@ -2,6 +2,9 @@
  * @file EmailNotificacionService.java
  * @brief Notificación por correo a los revisores asignados.
  * @author Santiago Caicedo
+ * @author Ivan Alexander Lopez
+ * @author Adrian Araujo Urbano
+ * @author Carlos Bambague
  */
 package co.unicauca.iso2.bancopreguntas.infra.email;
 

@@ -2,6 +2,9 @@
  * @file QuestionImplRepository.java
  * @brief Repositorio en memoria de preguntas.
  * @author Santiago Caicedo
+ * @author Ivan Alexander Lopez
+ * @author Adrian Araujo Urbano
+ * @author Carlos Bambague
  */
 package co.unicauca.iso2.bancopreguntas.access;
 

@@ -2,6 +2,9 @@
  * @file QuestionJdbcRepositoryH2Test.java
  * @brief Pruebas de integración del repositorio JDBC.
  * @author Santiago Caicedo
+ * @author Ivan Alexander Lopez
+ * @author Adrian Araujo Urbano
+ * @author Carlos Bambague
  */
 package co.unicauca.iso2.bancopreguntas.access;
 

@@ -2,6 +2,9 @@
  * @file QuestionServiceTest.java
  * @brief Pruebas del servicio de preguntas.
  * @author Santiago Caicedo
+ * @author Ivan Alexander Lopez
+ * @author Adrian Araujo Urbano
+ * @author Carlos Bambague
  */
 package co.unicauca.iso2.bancopreguntas.domain;
 

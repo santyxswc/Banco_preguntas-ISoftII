@@ -2,6 +2,9 @@
  * @file PreguntasDePrueba.java
  * @brief Datos de prueba compartidos por las pruebas del dominio.
  * @author Santiago Caicedo
+ * @author Ivan Alexander Lopez
+ * @author Adrian Araujo Urbano
+ * @author Carlos Bambague
  */
 package co.unicauca.iso2.bancopreguntas.domain;
 

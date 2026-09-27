@@ -93,10 +93,10 @@ dominio, y pruebas de integración del repositorio JDBC sobre H2.
 
 ## Integrantes
 
-- Yeferson Santiago Caicedo Orozco
+- Santiago Caicedo
+- Ivan Alexander Lopez
 - Adrian Araujo Urbano
-- Ivan Alexander Lopez Lasso
-- Carlos Arturo Bambague Martinez
+- Carlos Bambague
 
 ## Docentes
 

@@ -2,6 +2,9 @@
  * @file EstadoPregunta.java
  * @brief Estados del ciclo de vida de una pregunta.
  * @author Santiago Caicedo
+ * @author Ivan Alexander Lopez
+ * @author Adrian Araujo Urbano
+ * @author Carlos Bambague
  */
 package co.unicauca.iso2.bancopreguntas.domain;
 
