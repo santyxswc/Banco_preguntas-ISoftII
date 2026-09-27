@@ -1,13 +1,15 @@
+/**
+ * @file QuestionDistractors.java
+ * @brief Opción de respuesta de una pregunta.
+ * @author Santiago Caicedo
+ */
 package co.unicauca.iso2.bancopreguntas.domain;
 
 /**
- * Representa una de las opciones de respuesta de una pregunta de
- * selección múltiple (A, B, C, D...).
+ * @brief Una de las opciones (A, B, C, D) de una pregunta.
  *
- * Una {@link Question} tiene varias QuestionDistractors: una de ellas
- * es la respuesta correcta (identificada mediante
- * {@link Question#getRespuestaCorrecta()}) y las demás son
- * distractores.
+ * La opción cuyo id coincide con Question#getRespuestaCorrecta() es la
+ * clave; las demás son distractores.
  */
 public class QuestionDistractors {
 
@@ -17,6 +19,10 @@ public class QuestionDistractors {
     public QuestionDistractors() {
     }
 
+    /**
+     * @param id    letra de la opción
+     * @param texto texto de la opción
+     */
     public QuestionDistractors(String id, String texto) {
         this.id = id;
         this.texto = texto;
