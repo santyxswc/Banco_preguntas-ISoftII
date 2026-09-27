@@ -1,108 +1,65 @@
-# Banco de Preguntas Saber PRO — Arquitectura en capas + Micro patrón MVC + Observer
+# Banco de Preguntas Saber Pro — Iteración 1
 
-Aplicación de escritorio monolítica en Java (Swing) para gestionar un
-banco de preguntas de preparación para las pruebas Saber Pro,
-desarrollada para el Taller de Patrón en Capas y Micro Patrón MVC —
-Laboratorio de Ingeniería de Software II, Universidad del Cauca
-(2026.2).
+Aplicación de escritorio en Java (Swing) para gestionar un banco de
+preguntas de selección múltiple con única respuesta para la preparación
+de las pruebas Saber Pro. Proyecto del curso Ingeniería de Software II,
+Universidad del Cauca (2026.2).
+
+Primera iteración: arquitectura **monolítica en 3 capas** con el
+micro patrón **MVC**, principios **SOLID** y patrones **GoF**.
+
+## Historias de usuario implementadas
+
+| HU | Descripción | Dónde |
+|----|-------------|-------|
+| HU1 | El autor crea preguntas con contexto, pregunta directa, 4 opciones, respuesta correcta, justificación, bibliografía, competencia, tema, subtema y nivel. Al guardar se aplica la validación estructural (HU03). | `GUICrearPregunta`, `PreguntaController`, `QuestionBuilder`, `ValidadorEstructuralPregunta` |
+| HU2 | El autor pasa sus preguntas de *Borrador* a *Pendiente de revisión*. Los estados se ven con colores. | `GUIListarPreguntas`, `QuestionService.enviarARevision`, `EstadoPregunta` |
+| HU3 | El autor lista sus preguntas con filtros, orden y paginación, y edita las que siguen en borrador. | `GUIListarPreguntas`, `PreguntaTableModel`, `QuestionFilter`, `GUIEditarPregunta` |
+| HU4 | El administrador asigna uno o más revisores a preguntas pendientes y el sistema les envía un correo. | `GUIAsignarRevisores`, `AsignacionController`, `AsignacionService`, `EmailNotificacionService` |
+
+Validación estructural (HU03): contexto, única pregunta directa,
+exactamente 4 opciones, una sola respuesta correcta, opciones no vacías
+ni repetidas, prohibido "Todas/Ninguna de las anteriores" y longitud
+similar entre opciones.
+
+## Arquitectura
+
+```
+presentation   Vistas Swing (GUI*), controladores MVC, modelo de tabla
+     │
+     ▼
+domain         Entidades, servicios, interfaces de repositorio, validación
+     ▲
+     │ implementa
+access         Repositorios en memoria y JDBC (PostgreSQL / H2 + Flyway)
+
+infra          Observer/Subject, eventos de dominio y envío de correo
+app            ClientMain: arma las dependencias y abre el login
+```
+
+- `domain` no depende de `access`: los servicios usan interfaces
+  (`QuestionRepository`, `UsuarioRepository`, `AsignacionRepository`) y
+  `ClientMain` inyecta las implementaciones (DIP).
+- Las vistas no tienen lógica de negocio: delegan en
+  `PreguntaController` y `AsignacionController`.
+
+### Patrones de diseño
+
+| Patrón | Clases | Uso |
+|--------|--------|-----|
+| Observer | `Subject`, `Observer`, `QuestionService`, `GUIObserver1/2`, `GUIListarPreguntas`, `GUIAsignarRevisores` | Las vistas se refrescan solas cuando cambia una pregunta. |
+| Strategy | `ReglaValidacion`, `ValidadorEstructuralPregunta` | Reglas de validación intercambiables sin tocar el servicio. |
+| Builder | `QuestionBuilder` | Construcción de preguntas con muchos campos y valores por defecto. |
+| State (simplificado) | `EstadoPregunta` | Cada estado conoce su color, si permite edición y sus transiciones válidas. |
+| Repository | `*Repository`, `*ImplRepository`, `QuestionJdbcRepository` | Aísla la persistencia del dominio. |
+| Publicador/Suscriptor | `PreguntaEventPublisher`, `RevisorAsignadoEvent`, `EmailNotificacionService` | El correo a revisores queda desacoplado de la asignación. |
 
 ## Tecnologías
 
-- Java 21
-  igual que el proyecto de referencia)
-- Maven
-- Swing
+- Java 21, Maven, Swing
 - JUnit 5
-
-## Arquitectura en capas
-
-```
-presentation
- ├── GUIQuestions     (ventana principal: selector + formulario)
- ├── GUIObserver1      (vista de estadísticas)
- └── GUIObserver2      (vista gráfica de pastel)
-        │
-        ▼
-domain
- ├── Question
- ├── QuestionDistractors
- ├── QuestionService   (reglas de negocio + Subject)
- └── QuestionRepository (abstracción de persistencia)
-        │
-        ▼
-access
- └── QuestionImplRepository (persistencia en memoria)
-
-infra (capa transversal)
- ├── Observer
- └── Subject
-```
-
-- **presentation**: interacción con el usuario (Swing).
-- **domain**: entidades, reglas de negocio y el servicio de la
-  entidad `Question`.
-- **access**: persistencia. Se usa una estructura en memoria (`Map`)
-  tal como lo permite el enunciado del taller — no es una base de
-  datos relacional.
-- **infra**: lógica transversal a las demás capas — en este caso, el
-  patrón Observer (`Observer` y `Subject`), reutilizable por
-  cualquier clase del dominio que necesite notificar cambios.
-
-`QuestionService` depende de la interfaz `QuestionRepository` (no de
-`QuestionImplRepository`), aplicando el mismo Principio de Inversión
-de Dependencias del ejemplo de la teoría.
-
-## Micro patrón MVC + patrón Observer
-
-- **Modelo**: `Question`, `QuestionDistractors` y `QuestionService`
-  (que además hace de **Subject**).
-- **Vista/Controlador**: `GUIQuestions` es la ventana activa: permite
-  elegir una pregunta, ver su formulario y cambiar su estado. Al
-  llamar `QuestionService.updateEstado(...)`, delega la regla de
-  negocio en el servicio (rol de controlador) y refresca su propio
-  formulario (rol de vista).
-- **Vistas pendientes del cambio de estado (Observer)**:
-  `GUIObserver1` (estadísticas por estado) y `GUIObserver2` (gráfica
-  de pastel) implementan `Observer` y se registran ante
-  `QuestionService` (`attach(this)`) en su propio constructor. Tan
-  pronto `QuestionService.updateEstado(...)` cambia el estado de una
-  pregunta, llama a `notifyObservers()` (heredado de `Subject`), y
-  ambas vistas se enteran solas y se renderizan de nuevo — sin que
-  `GUIQuestions` las conozca ni las llame directamente.
-
-```
-GUIQuestions ──actualiza estado──▶ QuestionService (Subject)
-                                          │
-                                notifyObservers()
-                                   ┌──────┴──────┐
-                                   ▼             ▼
-                            GUIObserver1   GUIObserver2
-                            (estadísticas) (gráfica de pastel)
-```
-
-`ClientMain` es el composition root: crea `QuestionImplRepository`,
-lo inyecta en `QuestionService`, y construye las tres ventanas
-compartiendo la misma instancia del servicio.
-
-## Datos de ejemplo
-
-`QuestionImplRepository` se inicializa con 10 preguntas de ejemplo de
-distintas competencias Saber Pro (lectura crítica, razonamiento
-cuantitativo, competencias ciudadanas, comunicación escrita, inglés),
-repartidas entre los tres estados (`Borrador`, `Pendiente de
-revisión`, `Eliminada`) para poder ver de inmediato las vistas de
-estadísticas y de gráfica al ejecutar la aplicación.
-
-## Pruebas
-
-Pruebas unitarias con un doble de prueba (`FakeQuestionRepository`),
-sin depender de `QuestionImplRepository`, incluyendo una prueba de
-que `updateEstado` notifica correctamente a los observadores
-registrados:
-
-```
-mvn test
-```
+- PostgreSQL + Flyway (H2 en memoria para pruebas)
+- Jakarta Mail
 
 ## Ejecución
 
@@ -111,10 +68,26 @@ mvn clean install
 mvn exec:java
 ```
 
-Al iniciar se abren tres ventanas: la ventana principal de gestión de
-preguntas, la vista de estadísticas y la vista gráfica. Cambia el
-estado de una pregunta desde la ventana principal y observa cómo las
-otras dos se actualizan automáticamente.
+Usuarios de prueba:
+
+| Rol | Correo | Contraseña |
+|-----|--------|------------|
+| Administrador | admin@unicauca.edu.co | admin123 |
+| Autor | autor1@unicauca.edu.co | autor123 |
+| Autor | autor2@unicauca.edu.co | autor123 |
+
+Por defecto los datos se guardan en memoria. El correo se simula en
+consola; para enviarlo de verdad se configuran las variables
+`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD` y `SMTP_FROM`.
+
+## Pruebas
+
+```
+mvn test
+```
+
+Hay pruebas unitarias para las entidades, servicios y la validación del
+dominio, y pruebas de integración del repositorio JDBC sobre H2.
 
 ## Integrantes
 
@@ -123,6 +96,6 @@ otras dos se actualizan automáticamente.
 - Ivan Alexander Lopez Lasso
 - Carlos Arturo Bambague Martinez
 
-## Docente
+## Docentes
 
 - Wilson Pantoja Yepez, Paola Bedoya
