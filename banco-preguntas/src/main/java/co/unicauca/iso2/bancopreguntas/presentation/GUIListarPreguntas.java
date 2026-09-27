@@ -1,3 +1,8 @@
+/**
+ * @file GUIListarPreguntas.java
+ * @brief Listado de preguntas con filtros y paginación.
+ * @author Santiago Caicedo
+ */
 package co.unicauca.iso2.bancopreguntas.presentation;
 
 import co.unicauca.iso2.bancopreguntas.domain.*;
@@ -7,24 +12,14 @@ import co.unicauca.iso2.bancopreguntas.infra.Subject;
 import javax.swing.*;
 import javax.swing.table.*;
 import java.awt.*;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Vista de listado y filtrado de preguntas (RF03) con soporte para
- * cambio de estado BORRADOR → PENDIENTE_REVISION (RF02).
+ * @brief Tabla de preguntas con filtros, orden, paginación y acciones.
  *
- * RF03.1 — Muestra solo las preguntas del autor autenticado
- *          (si autorId no es null) o todas (admin).
- * RF03.2 — Paginación configurable 10/25/50.
- * RF03.3 — Filtros combinables: estado, competencia, texto libre.
- * RF03.4 — Ordenable por fecha creación o modificación.
- * RF03.5 — Edición habilitada solo en BORRADOR.
- * RF02.3 — Cada estado muestra su color distintivo en la celda.
- *
- * Implementa {@link Observer} para actualizarse automáticamente
- * cuando QuestionService notifica cambios de estado.
+ * El autor ve solo sus preguntas; el administrador ve todas. El estado
+ * se pinta con su color y los botones Editar/Enviar solo se habilitan
+ * en BORRADOR. Se refresca sola al ser Observer de QuestionService.
  */
 public class GUIListarPreguntas extends JFrame implements Observer {
 
@@ -39,18 +34,14 @@ public class GUIListarPreguntas extends JFrame implements Observer {
     private static final Color TABLE_BG     = new Color(22, 28, 44);
     private static final Color TABLE_SEL    = new Color(40, 55, 95);
 
-    private static final DateTimeFormatter FMT =
-            DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-
     private final QuestionService questionService;
-    /** null si es el admin (ve todas); no-null si es el autor. */
+    /** Autor cuyas preguntas se listan; null para ver todas. */
     private final String autorIdFiltro;
 
-    // Datos
-    private List<Question> todasLasPreguntas = new ArrayList<>();
-    private List<Question> preguntasFiltradas  = new ArrayList<>();
+    // Paginación actual
     private int paginaActual = 0;
     private int tamPagina    = 10;
+    private int totalPaginas = 1;
 
     // Filtros
     private JComboBox<String>        comboEstado;
@@ -60,8 +51,8 @@ public class GUIListarPreguntas extends JFrame implements Observer {
     private JComboBox<Integer>       comboTamPagina;
 
     // Tabla
-    private JTable            tabla;
-    private DefaultTableModel modeloTabla;
+    private JTable              tabla;
+    private PreguntaTableModel  modeloTabla;
 
     // Paginación
     private JLabel  lblInfoPagina;
@@ -74,11 +65,11 @@ public class GUIListarPreguntas extends JFrame implements Observer {
         this.questionService = questionService;
         this.autorIdFiltro   = autorIdFiltro;
 
-        questionService.attach(this); // observer (RF)
+        questionService.attach(this);
 
         inicializarVentana();
         construirUI();
-        cargarPreguntas();
+        aplicarFiltros();
     }
 
     // ----------------------------------------------------------------
@@ -87,7 +78,7 @@ public class GUIListarPreguntas extends JFrame implements Observer {
 
     @Override
     public void actualizar(Subject sujeto) {
-        SwingUtilities.invokeLater(this::cargarPreguntas);
+        SwingUtilities.invokeLater(this::aplicarFiltros);
     }
 
     // ----------------------------------------------------------------
@@ -148,7 +139,7 @@ public class GUIListarPreguntas extends JFrame implements Observer {
                 EstadoPregunta.BORRADOR.getEtiqueta(),
                 EstadoPregunta.PENDIENTE_REVISION.getEtiqueta(),
                 EstadoPregunta.EN_REVISION.getEtiqueta(),
-                EstadoPregunta.ELIMINADA.getEtiqueta()};
+                EstadoPregunta.ARCHIVADA.getEtiqueta()};
         comboEstado = new JComboBox<>(estados);
         estilizarCombo(comboEstado);
         panel.add(comboEstado, gbc);
@@ -187,7 +178,7 @@ public class GUIListarPreguntas extends JFrame implements Observer {
         comboTamPagina.addActionListener(e -> {
             tamPagina = (Integer) comboTamPagina.getSelectedItem();
             paginaActual = 0;
-            refrescarTabla();
+            aplicarFiltros();
         });
         panel.add(comboTamPagina, gbc);
 
@@ -207,15 +198,7 @@ public class GUIListarPreguntas extends JFrame implements Observer {
 
     private JPanel crearPanelTabla() {
 
-        String[] columnas = {"ID", "Enunciado", "Competencia",
-                "Nivel", "Estado", "F.Creación", "Acciones"};
-        modeloTabla = new DefaultTableModel(columnas, 0) {
-            @Override
-            public boolean isCellEditable(int row, int col) {
-                return col == 6; // solo columna Acciones
-            }
-        };
-
+        modeloTabla = new PreguntaTableModel();
         tabla = new JTable(modeloTabla);
         tabla.setBackground(TABLE_BG);
         tabla.setForeground(TEXT_PRIMARY);
@@ -230,14 +213,14 @@ public class GUIListarPreguntas extends JFrame implements Observer {
                 new Font("SansSerif", Font.BOLD, 12));
 
         // Renderer de colores para columna Estado
-        tabla.getColumnModel().getColumn(4).setCellRenderer(
-                new EstadoCellRenderer());
+        tabla.getColumnModel().getColumn(PreguntaTableModel.COL_ESTADO)
+                .setCellRenderer(new EstadoCellRenderer());
 
         // Renderer/editor de botones para columna Acciones
-        tabla.getColumnModel().getColumn(6).setCellRenderer(
-                new AccionesCellRenderer());
-        tabla.getColumnModel().getColumn(6).setCellEditor(
-                new AccionesCellEditor());
+        tabla.getColumnModel().getColumn(PreguntaTableModel.COL_ACCIONES)
+                .setCellRenderer(new AccionesCellRenderer());
+        tabla.getColumnModel().getColumn(PreguntaTableModel.COL_ACCIONES)
+                .setCellEditor(new AccionesCellEditor());
 
         // Anchos aproximados
         tabla.getColumnModel().getColumn(0).setPreferredWidth(80);
@@ -272,7 +255,7 @@ public class GUIListarPreguntas extends JFrame implements Observer {
         btnAnterior.addActionListener(e -> {
             if (paginaActual > 0) {
                 paginaActual--;
-                refrescarTabla();
+                aplicarFiltros();
             }
         });
 
@@ -284,10 +267,9 @@ public class GUIListarPreguntas extends JFrame implements Observer {
         estilizarBoton(btnSiguiente, new Color(45, 55, 85),
                 new Color(60, 72, 108));
         btnSiguiente.addActionListener(e -> {
-            int totalPaginas = calcularTotalPaginas();
             if (paginaActual < totalPaginas - 1) {
                 paginaActual++;
-                refrescarTabla();
+                aplicarFiltros();
             }
         });
 
@@ -298,121 +280,66 @@ public class GUIListarPreguntas extends JFrame implements Observer {
     }
 
     // ----------------------------------------------------------------
-    // Lógica de datos
+    // Consulta
     // ----------------------------------------------------------------
-
-    private void cargarPreguntas() {
-        if (autorIdFiltro != null) {
-            todasLasPreguntas = questionService.listByAutor(autorIdFiltro);
-        } else {
-            todasLasPreguntas = questionService.listQuestions();
-        }
-        paginaActual = 0;
-        aplicarFiltros();
-    }
 
     private void aplicarFiltros() {
 
-        String estadoSel = (String) comboEstado.getSelectedItem();
-        String busqueda  = txtBusqueda.getText().trim().toLowerCase();
-        String compFiltro = txtCompetencia.getText().trim().toLowerCase();
-        String ordenSel  = (String) comboOrden.getSelectedItem();
+        QuestionFilter filtro = new QuestionFilter()
+                .conAutorId(autorIdFiltro)
+                .conEstado(estadoDesdeEtiqueta((String) comboEstado.getSelectedItem()))
+                .conCompetencia(vacioANull(txtCompetencia.getText()))
+                .conTextoLibre(vacioANull(txtBusqueda.getText()))
+                .conOrden(ordenDesdeEtiqueta((String) comboOrden.getSelectedItem()))
+                .conPagina(paginaActual)
+                .conTamPagina(tamPagina);
 
-        // Filtrar
-        preguntasFiltradas = new ArrayList<>();
-        for (Question q : todasLasPreguntas) {
+        PaginaResultado<Question> pagina = questionService.buscarPaginado(filtro);
 
-            // Filtro estado — null-safe: si la pregunta no tiene estado se omite al filtrar
-            if (!"(Todos)".equals(estadoSel)) {
-                if (q.getEstado() == null
-                        || !q.getEstado().getEtiqueta().equals(estadoSel)) {
-                    continue;
-                }
-            }
-            // Filtro competencia
-            if (!compFiltro.isEmpty()
-                    && (q.getCompetencia() == null
-                        || !q.getCompetencia().toLowerCase()
-                             .contains(compFiltro))) {
-                continue;
-            }
-            // Filtro texto libre en enunciado
-            if (!busqueda.isEmpty()
-                    && (q.getEnunciado() == null
-                        || !q.getEnunciado().toLowerCase()
-                             .contains(busqueda))) {
-                continue;
-            }
+        modeloTabla.setPreguntas(pagina.getElementos());
+        totalPaginas = pagina.getTotalPaginas();
+        paginaActual = pagina.getPagina();
 
-            preguntasFiltradas.add(q);
-        }
-
-        // Ordenar (RF03.4) — null-safe para fechas
-        preguntasFiltradas.sort((a, b) -> {
-            switch (ordenSel) {
-                case "Fecha creación (asc)":
-                    if (a.getFechaCreacion() == null) return 1;
-                    if (b.getFechaCreacion() == null) return -1;
-                    return a.getFechaCreacion().compareTo(b.getFechaCreacion());
-                case "Fecha modificación (desc)":
-                    if (b.getFechaModificacion() == null) return 1;
-                    if (a.getFechaModificacion() == null) return -1;
-                    return b.getFechaModificacion().compareTo(a.getFechaModificacion());
-                case "Fecha modificación (asc)":
-                    if (a.getFechaModificacion() == null) return 1;
-                    if (b.getFechaModificacion() == null) return -1;
-                    return a.getFechaModificacion().compareTo(b.getFechaModificacion());
-                default: // "Fecha creación (desc)"
-                    if (b.getFechaCreacion() == null) return 1;
-                    if (a.getFechaCreacion() == null) return -1;
-                    return b.getFechaCreacion().compareTo(a.getFechaCreacion());
-            }
-        });
-
-        refrescarTabla();
-    }
-
-    private void refrescarTabla() {
-
-        modeloTabla.setRowCount(0);
-
-        int totalPaginas = calcularTotalPaginas();
-        int desde = paginaActual * tamPagina;
-        int hasta = Math.min(desde + tamPagina, preguntasFiltradas.size());
-
-        for (int i = desde; i < hasta; i++) {
-            Question q = preguntasFiltradas.get(i);
-            modeloTabla.addRow(new Object[]{
-                    q.getId(),
-                    truncar(q.getEnunciado(), 60),
-                    q.getCompetencia(),
-                    q.getNivelDificultad() != null
-                            ? q.getNivelDificultad().getEtiqueta() : "-",
-                    q.getEstado(),
-                    q.getFechaCreacion() != null
-                            ? q.getFechaCreacion().format(FMT) : "-",
-                    q  // objeto completo para los botones
-            });
-        }
-
-        // Actualizar info de paginación
         lblInfoPagina.setText("Página " + (paginaActual + 1)
                 + " de " + Math.max(1, totalPaginas)
-                + "  (" + preguntasFiltradas.size() + " resultados)");
+                + "  (" + pagina.getTotalElementos() + " resultados)");
         btnAnterior.setEnabled(paginaActual > 0);
         btnSiguiente.setEnabled(paginaActual < totalPaginas - 1);
     }
 
-    private int calcularTotalPaginas() {
-        return (int) Math.ceil(
-                (double) preguntasFiltradas.size() / tamPagina);
+    private EstadoPregunta estadoDesdeEtiqueta(String etiqueta) {
+        if (etiqueta == null || "(Todos)".equals(etiqueta)) {
+            return null;
+        }
+        for (EstadoPregunta estado : EstadoPregunta.values()) {
+            if (estado.getEtiqueta().equals(etiqueta)) {
+                return estado;
+            }
+        }
+        return null;
+    }
+
+    private QuestionFilter.Orden ordenDesdeEtiqueta(String etiqueta) {
+        if (etiqueta == null) {
+            return QuestionFilter.Orden.FECHA_CREACION_DESC;
+        }
+        return switch (etiqueta) {
+            case "Fecha creación (asc)" -> QuestionFilter.Orden.FECHA_CREACION_ASC;
+            case "Fecha modificación (desc)" -> QuestionFilter.Orden.FECHA_MODIFICACION_DESC;
+            case "Fecha modificación (asc)" -> QuestionFilter.Orden.FECHA_MODIFICACION_ASC;
+            default -> QuestionFilter.Orden.FECHA_CREACION_DESC;
+        };
+    }
+
+    private String vacioANull(String s) {
+        return (s == null || s.trim().isEmpty()) ? null : s.trim();
     }
 
     // ----------------------------------------------------------------
     // Acciones sobre preguntas
     // ----------------------------------------------------------------
 
-    /** Abre el formulario de edición (solo BORRADOR — RF03.5). */
+    /** @brief Abre el formulario de edición si la pregunta está en borrador. */
     void editarPregunta(Question q) {
         if (q.getEstado() != EstadoPregunta.BORRADOR) {
             JOptionPane.showMessageDialog(this,
@@ -424,7 +351,7 @@ public class GUIListarPreguntas extends JFrame implements Observer {
         new GUIEditarPregunta(questionService, q).setVisible(true);
     }
 
-    /** Envía la pregunta a revisión (RF02). */
+    /** @brief Pasa la pregunta a "Pendiente de revisión". */
     void enviarARevision(Question q) {
         String autorId = (SessionContext.estaAutenticado())
                 ? SessionContext.getUsuarioActual().getId() : "";
@@ -449,7 +376,7 @@ public class GUIListarPreguntas extends JFrame implements Observer {
     // Renderers y editores de tabla
     // ----------------------------------------------------------------
 
-    /** Colorea la celda de Estado según RF02.3. */
+    /** @brief Pinta la celda de estado con el color del estado. */
     private static class EstadoCellRenderer extends DefaultTableCellRenderer {
         @Override
         public Component getTableCellRendererComponent(JTable table,
@@ -463,7 +390,7 @@ public class GUIListarPreguntas extends JFrame implements Observer {
             lbl.setOpaque(true);
 
             if (value instanceof EstadoPregunta estado) {
-                Color color = estado.getColor();
+                Color color = estado.colorUI();
                 lbl.setBackground(isSelected
                         ? color.darker().darker()
                         : color.darker().darker().darker());
@@ -478,7 +405,7 @@ public class GUIListarPreguntas extends JFrame implements Observer {
         }
     }
 
-    /** Botones Editar / Enviar en columna Acciones. */
+    /** @brief Dibuja los botones Editar / Enviar. */
     private class AccionesCellRenderer implements TableCellRenderer {
         private final JPanel panel = new JPanel(new FlowLayout(
                 FlowLayout.CENTER, 4, 2));
@@ -509,7 +436,7 @@ public class GUIListarPreguntas extends JFrame implements Observer {
         }
     }
 
-    /** Editor que delega los clics en los botones a la lógica de negocio. */
+    /** @brief Atiende los clics de los botones de la columna Acciones. */
     private class AccionesCellEditor extends AbstractCellEditor
             implements TableCellEditor {
 
@@ -560,11 +487,6 @@ public class GUIListarPreguntas extends JFrame implements Observer {
     // ----------------------------------------------------------------
     // Utilidades
     // ----------------------------------------------------------------
-
-    private static String truncar(String s, int max) {
-        if (s == null) return "";
-        return s.length() <= max ? s : s.substring(0, max) + "…";
-    }
 
     private JLabel etiqueta(String texto) {
         JLabel lbl = new JLabel(texto);
