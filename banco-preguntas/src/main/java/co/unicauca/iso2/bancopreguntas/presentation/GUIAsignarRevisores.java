@@ -1,3 +1,8 @@
+/**
+ * @file GUIAsignarRevisores.java
+ * @brief Ventana del administrador para asignar revisores.
+ * @author Santiago Caicedo
+ */
 package co.unicauca.iso2.bancopreguntas.presentation;
 
 import co.unicauca.iso2.bancopreguntas.domain.*;
@@ -10,17 +15,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Vista para que el administrador asigne revisores a preguntas
- * en estado "Pendiente de revisión" (RF04).
+ * @brief Lista las preguntas pendientes de revisión y los docentes
+ *        disponibles para asignarlos como revisores.
  *
- * RF04.1 — Muestra las preguntas en PENDIENTE_REVISION.
- * RF04.2 — Permite seleccionar uno o más revisores (docentes).
- * RF04.3 — Al asignar, la pregunta pasa a EN_REVISION.
- * RF04.4 — El sistema envía (simula) correo a cada revisor.
- * RF04.5 — Si el correo falla, la asignación no se revierte.
- *
- * Implementa {@link Observer} para actualizarse automáticamente
- * cuando QuestionService notifica cambios.
+ * Se registra como Observer de QuestionService para refrescar la lista
+ * cuando cambia el estado de alguna pregunta.
  */
 public class GUIAsignarRevisores extends JFrame implements Observer {
 
@@ -34,6 +33,7 @@ public class GUIAsignarRevisores extends JFrame implements Observer {
 
     private final QuestionService   questionService;
     private final UsuarioRepository usuarioRepository;
+    private final AsignacionController controller;
 
     private JList<Question> listaPendientes;
     private DefaultListModel<Question> modeloPendientes;
@@ -42,10 +42,12 @@ public class GUIAsignarRevisores extends JFrame implements Observer {
     private final List<JCheckBox> checkboxRevisores = new ArrayList<>();
 
     public GUIAsignarRevisores(QuestionService questionService,
-                                UsuarioRepository usuarioRepository) {
+                                UsuarioRepository usuarioRepository,
+                                AsignacionService asignacionService) {
 
         this.questionService   = questionService;
         this.usuarioRepository = usuarioRepository;
+        this.controller        = new AsignacionController(asignacionService);
 
         questionService.attach(this);
 
@@ -225,7 +227,7 @@ public class GUIAsignarRevisores extends JFrame implements Observer {
     }
 
     // ----------------------------------------------------------------
-    // Lógica de negocio
+    // Acciones
     // ----------------------------------------------------------------
 
     private void cargarPreguntas() {
@@ -264,8 +266,7 @@ public class GUIAsignarRevisores extends JFrame implements Observer {
             return;
         }
 
-        // RF04.2 / RF04.3 / RF04.4 / RF04.5
-        boolean exito = questionService.asignarRevisores(
+        boolean exito = controller.asignarRevisores(
                 seleccionada.getId(), revisorIds);
 
         if (!exito) {
@@ -324,7 +325,7 @@ public class GUIAsignarRevisores extends JFrame implements Observer {
         return btn;
     }
 
-    /** Renderiza cada pregunta en la lista con su estado coloreado. */
+    /** @brief Muestra id y enunciado recortado de cada pregunta. */
     private static class PreguntaCellRenderer
             extends DefaultListCellRenderer {
 
