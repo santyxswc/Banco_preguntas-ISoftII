@@ -1,3 +1,8 @@
+/**
+ * @file GUICrearPregunta.java
+ * @brief Formulario para crear preguntas.
+ * @author Santiago Caicedo
+ */
 package co.unicauca.iso2.bancopreguntas.presentation;
 
 import java.awt.BorderLayout;
@@ -7,11 +12,9 @@ import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -27,28 +30,14 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
-import co.unicauca.iso2.bancopreguntas.domain.EstadoPregunta;
 import co.unicauca.iso2.bancopreguntas.domain.NivelDificultad;
-import co.unicauca.iso2.bancopreguntas.domain.Question;
-import co.unicauca.iso2.bancopreguntas.domain.QuestionDistractors;
 import co.unicauca.iso2.bancopreguntas.domain.QuestionService;
 
 /**
- * Formulario para crear una nueva pregunta de selección múltiple
- * (RF01).
+ * @brief Vista para registrar una pregunta de selección múltiple.
  *
- * RF01.1 — Incluye todos los campos requeridos: contexto, pregunta
- * directa, 4 distractores, respuesta correcta, justificación,
- * bibliografía, competencia, tema, subtema, nivel de dificultad.
- *
- * RF01.2 — Al guardar, ejecuta validación estructural mediante
- * {@link QuestionService#validarEstructura(Question)}.
- *
- * RF01.3 — Si hay errores, los muestra campo a campo en rojo sin
- * perder lo digitado.
- *
- * RF01.4 — Al guardar con éxito, la pregunta queda en BORRADOR
- * asociada al autor autenticado.
+ * Recoge los datos y se los pasa a PreguntaController. Si hay errores
+ * los muestra debajo de cada campo sin borrar lo digitado.
  */
 public class GUICrearPregunta extends JFrame {
 
@@ -62,7 +51,7 @@ public class GUICrearPregunta extends JFrame {
     private static final Color BORDER_COLOR = new Color(50, 58, 85);
     private static final Color SUCCESS_COLOR = new Color(60, 200, 100);
 
-    private final QuestionService questionService;
+    private final PreguntaController controller;
 
     // Campos del formulario
     private JTextArea   txtContexto;
@@ -80,7 +69,7 @@ public class GUICrearPregunta extends JFrame {
     private final Map<String, JLabel> labelsError = new HashMap<>();
 
     public GUICrearPregunta(QuestionService questionService) {
-        this.questionService = questionService;
+        this.controller = new PreguntaController(questionService);
         inicializarVentana();
         construirUI();
     }
@@ -274,9 +263,7 @@ public class GUICrearPregunta extends JFrame {
     // Helpers de construcción de componentes
     // ----------------------------------------------------------------
 
-    /**
-     * Crea una fila etiqueta + componente + label de error.
-     */
+    /** @brief Fila con etiqueta, componente y etiqueta de error. */
     private JPanel crearFilaCampo(String clave, String etiqueta,
                                    JComponent componente) {
 
@@ -362,35 +349,44 @@ public class GUICrearPregunta extends JFrame {
     }
 
     // ----------------------------------------------------------------
-    // Lógica de guardado (RF01.2, RF01.3, RF01.4)
+    // Guardado
     // ----------------------------------------------------------------
 
     private void guardar() {
 
-        // Limpiar errores anteriores
         limpiarErrores();
 
-        // Construir la pregunta con los datos del formulario
-        Question q = construirPreguntaDesdeFormulario();
+        PreguntaController.DatosFormularioPregunta datos =
+                new PreguntaController.DatosFormularioPregunta();
 
-        // RF01.2 — validación estructural
-        List<String> errores = questionService.validarEstructura(q);
+        datos.contexto  = txtContexto.getText().trim();
+        datos.enunciado = txtEnunciado.getText().trim();
+        datos.opcionA = txtOpcionA.getText().trim();
+        datos.opcionB = txtOpcionB.getText().trim();
+        datos.opcionC = txtOpcionC.getText().trim();
+        datos.opcionD = txtOpcionD.getText().trim();
+        datos.respuestaCorrecta = (String) comboRespuesta.getSelectedItem();
+        datos.justificacion = txtJustificacion.getText().trim();
+        datos.bibliografia  = txtBibliografia.getText().trim();
+        datos.competencia   = txtCompetencia.getText().trim();
+        datos.tema          = txtTema.getText().trim();
+        datos.subtema       = txtSubtema.getText().trim();
+        datos.nivelDificultad = (NivelDificultad) comboNivel.getSelectedItem();
 
-        if (!errores.isEmpty()) {
-            // RF01.3 — mostrar errores campo a campo
-            mostrarErroresCampo(errores);
-            return;
+        if (SessionContext.estaAutenticado()) {
+            datos.autorId = SessionContext.getUsuarioActual().getId();
         }
 
-        // RF01.4 — guardar en BORRADOR asociada al autor
-        boolean guardada = questionService.saveQuestion(q);
+        List<String> errores = controller.crearPregunta(datos);
 
-        if (!guardada) {
-            JOptionPane.showMessageDialog(this,
-                    "No se pudo guardar la pregunta. "
-                    + "Es posible que el ID ya exista.",
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE);
+        if (!errores.isEmpty()) {
+            if (errores.size() == 1 && errores.get(0).startsWith("id|")) {
+                JOptionPane.showMessageDialog(this,
+                        errores.get(0).substring("id|".length()),
+                        "Error", JOptionPane.ERROR_MESSAGE);
+            } else {
+                mostrarErroresCampo(errores);
+            }
             return;
         }
 
@@ -401,43 +397,6 @@ public class GUICrearPregunta extends JFrame {
         dispose();
     }
 
-    private Question construirPreguntaDesdeFormulario() {
-
-        Question q = new Question();
-        q.setId("P-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
-        q.setNombre(txtEnunciado.getText().trim().length() > 50
-                ? txtEnunciado.getText().trim().substring(0, 50) + "…"
-                : txtEnunciado.getText().trim());
-        q.setContexto(txtContexto.getText().trim());
-        q.setEnunciado(txtEnunciado.getText().trim());
-
-        // Opciones (A, B, C, D)
-        List<QuestionDistractors> opciones = new ArrayList<>();
-        opciones.add(new QuestionDistractors("A", txtOpcionA.getText().trim()));
-        opciones.add(new QuestionDistractors("B", txtOpcionB.getText().trim()));
-        opciones.add(new QuestionDistractors("C", txtOpcionC.getText().trim()));
-        opciones.add(new QuestionDistractors("D", txtOpcionD.getText().trim()));
-        q.setOpciones(opciones);
-
-        q.setRespuestaCorrecta(
-                (String) comboRespuesta.getSelectedItem());
-        q.setJustificacion(txtJustificacion.getText().trim());
-        q.setBibliografia(txtBibliografia.getText().trim());
-        q.setCompetencia(txtCompetencia.getText().trim());
-        q.setTema(txtTema.getText().trim());
-        q.setSubtema(txtSubtema.getText().trim());
-        q.setNivelDificultad(
-                (NivelDificultad) comboNivel.getSelectedItem());
-        q.setEstado(EstadoPregunta.BORRADOR);
-
-        // RF01.4 — asociar al autor autenticado
-        if (SessionContext.estaAutenticado()) {
-            q.setAutorId(SessionContext.getUsuarioActual().getId());
-        }
-
-        return q;
-    }
-
     private void limpiarErrores() {
         for (JLabel lbl : labelsError.values()) {
             lbl.setText(" ");
@@ -445,8 +404,8 @@ public class GUICrearPregunta extends JFrame {
     }
 
     /**
-     * Muestra mensajes de error campo a campo (RF01.3).
-     * Cada error tiene el formato "campo|mensaje".
+     * @brief Pinta cada error debajo de su campo.
+     * @param errores errores en formato "campo|mensaje"
      */
     private void mostrarErroresCampo(List<String> errores) {
         for (String error : errores) {

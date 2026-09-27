@@ -1,7 +1,12 @@
+/**
+ * @file NivelDificultad.java
+ * @brief Niveles de dificultad válidos para una pregunta.
+ * @author Santiago Caicedo
+ */
 package co.unicauca.iso2.bancopreguntas.domain;
 
 /**
- * Catálogo de niveles de dificultad válidos para una pregunta (RF01.2).
+ * @brief Catálogo cerrado de niveles de dificultad.
  */
 public enum NivelDificultad {
 
@@ -15,6 +20,7 @@ public enum NivelDificultad {
         this.etiqueta = etiqueta;
     }
 
+    /** @return nombre legible del nivel */
     public String getEtiqueta() {
         return etiqueta;
     }

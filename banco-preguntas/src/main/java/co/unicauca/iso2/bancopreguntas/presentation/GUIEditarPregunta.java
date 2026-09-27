@@ -1,3 +1,8 @@
+/**
+ * @file GUIEditarPregunta.java
+ * @brief Formulario para editar preguntas en borrador.
+ * @author Santiago Caicedo
+ */
 package co.unicauca.iso2.bancopreguntas.presentation;
 
 import java.awt.BorderLayout;
@@ -7,7 +12,6 @@ import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,16 +30,14 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
-import co.unicauca.iso2.bancopreguntas.domain.EstadoPregunta;
 import co.unicauca.iso2.bancopreguntas.domain.NivelDificultad;
 import co.unicauca.iso2.bancopreguntas.domain.Question;
 import co.unicauca.iso2.bancopreguntas.domain.QuestionDistractors;
 import co.unicauca.iso2.bancopreguntas.domain.QuestionService;
 
 /**
- * Formulario para editar una pregunta existente en estado BORRADOR.
- * Reutiliza la misma lógica de validación de {@link GUICrearPregunta}
- * pero pre-carga los datos de la pregunta seleccionada.
+ * @brief Vista de edición: carga los datos de la pregunta y guarda
+ *        los cambios a través de PreguntaController.
  */
 public class GUIEditarPregunta extends JFrame {
 
@@ -47,8 +49,8 @@ public class GUIEditarPregunta extends JFrame {
     private static final Color ERROR_COLOR  = new Color(255, 85, 85);
     private static final Color BORDER_COLOR = new Color(50, 58, 85);
 
-    private final QuestionService questionService;
-    private final Question        preguntaOriginal;
+    private final PreguntaController controller;
+    private final Question           preguntaOriginal;
 
     private JTextArea   txtContexto;
     private JTextArea   txtEnunciado;
@@ -66,7 +68,7 @@ public class GUIEditarPregunta extends JFrame {
     public GUIEditarPregunta(QuestionService questionService,
                               Question pregunta) {
 
-        this.questionService  = questionService;
+        this.controller       = new PreguntaController(questionService);
         this.preguntaOriginal = pregunta;
 
         inicializarVentana();
@@ -187,34 +189,32 @@ public class GUIEditarPregunta extends JFrame {
 
         limpiarErrores();
 
-        // Construir pregunta con datos del formulario
-        Question q = new Question();
-        q.setId(preguntaOriginal.getId());
-        q.setNombre(preguntaOriginal.getNombre());
-        q.setAutorId(preguntaOriginal.getAutorId());
-        q.setEstado(EstadoPregunta.BORRADOR);
-        q.setFechaCreacion(preguntaOriginal.getFechaCreacion());
+        PreguntaController.DatosFormularioPregunta datos =
+                new PreguntaController.DatosFormularioPregunta();
 
-        q.setContexto(txtContexto.getText().trim());
-        q.setEnunciado(txtEnunciado.getText().trim());
+        datos.contexto  = txtContexto.getText().trim();
+        datos.enunciado = txtEnunciado.getText().trim();
+        datos.opcionA = txtOpcionA.getText().trim();
+        datos.opcionB = txtOpcionB.getText().trim();
+        datos.opcionC = txtOpcionC.getText().trim();
+        datos.opcionD = txtOpcionD.getText().trim();
+        datos.respuestaCorrecta = (String) comboRespuesta.getSelectedItem();
+        datos.justificacion = txtJustificacion.getText().trim();
+        datos.bibliografia  = txtBibliografia.getText().trim();
+        datos.competencia   = txtCompetencia.getText().trim();
+        datos.tema          = txtTema.getText().trim();
+        datos.subtema       = txtSubtema.getText().trim();
+        datos.nivelDificultad = (NivelDificultad) comboNivel.getSelectedItem();
 
-        List<QuestionDistractors> opciones = new ArrayList<>();
-        opciones.add(new QuestionDistractors("A", txtOpcionA.getText().trim()));
-        opciones.add(new QuestionDistractors("B", txtOpcionB.getText().trim()));
-        opciones.add(new QuestionDistractors("C", txtOpcionC.getText().trim()));
-        opciones.add(new QuestionDistractors("D", txtOpcionD.getText().trim()));
-        q.setOpciones(opciones);
+        List<String> errores = controller.editarPregunta(preguntaOriginal, datos);
 
-        q.setRespuestaCorrecta((String) comboRespuesta.getSelectedItem());
-        q.setJustificacion(txtJustificacion.getText().trim());
-        q.setBibliografia(txtBibliografia.getText().trim());
-        q.setCompetencia(txtCompetencia.getText().trim());
-        q.setTema(txtTema.getText().trim());
-        q.setSubtema(txtSubtema.getText().trim());
-        q.setNivelDificultad((NivelDificultad) comboNivel.getSelectedItem());
-
-        List<String> errores = questionService.validarEstructura(q);
         if (!errores.isEmpty()) {
+            if (errores.size() == 1 && errores.get(0).startsWith("id|")) {
+                JOptionPane.showMessageDialog(this,
+                        errores.get(0).substring("id|".length()),
+                        "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
             for (String error : errores) {
                 String[] partes = error.split("\\|", 2);
                 if (partes.length == 2) {
@@ -225,21 +225,11 @@ public class GUIEditarPregunta extends JFrame {
             return;
         }
 
-        boolean actualizada = questionService.updateQuestion(q);
-        if (!actualizada) {
-            JOptionPane.showMessageDialog(this,
-                    "No se pudo actualizar la pregunta.",
-                    "Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
         JOptionPane.showMessageDialog(this,
                 "✅ Pregunta actualizada correctamente.",
                 "Guardado", JOptionPane.INFORMATION_MESSAGE);
         dispose();
     }
-
-    // ---- Helpers de construcción -----------------------------------
 
     private JPanel seccion(String titulo) {
         JPanel p = new JPanel();
