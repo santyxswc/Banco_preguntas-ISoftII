@@ -2,6 +2,9 @@
  * @file QuestionTest.java
  * @brief Pruebas de la entidad Question.
  * @author Santiago Caicedo
+ * @author Ivan Alexander Lopez
+ * @author Adrian Araujo Urbano
+ * @author Carlos Bambague
  */
 package co.unicauca.iso2.bancopreguntas.domain;
 

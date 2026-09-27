@@ -2,6 +2,9 @@
  * @file CatalogoRepository.java
  * @brief Contrato de acceso al catálogo académico.
  * @author Santiago Caicedo
+ * @author Ivan Alexander Lopez
+ * @author Adrian Araujo Urbano
+ * @author Carlos Bambague
  */
 package co.unicauca.iso2.bancopreguntas.domain;
 

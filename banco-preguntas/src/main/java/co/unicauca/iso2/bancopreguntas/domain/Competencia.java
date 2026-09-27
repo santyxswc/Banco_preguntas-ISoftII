@@ -2,6 +2,9 @@
  * @file Competencia.java
  * @brief Competencia evaluada en las pruebas Saber Pro.
  * @author Santiago Caicedo
+ * @author Ivan Alexander Lopez
+ * @author Adrian Araujo Urbano
+ * @author Carlos Bambague
  */
 package co.unicauca.iso2.bancopreguntas.domain;
 

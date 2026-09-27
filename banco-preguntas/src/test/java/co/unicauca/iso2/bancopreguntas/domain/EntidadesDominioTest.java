@@ -2,6 +2,9 @@
  * @file EntidadesDominioTest.java
  * @brief Pruebas de las entidades de apoyo del dominio.
  * @author Santiago Caicedo
+ * @author Ivan Alexander Lopez
+ * @author Adrian Araujo Urbano
+ * @author Carlos Bambague
  */
 package co.unicauca.iso2.bancopreguntas.domain;
 

@@ -2,6 +2,9 @@
  * @file AsignacionService.java
  * @brief Lógica de negocio para asignar revisores a preguntas.
  * @author Santiago Caicedo
+ * @author Ivan Alexander Lopez
+ * @author Adrian Araujo Urbano
+ * @author Carlos Bambague
  */
 package co.unicauca.iso2.bancopreguntas.domain;
 

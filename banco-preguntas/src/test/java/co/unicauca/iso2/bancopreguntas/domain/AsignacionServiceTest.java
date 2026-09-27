@@ -2,6 +2,9 @@
  * @file AsignacionServiceTest.java
  * @brief Pruebas de la asignación de revisores.
  * @author Santiago Caicedo
+ * @author Ivan Alexander Lopez
+ * @author Adrian Araujo Urbano
+ * @author Carlos Bambague
  */
 package co.unicauca.iso2.bancopreguntas.domain;
 

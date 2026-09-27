@@ -2,6 +2,9 @@
  * @file PaginaResultado.java
  * @brief Resultado paginado de una consulta.
  * @author Santiago Caicedo
+ * @author Ivan Alexander Lopez
+ * @author Adrian Araujo Urbano
+ * @author Carlos Bambague
  */
 package co.unicauca.iso2.bancopreguntas.domain;
 

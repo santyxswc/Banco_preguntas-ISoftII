@@ -2,6 +2,9 @@
  * @file Tema.java
  * @brief Tema que pertenece a una competencia.
  * @author Santiago Caicedo
+ * @author Ivan Alexander Lopez
+ * @author Adrian Araujo Urbano
+ * @author Carlos Bambague
  */
 package co.unicauca.iso2.bancopreguntas.domain;
 
