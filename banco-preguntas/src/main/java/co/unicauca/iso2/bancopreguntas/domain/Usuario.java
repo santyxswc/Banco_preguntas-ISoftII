@@ -1,8 +1,12 @@
+/**
+ * @file Usuario.java
+ * @brief Usuario del sistema.
+ * @author Santiago Caicedo
+ */
 package co.unicauca.iso2.bancopreguntas.domain;
 
 /**
- * Entidad que representa un usuario del sistema.
- * Un usuario puede ser Autor o Administrador (ver {@link Rol}).
+ * @brief Usuario autenticable con un Rol.
  */
 public class Usuario {
 

@@ -1,22 +1,20 @@
+/**
+ * @file Observer.java
+ * @brief Interfaz observador del patrón Observer.
+ * @author Santiago Caicedo
+ */
 package co.unicauca.iso2.bancopreguntas.infra;
 
 /**
- * Parte del patrón Observer.
+ * @brief Objeto que quiere enterarse de los cambios de un Subject.
  *
- * Cualquier vista que deba reaccionar a un cambio de estado de un
- * {@link Subject} debe implementar esta interfaz y registrarse en él
- * mediante {@link Subject#attach(Observer)}.
- *
- * En esta aplicación, las vistas GUIObserver1 (estadísticas) y
- * GUIObserver2 (gráfica de pastel) implementan esta interfaz para
- * enterarse de los cambios de estado de las preguntas del banco.
+ * Las vistas que se refrescan solas (estadísticas, gráfica, listado,
+ * asignación) implementan esta interfaz.
  */
 public interface Observer {
 
     /**
-     * Método invocado por el sujeto observado cada vez que su estado
-     * cambia.
-     *
+     * @brief Se llama cada vez que el sujeto cambia.
      * @param subject sujeto que notifica el cambio
      */
     void actualizar(Subject subject);

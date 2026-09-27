@@ -1,29 +1,24 @@
+/**
+ * @file Subject.java
+ * @brief Sujeto observable del patrón Observer.
+ * @author Santiago Caicedo
+ */
 package co.unicauca.iso2.bancopreguntas.infra;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Parte del patrón Observer.
+ * @brief Mantiene la lista de observadores y les avisa de los cambios.
  *
- * Es lógica transversal reutilizable por cualquier clase del dominio
- * que necesite notificar a varias vistas pendientes de sus cambios,
- * sin acoplarse a ninguna de ellas: Subject solo conoce la interfaz
- * {@link Observer}, nunca una vista concreta.
- *
- * En esta aplicación, QuestionService extiende Subject: cada vez que
- * cambia el estado de una pregunta, notifica a los observadores
- * registrados (GUIObserver1 y GUIObserver2) para que se rendericen
- * de nuevo.
+ * Solo conoce la interfaz Observer, nunca una vista concreta.
  */
 public abstract class Subject {
 
     private final List<Observer> observadores = new ArrayList<>();
 
     /**
-     * Registra un observador para que sea notificado de los cambios
-     * de este sujeto.
-     *
+     * @brief Registra un observador (se ignoran nulos y repetidos).
      * @param observador observador a registrar
      */
     public void attach(Observer observador) {
@@ -38,8 +33,7 @@ public abstract class Subject {
     }
 
     /**
-     * Elimina un observador previamente registrado.
-     *
+     * @brief Quita un observador registrado.
      * @param observador observador a eliminar
      */
     public void detach(Observer observador) {
@@ -47,14 +41,7 @@ public abstract class Subject {
         observadores.remove(observador);
     }
 
-    /**
-     * Notifica a todos los observadores registrados de que el estado
-     * de este sujeto cambió.
-     *
-     * Solo las subclases (por ejemplo, QuestionService) pueden
-     * disparar la notificación, típicamente al final de una
-     * operación que modifica su estado.
-     */
+    /** @brief Avisa a todos los observadores registrados. */
     protected void notifyObservers() {
 
         for (Observer observador : observadores) {

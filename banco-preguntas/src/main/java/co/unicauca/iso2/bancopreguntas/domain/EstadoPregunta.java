@@ -1,18 +1,31 @@
+/**
+ * @file EstadoPregunta.java
+ * @brief Estados del ciclo de vida de una pregunta.
+ * @author Santiago Caicedo
+ */
 package co.unicauca.iso2.bancopreguntas.domain;
 
+import java.awt.Color;
+import java.util.EnumSet;
+import java.util.Set;
+
 /**
- * Estados posibles de una pregunta del banco de preguntas Saber Pro.
+ * @brief Estados por los que pasa una pregunta del banco.
+ *
+ * Cada estado sabe con qué color se muestra, si permite edición y a qué
+ * estados puede pasar, así las reglas del ciclo de vida no quedan
+ * repartidas en if/switch por toda la aplicación.
  */
 public enum EstadoPregunta {
 
-    /** Gris — pregunta en edición por el autor. */
+    /** Pregunta en edición por su autor. */
     BORRADOR("Borrador"),
-    /** Ámbar — esperando que un admin asigne revisores. */
+    /** Esperando que el administrador asigne revisores. */
     PENDIENTE_REVISION("Pendiente de revisión"),
-    /** Azul — revisores asignados, en proceso de revisión. */
+    /** Con revisores asignados. */
     EN_REVISION("En revisión"),
-    /** Rojo oscuro — descartada. */
-    ELIMINADA("Eliminada");
+    /** Retirada del banco; nunca se borra físicamente. */
+    ARCHIVADA("Archivada");
 
     private final String etiqueta;
 
@@ -20,23 +33,54 @@ public enum EstadoPregunta {
         this.etiqueta = etiqueta;
     }
 
+    /** @return nombre legible del estado */
     public String getEtiqueta() {
         return etiqueta;
     }
 
     /**
-     * Color distintivo para representar el estado en la interfaz
-     * (RF02.3).
-     *
-     * @return color AWT asociado al estado
+     * @brief Color con el que se pinta el estado en la interfaz.
+     * @return color asociado al estado
      */
-    public java.awt.Color getColor() {
+    public Color colorUI() {
         return switch (this) {
-            case BORRADOR           -> new java.awt.Color(150, 150, 150); // gris
-            case PENDIENTE_REVISION -> new java.awt.Color(230, 160,  20); // ámbar
-            case EN_REVISION        -> new java.awt.Color( 30, 120, 210); // azul
-            case ELIMINADA          -> new java.awt.Color(180,  40,  40); // rojo
+            case BORRADOR           -> new Color(150, 150, 150);
+            case PENDIENTE_REVISION -> new Color(230, 160,  20);
+            case EN_REVISION        -> new Color( 30, 120, 210);
+            case ARCHIVADA          -> new Color(180,  40,  40);
         };
+    }
+
+    /** @return true si la pregunta se puede editar en este estado */
+    public boolean permiteEdicion() {
+        return this == BORRADOR;
+    }
+
+    /** @return true si desde este estado se puede enviar a revisión */
+    public boolean permiteEnviarARevision() {
+        return this == BORRADOR;
+    }
+
+    /**
+     * @brief Estados a los que se puede pasar desde este.
+     * @return conjunto de estados destino válidos
+     */
+    public Set<EstadoPregunta> siguientesPermitidos() {
+        return switch (this) {
+            case BORRADOR           -> EnumSet.of(PENDIENTE_REVISION, ARCHIVADA);
+            case PENDIENTE_REVISION -> EnumSet.of(EN_REVISION, ARCHIVADA);
+            case EN_REVISION        -> EnumSet.of(ARCHIVADA);
+            case ARCHIVADA          -> EnumSet.noneOf(EstadoPregunta.class);
+        };
+    }
+
+    /**
+     * @brief Indica si la transición hacia otro estado es válida.
+     * @param destino estado al que se quiere pasar
+     * @return true si la transición está permitida
+     */
+    public boolean puedeCambiarA(EstadoPregunta destino) {
+        return destino != null && siguientesPermitidos().contains(destino);
     }
 
     @Override

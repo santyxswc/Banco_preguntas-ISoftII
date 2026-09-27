@@ -1,3 +1,8 @@
+/**
+ * @file GUILogin.java
+ * @brief Ventana de inicio de sesión.
+ * @author Santiago Caicedo
+ */
 package co.unicauca.iso2.bancopreguntas.presentation;
 
 import java.awt.Color;
@@ -22,22 +27,21 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 
+import co.unicauca.iso2.bancopreguntas.domain.AsignacionService;
 import co.unicauca.iso2.bancopreguntas.domain.QuestionService;
 import co.unicauca.iso2.bancopreguntas.domain.Usuario;
 import co.unicauca.iso2.bancopreguntas.domain.UsuarioRepository;
 
 /**
- * Ventana de inicio de sesión del Banco de Preguntas Saber Pro.
+ * @brief Autentica al usuario contra UsuarioRepository y abre GUIMain.
  *
- * Valida las credenciales contra {@link UsuarioRepository}. Si son
- * correctas guarda el usuario en {@link SessionContext} y abre
- * {@link GUIMain}. Si son incorrectas muestra un mensaje de error
- * en rojo debajo del formulario sin perder los datos ingresados.
+ * Si las credenciales no son válidas muestra el error debajo del
+ * formulario.
  */
 public class GUILogin extends JFrame {
 
     // ----------------------------------------------------------------
-    // Paleta de colores (diseño moderno, oscuro)
+    // Colores
     // ----------------------------------------------------------------
     private static final Color BG_DARK      = new Color(18, 22, 36);
     private static final Color BG_CARD      = new Color(28, 33, 52);
@@ -50,16 +54,19 @@ public class GUILogin extends JFrame {
 
     private final UsuarioRepository usuarioRepository;
     private final QuestionService   questionService;
+    private final AsignacionService asignacionService;
 
     private JTextField  txtEmail;
     private JPasswordField txtPassword;
     private JLabel      lblError;
 
     public GUILogin(UsuarioRepository usuarioRepository,
-                    QuestionService questionService) {
+                    QuestionService questionService,
+                    AsignacionService asignacionService) {
 
         this.usuarioRepository = usuarioRepository;
         this.questionService   = questionService;
+        this.asignacionService = asignacionService;
 
         inicializarVentana();
         construirUI();
@@ -90,7 +97,7 @@ public class GUILogin extends JFrame {
         setLocationRelativeTo(null); // centrar en pantalla
     }
 
-    /** Tarjeta blanca (oscura) que contiene el formulario. */
+    /** @brief Panel central con el formulario. */
     private JPanel crearTarjeta() {
 
         JPanel card = new JPanel();
@@ -142,7 +149,6 @@ public class GUILogin extends JFrame {
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBackground(BG_CARD);
 
-        // Ícono de candado (texto unicode)
         JLabel icono = new JLabel("🔐");
         icono.setFont(new Font("SansSerif", Font.PLAIN, 40));
         icono.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -179,7 +185,6 @@ public class GUILogin extends JFrame {
             @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
-                // Placeholder simulado
                 if (getText().isEmpty()) {
                     Graphics2D g2 = (Graphics2D) g.create();
                     g2.setColor(TEXT_MUTED);
@@ -305,7 +310,8 @@ public class GUILogin extends JFrame {
 
         // Abrir ventana principal según rol
         GUIMain ventanaMain = new GUIMain(questionService,
-                                          usuarioRepository);
+                                          usuarioRepository,
+                                          asignacionService);
         ventanaMain.setVisible(true);
         dispose(); // cerrar login
     }
