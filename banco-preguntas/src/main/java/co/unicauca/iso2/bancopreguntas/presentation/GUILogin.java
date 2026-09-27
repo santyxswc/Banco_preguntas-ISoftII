@@ -14,7 +14,9 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
+import java.awt.geom.RoundRectangle2D;
 import java.util.Optional;
 
 import javax.swing.BorderFactory;
@@ -51,6 +53,44 @@ public class GUILogin extends JFrame {
     private static final Color TEXT_MUTED   = new Color(130, 140, 175);
     private static final Color ERROR_COLOR  = new Color(255, 85, 85);
     private static final Color BORDER_COLOR = new Color(50, 58, 85);
+
+    /** @brief Radio de las esquinas redondeadas de tarjeta y campos. */
+    private static final int RADIO_BORDE = 12;
+
+    /**
+     * @brief Panel con fondo y borde de esquinas redondeadas.
+     *
+     * Se usa para la tarjeta de login: pinta su propio relleno
+     * redondeado en vez del rectángulo recto de un JPanel normal, así
+     * la ventana se ve menos "cuadriculada".
+     */
+    private static class PanelRedondeado extends JPanel {
+
+        private final int radio;
+
+        PanelRedondeado(int radio) {
+            this.radio = radio;
+            setOpaque(false);
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                    RenderingHints.VALUE_ANTIALIAS_ON);
+
+            g2.setColor(getBackground());
+            g2.fill(new RoundRectangle2D.Float(
+                    0, 0, getWidth() - 1, getHeight() - 1, radio, radio));
+
+            g2.setColor(BORDER_COLOR);
+            g2.draw(new RoundRectangle2D.Float(
+                    0, 0, getWidth() - 1, getHeight() - 1, radio, radio));
+
+            g2.dispose();
+            super.paintComponent(g);
+        }
+    }
 
     private final UsuarioRepository usuarioRepository;
     private final QuestionService   questionService;
@@ -100,12 +140,10 @@ public class GUILogin extends JFrame {
     /** @brief Panel central con el formulario. */
     private JPanel crearTarjeta() {
 
-        JPanel card = new JPanel();
+        JPanel card = new PanelRedondeado(RADIO_BORDE + 4);
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
         card.setBackground(BG_CARD);
-        card.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(BORDER_COLOR, 1),
-                BorderFactory.createEmptyBorder(36, 44, 36, 44)));
+        card.setBorder(BorderFactory.createEmptyBorder(36, 44, 36, 44));
 
         // Logo / título
         card.add(crearEncabezado());
@@ -223,7 +261,22 @@ public class GUILogin extends JFrame {
 
     private JButton crearBotonIngresar() {
 
-        JButton btn = new JButton("Iniciar sesión");
+        JButton btn = new JButton("Iniciar sesión") {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                        RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(getBackground());
+                g2.fill(new RoundRectangle2D.Float(
+                        0, 0, getWidth() - 1, getHeight() - 1,
+                        RADIO_BORDE, RADIO_BORDE));
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
+        btn.setContentAreaFilled(false);
+        btn.setOpaque(false);
         btn.setBackground(ACCENT);
         btn.setForeground(Color.WHITE);
         btn.setFont(new Font("SansSerif", Font.BOLD, 14));
@@ -310,8 +363,8 @@ public class GUILogin extends JFrame {
 
         // Abrir ventana principal según rol
         GUIMain ventanaMain = new GUIMain(questionService,
-                                          usuarioRepository,
-                                          asignacionService);
+                usuarioRepository,
+                asignacionService);
         ventanaMain.setVisible(true);
         dispose(); // cerrar login
     }
