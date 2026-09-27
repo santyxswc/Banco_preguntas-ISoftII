@@ -86,6 +86,22 @@ class AsignacionServiceTest {
     }
 
     @Test
+    void asignarRevisoresFallaSiElAutorEstaEntreLosRevisores() {
+
+        Question propia = crearPreguntaPendiente("P-003");
+        propia.setAutorId("AUT-1");
+        questionRepository.save(propia);
+
+        boolean exito = asignacionService.asignarRevisores(
+                "P-003", List.of("REV-1", "AUT-1"));
+
+        assertFalse(exito);
+        assertEquals(EstadoPregunta.PENDIENTE_REVISION,
+                questionService.findQuestionById("P-003").getEstado());
+        assertTrue(asignacionRepository.findByPreguntaId("P-003").isEmpty());
+    }
+
+    @Test
     void asignarRevisoresFallaSiNoHayRevisoresSeleccionados() {
 
         boolean exito = asignacionService.asignarRevisores(
