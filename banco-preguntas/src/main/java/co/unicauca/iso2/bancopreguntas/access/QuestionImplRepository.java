@@ -1,3 +1,8 @@
+/**
+ * @file QuestionImplRepository.java
+ * @brief Repositorio en memoria de preguntas.
+ * @author Santiago Caicedo
+ */
 package co.unicauca.iso2.bancopreguntas.access;
 
 import co.unicauca.iso2.bancopreguntas.domain.EstadoPregunta;
@@ -12,14 +17,10 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Implementación de {@link QuestionRepository}.
+ * @brief Implementación en memoria de QuestionRepository.
  *
- * Pertenece a la capa de acceso a datos. Usa un mapa en memoria como
- * estructura de almacenamiento. QuestionService no conoce esta clase
- * directamente (DIP).
- *
- * Los datos de ejemplo están repartidos entre varios autores y en
- * distintos estados para poder probar de inmediato todas las vistas.
+ * Guarda las preguntas en un LinkedHashMap y arranca con datos de
+ * ejemplo de varios autores y estados para poder probar las vistas.
  */
 public class QuestionImplRepository implements QuestionRepository {
 
@@ -29,10 +30,6 @@ public class QuestionImplRepository implements QuestionRepository {
     public QuestionImplRepository() {
         cargarDatosDeEjemplo();
     }
-
-    // ----------------------------------------------------------------
-    // CRUD
-    // ----------------------------------------------------------------
 
     @Override
     public List<Question> list() {
@@ -79,7 +76,6 @@ public class QuestionImplRepository implements QuestionRepository {
         }
 
         if (preguntas.containsKey(question.getId())) {
-            // El id ya existe; save() es solo para altas nuevas.
             return false;
         }
 
@@ -119,15 +115,7 @@ public class QuestionImplRepository implements QuestionRepository {
         return true;
     }
 
-    // ----------------------------------------------------------------
-    // Datos de ejemplo
-    // ----------------------------------------------------------------
-
-    /**
-     * Carga un banco de preguntas de ejemplo con todos los campos
-     * requeridos por RF01.1, distribuidas entre varios autores y
-     * en distintos estados.
-     */
+    /** @brief Carga preguntas de ejemplo de varios autores y estados. */
     private void cargarDatosDeEjemplo() {
 
         // Autor: Carlos Morales (U-002)
@@ -261,10 +249,7 @@ public class QuestionImplRepository implements QuestionRepository {
                 EstadoPregunta.PENDIENTE_REVISION);
     }
 
-    /**
-     * Método auxiliar para construir y registrar una pregunta completa
-     * con todos los campos requeridos por RF01.1.
-     */
+    /** @brief Construye y registra una pregunta completa de ejemplo. */
     private void agregar(String id, String nombre, String autorId,
                           String contexto, String enunciado,
                           String[] textosOpciones, String letraCorrecta,

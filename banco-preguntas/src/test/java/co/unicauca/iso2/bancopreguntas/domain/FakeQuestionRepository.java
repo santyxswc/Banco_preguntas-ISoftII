@@ -1,12 +1,15 @@
+/**
+ * @file FakeQuestionRepository.java
+ * @brief Doble de prueba de QuestionRepository.
+ * @author Santiago Caicedo
+ */
 package co.unicauca.iso2.bancopreguntas.domain;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Implementación en memoria de QuestionRepository para pruebas
- * unitarias de QuestionService, sin depender de
- * QuestionImplRepository.
+ * @brief Repositorio en memoria usado como doble de prueba.
  */
 public class FakeQuestionRepository implements QuestionRepository {
 
