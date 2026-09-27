@@ -67,7 +67,8 @@ public class AsignacionService {
         }
 
         // Un autor no puede ser revisor de su propia pregunta.
-        if (revisorIds.contains(pregunta.getAutorId())) {
+        if (pregunta.getAutorId() != null
+                && revisorIds.contains(pregunta.getAutorId())) {
             return false;
         }
 

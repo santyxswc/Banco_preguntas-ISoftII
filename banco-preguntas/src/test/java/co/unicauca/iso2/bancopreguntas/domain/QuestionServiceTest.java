@@ -338,4 +338,20 @@ class QuestionServiceTest {
         assertFalse(conUsuarios.listarRevisoresDisponibles().isEmpty());
         assertTrue(service.listarRevisoresDisponibles().isEmpty());
     }
+
+    @Test
+    void listarRevisoresDeUnaPreguntaExcluyeASuAutor() {
+
+        QuestionService conUsuarios = new QuestionService(
+                repository, new UsuarioImplRepository());
+        Question pregunta = new Question();
+        pregunta.setAutorId("U-002");
+
+        List<Usuario> revisores = conUsuarios.listarRevisoresDisponibles(pregunta);
+
+        assertFalse(revisores.isEmpty());
+        assertTrue(revisores.stream().noneMatch(u -> "U-002".equals(u.getId())));
+        assertEquals(conUsuarios.listarRevisoresDisponibles().size() - 1,
+                revisores.size());
+    }
 }

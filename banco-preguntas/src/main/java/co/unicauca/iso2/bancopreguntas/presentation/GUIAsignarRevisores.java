@@ -137,6 +137,12 @@ public class GUIAsignarRevisores extends JFrame implements Observer {
         listaPendientes.setSelectionMode(
                 ListSelectionModel.SINGLE_SELECTION);
         listaPendientes.setCellRenderer(new PreguntaCellRenderer());
+        // El autor de la pregunta seleccionada no aparece como revisor.
+        listaPendientes.addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                cargarRevisores();
+            }
+        });
 
         JScrollPane scroll = new JScrollPane(listaPendientes);
         scroll.setBackground(new Color(22, 28, 44));
@@ -181,8 +187,8 @@ public class GUIAsignarRevisores extends JFrame implements Observer {
         panelRevisores.removeAll();
         checkboxRevisores.clear();
 
-        List<Usuario> revisores =
-                questionService.listarRevisoresDisponibles();
+        List<Usuario> revisores = questionService.listarRevisoresDisponibles(
+                listaPendientes.getSelectedValue());
 
         if (revisores.isEmpty()) {
             JLabel lbl = new JLabel("No hay revisores disponibles.");
@@ -276,7 +282,8 @@ public class GUIAsignarRevisores extends JFrame implements Observer {
             JOptionPane.showMessageDialog(this,
                     "No se pudo asignar los revisores. "
                     + "Verifica que la pregunta esté en estado "
-                    + "\"Pendiente de revisión\".",
+                    + "\"Pendiente de revisión\" y que su autor no "
+                    + "esté entre los revisores.",
                     "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }

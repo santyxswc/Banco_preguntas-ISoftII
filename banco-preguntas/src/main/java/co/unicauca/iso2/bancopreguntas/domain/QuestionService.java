@@ -120,6 +120,21 @@ public class QuestionService extends Subject {
     }
 
     /**
+     * @brief Docentes que pueden revisar una pregunta concreta.
+     *
+     * Excluye al autor de la pregunta: nadie revisa su propia pregunta.
+     * @param pregunta pregunta a revisar (si es null no se excluye a nadie)
+     * @return usuarios con rol AUTOR distintos del autor de la pregunta
+     */
+    public List<Usuario> listarRevisoresDisponibles(Question pregunta) {
+        List<Usuario> revisores = new ArrayList<>(listarRevisoresDisponibles());
+        if (pregunta != null && pregunta.getAutorId() != null) {
+            revisores.removeIf(u -> pregunta.getAutorId().equals(u.getId()));
+        }
+        return revisores;
+    }
+
+    /**
      * @brief Aplica la validación estructural a una pregunta.
      * @param q pregunta a validar
      * @return errores en formato "campo|mensaje" (vacía si es válida)
