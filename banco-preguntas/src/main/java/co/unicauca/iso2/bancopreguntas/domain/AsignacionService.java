@@ -31,8 +31,8 @@ public class AsignacionService {
      * @param eventPublisher       publicador de eventos (puede ser null)
      */
     public AsignacionService(QuestionService questionService,
-                              AsignacionRepository asignacionRepository,
-                              PreguntaEventPublisher eventPublisher) {
+                             AsignacionRepository asignacionRepository,
+                             PreguntaEventPublisher eventPublisher) {
         this.questionService = questionService;
         this.asignacionRepository = asignacionRepository;
         this.eventPublisher = eventPublisher;
@@ -40,6 +40,11 @@ public class AsignacionService {
 
     /**
      * @brief Asigna uno o más revisores a una pregunta pendiente.
+     *
+     * Rechaza la asignación si el autor de la pregunta aparece entre
+     * los revisores seleccionados: nadie puede revisar su propia
+     * pregunta.
+     *
      * @param preguntaId id de la pregunta
      * @param revisorIds ids de los revisores seleccionados
      * @return true si la asignación se realizó
@@ -55,6 +60,11 @@ public class AsignacionService {
 
         if (pregunta == null
                 || pregunta.getEstado() != EstadoPregunta.PENDIENTE_REVISION) {
+            return false;
+        }
+
+        // Un autor no puede ser revisor de su propia pregunta.
+        if (revisorIds.contains(pregunta.getAutorId())) {
             return false;
         }
 
