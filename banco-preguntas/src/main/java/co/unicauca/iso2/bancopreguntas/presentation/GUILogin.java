@@ -210,6 +210,12 @@ public class GUILogin extends JFrame {
         panel.add(Box.createVerticalStrut(4));
         panel.add(subtitulo);
 
+        // Misma alineación que los campos y todo el ancho de la tarjeta:
+        // si BoxLayout mezcla CENTER y LEFT, desplaza el formulario.
+        panel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        panel.setMaximumSize(new Dimension(Integer.MAX_VALUE,
+                panel.getPreferredSize().height));
+
         return panel;
     }
 
