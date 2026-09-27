@@ -2,6 +2,9 @@
  * @file EstadoPreguntaTest.java
  * @brief Pruebas de los estados de una pregunta.
  * @author Santiago Caicedo
+ * @author Ivan Alexander Lopez
+ * @author Adrian Araujo Urbano
+ * @author Carlos Bambague
  */
 package co.unicauca.iso2.bancopreguntas.domain;
 

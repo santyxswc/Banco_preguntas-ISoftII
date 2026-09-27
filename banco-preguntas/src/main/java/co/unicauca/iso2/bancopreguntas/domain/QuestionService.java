@@ -2,6 +2,9 @@
  * @file QuestionService.java
  * @brief Lógica de negocio de las preguntas del banco.
  * @author Santiago Caicedo
+ * @author Ivan Alexander Lopez
+ * @author Adrian Araujo Urbano
+ * @author Carlos Bambague
  */
 package co.unicauca.iso2.bancopreguntas.domain;
 

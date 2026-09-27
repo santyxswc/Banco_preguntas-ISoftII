@@ -2,6 +2,9 @@
  * @file GUIListarPreguntas.java
  * @brief Listado de preguntas con filtros y paginación.
  * @author Santiago Caicedo
+ * @author Ivan Alexander Lopez
+ * @author Adrian Araujo Urbano
+ * @author Carlos Bambague
  */
 package co.unicauca.iso2.bancopreguntas.presentation;
 

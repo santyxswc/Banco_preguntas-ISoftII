@@ -2,6 +2,9 @@
  * @file PreguntaTableModel.java
  * @brief Modelo de tabla para el listado de preguntas.
  * @author Santiago Caicedo
+ * @author Ivan Alexander Lopez
+ * @author Adrian Araujo Urbano
+ * @author Carlos Bambague
  */
 package co.unicauca.iso2.bancopreguntas.presentation;
 

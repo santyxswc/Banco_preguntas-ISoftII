@@ -2,6 +2,9 @@
  * @file ConexionBD.java
  * @brief Creación de DataSource y ejecución de migraciones.
  * @author Santiago Caicedo
+ * @author Ivan Alexander Lopez
+ * @author Adrian Araujo Urbano
+ * @author Carlos Bambague
  */
 package co.unicauca.iso2.bancopreguntas.access.db;
 

@@ -2,6 +2,9 @@
  * @file ReglaValidacion.java
  * @brief Estrategia de validación de preguntas (patrón Strategy).
  * @author Santiago Caicedo
+ * @author Ivan Alexander Lopez
+ * @author Adrian Araujo Urbano
+ * @author Carlos Bambague
  */
 package co.unicauca.iso2.bancopreguntas.domain.validacion;
 

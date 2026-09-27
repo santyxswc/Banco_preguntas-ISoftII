@@ -2,6 +2,9 @@
  * @file Observer.java
  * @brief Interfaz observador del patrón Observer.
  * @author Santiago Caicedo
+ * @author Ivan Alexander Lopez
+ * @author Adrian Araujo Urbano
+ * @author Carlos Bambague
  */
 package co.unicauca.iso2.bancopreguntas.infra;
 

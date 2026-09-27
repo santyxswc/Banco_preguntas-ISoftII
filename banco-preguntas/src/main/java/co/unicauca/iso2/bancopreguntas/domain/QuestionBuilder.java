@@ -2,6 +2,9 @@
  * @file QuestionBuilder.java
  * @brief Construcción paso a paso de preguntas (patrón Builder).
  * @author Santiago Caicedo
+ * @author Ivan Alexander Lopez
+ * @author Adrian Araujo Urbano
+ * @author Carlos Bambague
  */
 package co.unicauca.iso2.bancopreguntas.domain;
 

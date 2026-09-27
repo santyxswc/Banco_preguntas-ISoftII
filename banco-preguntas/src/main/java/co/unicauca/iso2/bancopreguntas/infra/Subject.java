@@ -2,6 +2,9 @@
  * @file Subject.java
  * @brief Sujeto observable del patrón Observer.
  * @author Santiago Caicedo
+ * @author Ivan Alexander Lopez
+ * @author Adrian Araujo Urbano
+ * @author Carlos Bambague
  */
 package co.unicauca.iso2.bancopreguntas.infra;
 

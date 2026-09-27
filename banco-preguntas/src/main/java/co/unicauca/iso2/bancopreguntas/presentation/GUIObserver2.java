@@ -2,6 +2,9 @@
  * @file GUIObserver2.java
  * @brief Vista gráfica de la distribución por estado.
  * @author Santiago Caicedo
+ * @author Ivan Alexander Lopez
+ * @author Adrian Araujo Urbano
+ * @author Carlos Bambague
  */
 package co.unicauca.iso2.bancopreguntas.presentation;
 

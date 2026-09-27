@@ -2,6 +2,9 @@
  * @file GUIAsignarRevisores.java
  * @brief Ventana del administrador para asignar revisores.
  * @author Santiago Caicedo
+ * @author Ivan Alexander Lopez
+ * @author Adrian Araujo Urbano
+ * @author Carlos Bambague
  */
 package co.unicauca.iso2.bancopreguntas.presentation;
 

@@ -2,6 +2,9 @@
  * @file Rol.java
  * @brief Roles de usuario del sistema.
  * @author Santiago Caicedo
+ * @author Ivan Alexander Lopez
+ * @author Adrian Araujo Urbano
+ * @author Carlos Bambague
  */
 package co.unicauca.iso2.bancopreguntas.domain;
 

@@ -2,6 +2,9 @@
  * @file AsignacionRepository.java
  * @brief Contrato de persistencia de las asignaciones de revisores.
  * @author Santiago Caicedo
+ * @author Ivan Alexander Lopez
+ * @author Adrian Araujo Urbano
+ * @author Carlos Bambague
  */
 package co.unicauca.iso2.bancopreguntas.domain;
 

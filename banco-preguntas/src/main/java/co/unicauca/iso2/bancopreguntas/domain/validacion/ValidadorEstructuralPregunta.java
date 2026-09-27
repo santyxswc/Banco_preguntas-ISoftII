@@ -2,6 +2,9 @@
  * @file ValidadorEstructuralPregunta.java
  * @brief Reglas de validación estructural de una pregunta (HU03).
  * @author Santiago Caicedo
+ * @author Ivan Alexander Lopez
+ * @author Adrian Araujo Urbano
+ * @author Carlos Bambague
  */
 package co.unicauca.iso2.bancopreguntas.domain.validacion;
 
