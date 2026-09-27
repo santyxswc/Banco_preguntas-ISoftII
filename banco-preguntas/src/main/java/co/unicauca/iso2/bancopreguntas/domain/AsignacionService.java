@@ -40,6 +40,8 @@ public class AsignacionService {
 
     /**
      * @brief Asigna uno o más revisores a una pregunta pendiente.
+     *
+     * El autor de la pregunta no puede ser uno de sus revisores.
      * @param preguntaId id de la pregunta
      * @param revisorIds ids de los revisores seleccionados
      * @return true si la asignación se realizó
@@ -55,6 +57,11 @@ public class AsignacionService {
 
         if (pregunta == null
                 || pregunta.getEstado() != EstadoPregunta.PENDIENTE_REVISION) {
+            return false;
+        }
+
+        if (pregunta.getAutorId() != null
+                && revisorIds.contains(pregunta.getAutorId())) {
             return false;
         }
 
