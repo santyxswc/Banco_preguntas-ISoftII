@@ -218,13 +218,21 @@ public class GUIEditarPregunta extends JFrame {
                         "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
+            // Además de marcar cada campo se muestra un resumen, para que
+            // los errores generales ("opciones") no pasen desapercibidos.
+            StringBuilder resumen = new StringBuilder();
             for (String error : errores) {
                 String[] partes = error.split("\\|", 2);
+                String mensaje = partes.length == 2 ? partes[1] : error;
                 if (partes.length == 2) {
                     JLabel lbl = labelsError.get(partes[0]);
-                    if (lbl != null) lbl.setText("⚠ " + partes[1]);
+                    if (lbl != null) lbl.setText("⚠ " + mensaje);
                 }
+                resumen.append("• ").append(mensaje).append('\n');
             }
+            JOptionPane.showMessageDialog(this,
+                    "No se pudo guardar la pregunta:\n\n" + resumen,
+                    "Revise los datos", JOptionPane.WARNING_MESSAGE);
             return;
         }
 

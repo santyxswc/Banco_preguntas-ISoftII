@@ -53,7 +53,7 @@ public final class ConexionBD {
         int puerto      = parsePuerto(System.getenv("DB_PORT"), 5432);
         String baseDatos = valorODefecto(System.getenv("DB_NAME"), "banco_preguntas");
         String usuario  = valorODefecto(System.getenv("DB_USER"), "postgres");
-        String password = valorODefecto(System.getenv("DB_PASSWORD"), "");
+        String password = valorODefecto(System.getenv("DB_PASSWORD"), "postgres");
         return crearPostgres(host, puerto, baseDatos, usuario, password);
     }
 
@@ -79,6 +79,19 @@ public final class ConexionBD {
         Flyway flyway = Flyway.configure()
                 .dataSource(dataSource)
                 .locations("classpath:db/migration")
+                .load();
+        flyway.migrate();
+    }
+
+    /**
+     * @brief Aplica el esquema y además los datos de ejemplo de db/seed
+     *        (usuarios de prueba). Lo usa la aplicación, no las pruebas.
+     * @param dataSource base de datos destino
+     */
+    public static void migrarConDatosDeEjemplo(DataSource dataSource) {
+        Flyway flyway = Flyway.configure()
+                .dataSource(dataSource)
+                .locations("classpath:db/migration", "classpath:db/seed")
                 .load();
         flyway.migrate();
     }

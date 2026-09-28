@@ -8,11 +8,14 @@
  */
 package co.unicauca.iso2.bancopreguntas.app;
 
+import javax.sql.DataSource;
 import javax.swing.SwingUtilities;
 
 import co.unicauca.iso2.bancopreguntas.access.AsignacionImplRepository;
 import co.unicauca.iso2.bancopreguntas.access.QuestionImplRepository;
+import co.unicauca.iso2.bancopreguntas.access.QuestionJdbcRepository;
 import co.unicauca.iso2.bancopreguntas.access.UsuarioImplRepository;
+import co.unicauca.iso2.bancopreguntas.access.db.ConexionBD;
 import co.unicauca.iso2.bancopreguntas.domain.AsignacionRepository;
 import co.unicauca.iso2.bancopreguntas.domain.AsignacionService;
 import co.unicauca.iso2.bancopreguntas.domain.QuestionRepository;
@@ -30,13 +33,10 @@ import co.unicauca.iso2.bancopreguntas.presentation.GUILogin;
  * Es el único lugar donde se eligen las implementaciones concretas;
  * el resto de clases las reciben por constructor.
  *
- * Por defecto se usan repositorios en memoria. Para trabajar con
- * PostgreSQL basta con cambiar el repositorio de preguntas:
- * @code
- *   DataSource ds = ConexionBD.crearPostgresDesdeEnv();
- *   ConexionBD.migrar(ds);
- *   QuestionRepository questionRepository = new QuestionJdbcRepository(ds);
- * @endcode
+ * Las preguntas se guardan en PostgreSQL (variables DB_*, ver
+ * ConexionBD). Si no hay conexión se usa el repositorio en memoria
+ * para que la aplicación siga funcionando. Usuarios y asignaciones
+ * siguen en memoria en esta iteración.
  */
 public class ClientMain {
 
@@ -46,7 +46,7 @@ public class ClientMain {
      */
     public static void main(String[] args) {
 
-        QuestionRepository questionRepository = new QuestionImplRepository();
+        QuestionRepository questionRepository = crearRepositorioPreguntas();
         UsuarioRepository usuarioRepository = new UsuarioImplRepository();
         AsignacionRepository asignacionRepository = new AsignacionImplRepository();
 
@@ -65,5 +65,22 @@ public class ClientMain {
         SwingUtilities.invokeLater(() -> new GUILogin(
                 usuarioRepository, questionService, asignacionService)
                 .setVisible(true));
+    }
+
+    /**
+     * @brief Repositorio JDBC sobre PostgreSQL; si la base no responde,
+     *        repositorio en memoria.
+     */
+    private static QuestionRepository crearRepositorioPreguntas() {
+        try {
+            DataSource ds = ConexionBD.crearPostgresDesdeEnv();
+            ConexionBD.migrarConDatosDeEjemplo(ds);
+            System.out.println("[BD] Conectado a PostgreSQL.");
+            return new QuestionJdbcRepository(ds);
+        } catch (RuntimeException e) {
+            System.err.println("[BD] No se pudo conectar a PostgreSQL ("
+                    + e.getMessage() + "). Se usan datos en memoria.");
+            return new QuestionImplRepository();
+        }
     }
 }
