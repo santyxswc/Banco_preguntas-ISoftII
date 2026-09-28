@@ -407,20 +407,26 @@ public class GUICrearPregunta extends JFrame {
     }
 
     /**
-     * @brief Pinta cada error debajo de su campo.
+     * @brief Pinta cada error debajo de su campo y los resume en un
+     *        diálogo, para que también se vean los errores generales
+     *        (como "opciones") y los de campos fuera de la vista.
      * @param errores errores en formato "campo|mensaje"
      */
     private void mostrarErroresCampo(List<String> errores) {
+        StringBuilder resumen = new StringBuilder();
         for (String error : errores) {
             String[] partes = error.split("\\|", 2);
+            String mensaje = partes.length == 2 ? partes[1] : error;
             if (partes.length == 2) {
-                String campo   = partes[0];
-                String mensaje = partes[1];
-                JLabel lbl = labelsError.get(campo);
+                JLabel lbl = labelsError.get(partes[0]);
                 if (lbl != null) {
                     lbl.setText("⚠ " + mensaje);
                 }
             }
+            resumen.append("• ").append(mensaje).append('\n');
         }
+        JOptionPane.showMessageDialog(this,
+                "No se pudo guardar la pregunta:\n\n" + resumen,
+                "Revise los datos", JOptionPane.WARNING_MESSAGE);
     }
 }
