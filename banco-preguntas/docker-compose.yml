@@ -1,0 +1,17 @@
+# PostgreSQL para desarrollo local: docker compose up -d
+# Los valores coinciden con los de ConexionBD.crearPostgresDesdeEnv().
+services:
+  postgres:
+    image: postgres:16
+    container_name: banco-preguntas-db
+    environment:
+      POSTGRES_DB: banco_preguntas
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - banco-preguntas-data:/var/lib/postgresql/data
+
+volumes:
+  banco-preguntas-data:

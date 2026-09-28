@@ -78,7 +78,31 @@ Usuarios de prueba:
 | Autor | autor3@unicauca.edu.co | autor123 |
 | Autor | autor4@unicauca.edu.co | autor123 |
 
-Por defecto los datos se guardan en memoria. El correo se simula en
+### Base de datos
+
+Las preguntas se guardan en PostgreSQL. Para levantarlo con Docker:
+
+```
+docker compose up -d
+```
+
+o, si Docker no tiene el plugin `compose`:
+
+```
+docker run -d --name banco-preguntas-db -e POSTGRES_DB=banco_preguntas \
+  -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -p 5432:5432 \
+  -v banco-preguntas-data:/var/lib/postgresql/data postgres:16
+```
+
+Al iniciar, la aplicación crea las tablas, los usuarios y las preguntas
+de prueba con
+Flyway. La conexión se configura con `DB_HOST`, `DB_PORT`, `DB_NAME`,
+`DB_USER` y `DB_PASSWORD` (por defecto `localhost:5432/banco_preguntas`,
+usuario y contraseña `postgres`). Si no hay conexión, la aplicación
+avisa en consola y guarda las preguntas en memoria. Usuarios y
+asignaciones siguen en memoria en esta iteración.
+
+El correo se simula en
 consola; para enviarlo de verdad se configuran las variables
 `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD` y `SMTP_FROM`.
 
