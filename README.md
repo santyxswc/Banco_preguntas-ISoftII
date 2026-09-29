@@ -1,5 +1,7 @@
 # Banco de Preguntas Saber Pro
 
+[![Pruebas](https://github.com/santyxswc/Banco_preguntas-ISoftII/actions/workflows/pruebas.yml/badge.svg)](https://github.com/santyxswc/Banco_preguntas-ISoftII/actions/workflows/pruebas.yml)
+
 Sistema para la gestión, validación y administración de un banco de
 preguntas de selección múltiple con única respuesta, orientado a la
 preparación de estudiantes de Ingeniería de Sistemas para las pruebas
@@ -108,6 +110,7 @@ autenticación y autorización por rol (RNF-06 a RNF-09).
 ```
 .
 ├── README.md               Este archivo: visión general del proyecto
+├── .github/workflows/      CI: compila y corre las pruebas en cada push
 └── banco-preguntas/        Corte 1: aplicación monolítica (Maven)
     ├── README.md           Detalle técnico, ejecución y usuarios de prueba
     ├── docker-compose.yml  PostgreSQL para desarrollo
@@ -152,6 +155,7 @@ ver [`banco-preguntas/README.md`](banco-preguntas/README.md#ejecución).
 | Pruebas | JUnit 5 |
 | Correo | Jakarta Mail (simulado en consola por defecto) |
 | Contenedores | Docker / Docker Compose |
+| Integración continua | GitHub Actions |
 
 ## Forma de trabajo
 

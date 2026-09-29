@@ -95,15 +95,13 @@ docker run -d --name banco-preguntas-db -e POSTGRES_DB=banco_preguntas \
 ```
 
 Al iniciar, la aplicación crea las tablas, los usuarios y las preguntas
-de prueba con
-Flyway. La conexión se configura con `DB_HOST`, `DB_PORT`, `DB_NAME`,
+de prueba con Flyway. La conexión se configura con `DB_HOST`, `DB_PORT`, `DB_NAME`,
 `DB_USER` y `DB_PASSWORD` (por defecto `localhost:5432/banco_preguntas`,
 usuario y contraseña `postgres`). Si no hay conexión, la aplicación
 avisa en consola y guarda las preguntas en memoria. Usuarios y
 asignaciones siguen en memoria en esta iteración.
 
-El correo se simula en
-consola; para enviarlo de verdad se configuran las variables
+El correo se simula en consola; para enviarlo de verdad se configuran las variables
 `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD` y `SMTP_FROM`.
 
 ## Pruebas
@@ -113,7 +111,8 @@ mvn test
 ```
 
 Hay pruebas unitarias para las entidades, servicios y la validación del
-dominio, y pruebas de integración del repositorio JDBC sobre H2.
+dominio, y pruebas de integración del repositorio JDBC sobre H2. GitHub
+Actions las corre en cada push y pull request a `main`.
 
 ## Integrantes
 
