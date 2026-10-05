@@ -40,4 +40,12 @@ public final class PreguntasDePrueba {
                 .conSubtema("Inferencia")
                 .conNivelDificultad(NivelDificultad.INTERMEDIO);
     }
+
+    public static Question preguntaValida(String autorId) {
+        return valida("P-" + System.nanoTime(), autorId).build();
+    }
+
+    public static Question preguntaValida(String id, String autorId) {
+        return valida(id, autorId).build();
+    }
 }

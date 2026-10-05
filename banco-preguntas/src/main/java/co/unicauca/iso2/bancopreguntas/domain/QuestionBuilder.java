@@ -158,4 +158,11 @@ public class QuestionBuilder {
 
         return pregunta;
     }
+
+    /**
+     * @brief Alias en inglés de construir().
+     */
+    public Question build() {
+        return construir();
+    }
 }

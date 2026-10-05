@@ -45,12 +45,6 @@ public class LoggingQuestionRepositoryDecorator implements QuestionRepository {
     }
 
     @Override
-    public boolean save(Question question) {
-        record("save(question=" + (question != null ? question.getId() : "null") + ")");
-        return wrapped.save(question);
-    }
-
-    @Override
     public List<Question> list() {
         record("list()");
         return wrapped.list();
@@ -63,9 +57,21 @@ public class LoggingQuestionRepositoryDecorator implements QuestionRepository {
     }
 
     @Override
-    public boolean delete(String id) {
-        record("delete(id=" + id + ")");
-        return wrapped.delete(id);
+    public List<Question> findByAutorId(String autorId) {
+        record("findByAutorId(autorId=" + autorId + ")");
+        return wrapped.findByAutorId(autorId);
+    }
+
+    @Override
+    public List<Question> findByEstado(EstadoPregunta estado) {
+        record("findByEstado(estado=" + estado + ")");
+        return wrapped.findByEstado(estado);
+    }
+
+    @Override
+    public boolean save(Question question) {
+        record("save(question=" + (question != null ? question.getId() : "null") + ")");
+        return wrapped.save(question);
     }
 
     @Override
@@ -81,20 +87,8 @@ public class LoggingQuestionRepositoryDecorator implements QuestionRepository {
     }
 
     @Override
-    public List<Question> findByAutor(String autorId) {
-        record("findByAutor(autorId=" + autorId + ")");
-        return wrapped.findByAutor(autorId);
-    }
-
-    @Override
-    public PaginaResultado<Question> findByFilter(QuestionFilter filtro, int pagina, int tamanoPagina) {
-        record("findByFilter(filtro, pagina=" + pagina + ", tamano=" + tamanoPagina + ")");
-        return wrapped.findByFilter(filtro, pagina, tamanoPagina);
-    }
-
-    @Override
-    public boolean existe(String id) {
-        record("existe(id=" + id + ")");
-        return wrapped.existe(id);
+    public PaginaResultado<Question> buscar(QuestionFilter filtro) {
+        record("buscar(filtro)");
+        return wrapped.buscar(filtro);
     }
 }
