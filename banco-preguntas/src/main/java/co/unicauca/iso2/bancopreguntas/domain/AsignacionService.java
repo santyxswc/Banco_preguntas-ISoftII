@@ -96,6 +96,13 @@ public class AsignacionService {
     }
 
     /**
+     * @return preguntas en estado PENDIENTE_REVISION
+     */
+    public List<Question> listarPreguntasPendientes() {
+        return questionService.listByEstado(EstadoPregunta.PENDIENTE_REVISION);
+    }
+
+    /**
      * @param preguntaId id de la pregunta
      * @return historial de asignaciones de la pregunta
      */

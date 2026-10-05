@@ -75,6 +75,11 @@ public class UsuarioImplRepository implements UsuarioRepository {
         return usuarios.get(id);
     }
 
+    @Override
+    public List<Usuario> list() {
+        return new ArrayList<>(usuarios.values());
+    }
+
     private void cargarUsuariosDeEjemplo() {
 
         agregar("U-001", "Admin Sistema",
@@ -91,11 +96,11 @@ public class UsuarioImplRepository implements UsuarioRepository {
 
         agregar("U-004", "Marco Rivas",
                 "revisor1@unicauca.edu.co", "rev123",
-                Rol.AUTOR);
+                Rol.REVISOR);
 
         agregar("U-005", "Diana Castro",
                 "revisor2@unicauca.edu.co", "rev123",
-                Rol.AUTOR);
+                Rol.REVISOR);
 
         agregar("U-006", "Andrés Gómez",
                 "autor3@unicauca.edu.co", "autor123",

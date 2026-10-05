@@ -35,4 +35,9 @@ public interface UsuarioRepository {
      * @return el usuario o null si no existe
      */
     Usuario findById(String id);
+
+    /**
+     * @return todos los usuarios registrados
+     */
+    List<Usuario> list();
 }
