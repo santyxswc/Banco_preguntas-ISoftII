@@ -14,6 +14,7 @@ package co.unicauca.iso2.bancopreguntas.domain;
 public enum Rol {
 
     AUTOR("Autor"),
+    REVISOR("Revisor"),
     ADMINISTRADOR("Administrador");
 
     private final String etiqueta;

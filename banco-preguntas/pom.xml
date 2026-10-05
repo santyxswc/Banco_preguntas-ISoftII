@@ -6,29 +6,47 @@
 
     <modelVersion>4.0.0</modelVersion>
 
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.3.4</version>
+        <relativePath/>
+    </parent>
+
     <groupId>co.unicauca.iso2</groupId>
     <artifactId>banco-preguntas</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>2.0-SNAPSHOT</version>
+    <description>Banco de Preguntas Saber Pro — Corte 2: Microservicios + API REST</description>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <junit.version>5.10.2</junit.version>
         <flyway.version>10.15.0</flyway.version>
-        <h2.version>2.2.224</h2.version>
-        <postgresql.version>42.7.3</postgresql.version>
         <jakarta.mail.version>2.0.3</jakarta.mail.version>
+        <springdoc.version>2.6.0</springdoc.version>
     </properties>
 
     <dependencies>
 
-        <!-- JUnit 5 -->
+        <!-- Spring Boot Web (API REST) -->
         <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <version>${junit.version}</version>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- Springdoc OpenAPI / Swagger UI -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>${springdoc.version}</version>
+        </dependency>
+
+        <!-- JUnit 5 (gestionado por Spring Boot parent) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
 
@@ -48,14 +66,12 @@
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>${postgresql.version}</version>
         </dependency>
 
         <!-- H2: base de datos en memoria para las pruebas del repositorio JDBC -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
-            <version>${h2.version}</version>
         </dependency>
 
         <!-- Jakarta Mail: correo a los revisores asignados -->
@@ -87,6 +103,13 @@
                 <version>3.2.5</version>
             </plugin>
 
+            <!-- Spring Boot Maven Plugin -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+
+            <!-- Mantener exec:java para el cliente Swing (corte 1) -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>

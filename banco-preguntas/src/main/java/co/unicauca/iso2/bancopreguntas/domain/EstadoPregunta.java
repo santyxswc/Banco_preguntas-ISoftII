@@ -18,6 +18,9 @@ import java.util.Set;
  * Cada estado sabe con qué color se muestra, si permite edición y a qué
  * estados puede pasar, así las reglas del ciclo de vida no quedan
  * repartidas en if/switch por toda la aplicación.
+ *
+ * Ciclo completo: Borrador → Pendiente de revisión → En revisión
+ * → Aprobada / Rechazada → Publicada → Archivada.
  */
 public enum EstadoPregunta {
 
@@ -27,6 +30,12 @@ public enum EstadoPregunta {
     PENDIENTE_REVISION("Pendiente de revisión"),
     /** Con revisores asignados. */
     EN_REVISION("En revisión"),
+    /** Aprobada por el revisor. */
+    APROBADA("Aprobada"),
+    /** Rechazada por el revisor; el autor puede corregir y reenviar. */
+    RECHAZADA("Rechazada"),
+    /** Disponible para simulacros y consulta por estudiantes. */
+    PUBLICADA("Publicada"),
     /** Retirada del banco; nunca se borra físicamente. */
     ARCHIVADA("Archivada");
 
@@ -42,7 +51,7 @@ public enum EstadoPregunta {
     }
 
     /**
-     * @brief Color con el que se pinta el estado en la interfaz.
+     * @brief Color con el que se pinta el estado en la interfaz Swing.
      * @return color asociado al estado
      */
     public Color colorUI() {
@@ -50,18 +59,36 @@ public enum EstadoPregunta {
             case BORRADOR           -> new Color(150, 150, 150);
             case PENDIENTE_REVISION -> new Color(230, 160,  20);
             case EN_REVISION        -> new Color( 30, 120, 210);
+            case APROBADA           -> new Color( 40, 167,  69);
+            case RECHAZADA          -> new Color(220,  53,  69);
+            case PUBLICADA          -> new Color(111,  66, 193);
             case ARCHIVADA          -> new Color(180,  40,  40);
         };
     }
 
-    /** @return true si la pregunta se puede editar en este estado */
+    /**
+     * @brief Color en formato hexadecimal para la API REST.
+     * @return cadena "#RRGGBB"
+     */
+    public String colorHex() {
+        Color c = colorUI();
+        return String.format("#%02X%02X%02X",
+                c.getRed(), c.getGreen(), c.getBlue());
+    }
+
+    /**
+     * @brief Indica si la pregunta se puede editar en este estado.
+     *
+     * En BORRADOR y RECHAZADA el autor puede modificar la pregunta.
+     * @return true si la pregunta se puede editar
+     */
     public boolean permiteEdicion() {
-        return this == BORRADOR;
+        return this == BORRADOR || this == RECHAZADA;
     }
 
     /** @return true si desde este estado se puede enviar a revisión */
     public boolean permiteEnviarARevision() {
-        return this == BORRADOR;
+        return this == BORRADOR || this == RECHAZADA;
     }
 
     /**
@@ -72,7 +99,10 @@ public enum EstadoPregunta {
         return switch (this) {
             case BORRADOR           -> EnumSet.of(PENDIENTE_REVISION, ARCHIVADA);
             case PENDIENTE_REVISION -> EnumSet.of(EN_REVISION, ARCHIVADA);
-            case EN_REVISION        -> EnumSet.of(ARCHIVADA);
+            case EN_REVISION        -> EnumSet.of(APROBADA, RECHAZADA, ARCHIVADA);
+            case APROBADA           -> EnumSet.of(PUBLICADA, ARCHIVADA);
+            case RECHAZADA          -> EnumSet.of(PENDIENTE_REVISION, ARCHIVADA);
+            case PUBLICADA          -> EnumSet.of(ARCHIVADA);
             case ARCHIVADA          -> EnumSet.noneOf(EstadoPregunta.class);
         };
     }
