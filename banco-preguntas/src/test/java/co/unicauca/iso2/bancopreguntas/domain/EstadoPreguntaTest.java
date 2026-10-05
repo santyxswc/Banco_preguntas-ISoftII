@@ -24,34 +24,46 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class EstadoPreguntaTest {
 
     @Test
-    void soloBorradorPermiteEdicionYEnvioARevision() {
+    void borradorYRechazadaPermitenEdicionYReenvio() {
         for (EstadoPregunta estado : EstadoPregunta.values()) {
-            boolean esBorrador = estado == EstadoPregunta.BORRADOR;
-            assertEquals(esBorrador, estado.permiteEdicion());
-            assertEquals(esBorrador, estado.permiteEnviarARevision());
+            boolean permiteEdicionYReenvio = (estado == EstadoPregunta.BORRADOR || estado == EstadoPregunta.RECHAZADA);
+            assertEquals(permiteEdicionYReenvio, estado.permiteEdicion(),
+                    "Estado " + estado + " falló en permiteEdicion");
+            assertEquals(permiteEdicionYReenvio, estado.permiteEnviarARevision(),
+                    "Estado " + estado + " falló en permiteEnviarARevision");
         }
     }
 
     @Test
-    void cadaEstadoTieneUnColorDistinto() {
+    void cadaEstadoTieneUnColorDistintoYHexadecimalValido() {
         Set<java.awt.Color> colores = new HashSet<>();
+        Set<String> coloresHex = new HashSet<>();
         for (EstadoPregunta estado : EstadoPregunta.values()) {
             assertNotNull(estado.colorUI());
+            assertNotNull(estado.colorHex());
+            assertTrue(estado.colorHex().matches("^#[0-9A-F]{6}$"), "Formato hex inválido para " + estado);
             colores.add(estado.colorUI());
+            coloresHex.add(estado.colorHex());
         }
         assertEquals(EstadoPregunta.values().length, colores.size());
+        assertEquals(EstadoPregunta.values().length, coloresHex.size());
     }
 
     @Test
     void transicionesDelFlujoNormalSonValidas() {
         assertTrue(EstadoPregunta.BORRADOR.puedeCambiarA(EstadoPregunta.PENDIENTE_REVISION));
         assertTrue(EstadoPregunta.PENDIENTE_REVISION.puedeCambiarA(EstadoPregunta.EN_REVISION));
-        assertTrue(EstadoPregunta.EN_REVISION.puedeCambiarA(EstadoPregunta.ARCHIVADA));
+        assertTrue(EstadoPregunta.EN_REVISION.puedeCambiarA(EstadoPregunta.APROBADA));
+        assertTrue(EstadoPregunta.EN_REVISION.puedeCambiarA(EstadoPregunta.RECHAZADA));
+        assertTrue(EstadoPregunta.APROBADA.puedeCambiarA(EstadoPregunta.PUBLICADA));
+        assertTrue(EstadoPregunta.RECHAZADA.puedeCambiarA(EstadoPregunta.PENDIENTE_REVISION));
+        assertTrue(EstadoPregunta.PUBLICADA.puedeCambiarA(EstadoPregunta.ARCHIVADA));
     }
 
     @Test
     void noSePuedeSaltarEstadosNiVolverDesdeArchivada() {
         assertFalse(EstadoPregunta.BORRADOR.puedeCambiarA(EstadoPregunta.EN_REVISION));
+        assertFalse(EstadoPregunta.BORRADOR.puedeCambiarA(EstadoPregunta.APROBADA));
         assertFalse(EstadoPregunta.EN_REVISION.puedeCambiarA(EstadoPregunta.BORRADOR));
         assertTrue(EstadoPregunta.ARCHIVADA.siguientesPermitidos().isEmpty());
         assertFalse(EstadoPregunta.BORRADOR.puedeCambiarA(null));
@@ -61,5 +73,8 @@ class EstadoPreguntaTest {
     void toStringDevuelveLaEtiqueta() {
         assertEquals("Pendiente de revisión", EstadoPregunta.PENDIENTE_REVISION.toString());
         assertEquals("Borrador", EstadoPregunta.BORRADOR.getEtiqueta());
+        assertEquals("Aprobada", EstadoPregunta.APROBADA.getEtiqueta());
+        assertEquals("Rechazada", EstadoPregunta.RECHAZADA.getEtiqueta());
+        assertEquals("Publicada", EstadoPregunta.PUBLICADA.getEtiqueta());
     }
 }
