@@ -1,0 +1,540 @@
+{
+  "info": {
+    "_postman_id": "c1f7a42e-7c5b-4c6e-8a9d-banco-preguntas-taller09",
+    "name": "Taller 09 - Banco de Preguntas Microservicios (REST + RabbitMQ)",
+    "description": "Colección de pruebas completa para el Taller 09: Comunicación síncrona y asíncrona entre microservicios (Universidad del Cauca - 2026.2).\n\nIncluye todos los casos de la matriz de pruebas (casos exitosos y fallidos) organizados por microservicio.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "userServiceUrl", "value": "http://localhost:8083" },
+    { "key": "questionServiceUrl", "value": "http://localhost:8081" },
+    { "key": "validationServiceUrl", "value": "http://localhost:8082" },
+    { "key": "lifecycleServiceUrl", "value": "http://localhost:8084" },
+    { "key": "reviewServiceUrl", "value": "http://localhost:8085" },
+    { "key": "notificationServiceUrl", "value": "http://localhost:8086" },
+    { "key": "createdQuestionId", "value": "101" },
+    { "key": "operationId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1. User Service (Puerto 8083)",
+      "description": "Autenticación síncrona y verificación de roles",
+      "item": [
+        {
+          "name": "Caso 1: Login con credenciales válidas (200 OK)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"autor1\",\n  \"password\": \"autor123\"\n}"
+            },
+            "url": {
+              "raw": "{{userServiceUrl}}/auth/login",
+              "host": ["{{userServiceUrl}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Usuario autenticado con roles', function () {",
+                  "    var data = pm.response.json();",
+                  "    pm.expect(data.authenticated).to.eql(true);",
+                  "    pm.expect(data.user.username).to.eql('autor1');",
+                  "    pm.expect(data.user.roles).to.include('AUTOR');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Caso 2: Login con credenciales incorrectas (401 Unauthorized)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"autor1\",\n  \"password\": \"clave_erronea\"\n}"
+            },
+            "url": {
+              "raw": "{{userServiceUrl}}/auth/login",
+              "host": ["{{userServiceUrl}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 401 Unauthorized', function () { pm.response.to.have.status(401); });",
+                  "pm.test('Acceso rechazado', function () {",
+                  "    var data = pm.response.json();",
+                  "    pm.expect(data.authenticated).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar todos los usuarios",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{userServiceUrl}}/users",
+              "host": ["{{userServiceUrl}}"],
+              "path": ["users"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Validation Service (Puerto 8082)",
+      "description": "Validación estructural y pedagógica síncrona",
+      "item": [
+        {
+          "name": "Validar pregunta estructuralmente válida (Directo REST)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"¿Qué mecanismo asegura el desacoplamiento temporal entre microservicios?\",\n  \"options\": [\n    { \"id\": \"A\", \"text\": \"Colas de mensajería asíncrona como RabbitMQ\" },\n    { \"id\": \"B\", \"text\": \"Llamadas síncronas HTTP/REST directas\" },\n    { \"id\": \"C\", \"text\": \"Bases de datos centralizadas compartidas\" },\n    { \"id\": \"D\", \"text\": \"Llamadas RPC bloqueantes\" }\n  ],\n  \"correctOptionId\": \"A\",\n  \"authorId\": 2\n}"
+            },
+            "url": {
+              "raw": "{{validationServiceUrl}}/validate",
+              "host": ["{{validationServiceUrl}}"],
+              "path": ["validate"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Validación exitosa (valid=true)', function () {",
+                  "    var data = pm.response.json();",
+                  "    pm.expect(data.valid).to.eql(true);",
+                  "    pm.expect(data.errors.length).to.eql(0);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Validar pregunta inválida (Opciones comodín / menos de 4 opciones)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Pregunta corta\",\n  \"options\": [\n    { \"id\": \"A\", \"text\": \"Opción A\" },\n    { \"id\": \"B\", \"text\": \"Todas las anteriores\" }\n  ],\n  \"correctOptionId\": \"A\",\n  \"authorId\": 2\n}"
+            },
+            "url": {
+              "raw": "{{validationServiceUrl}}/validate",
+              "host": ["{{validationServiceUrl}}"],
+              "path": ["validate"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Validación rechazada (valid=false)', function () {",
+                  "    var data = pm.response.json();",
+                  "    pm.expect(data.valid).to.eql(false);",
+                  "    pm.expect(data.errors.length).to.be.above(0);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Question Service (Puerto 8081)",
+      "description": "Creación síncrona con validación remota y solicitud asíncrona de revisión",
+      "item": [
+        {
+          "name": "Caso 3: Crear pregunta válida (201 Created en DRAFT)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer token-docente-autor1" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"¿Cuál es la función principal de RabbitMQ en una arquitectura distribuida?\",\n  \"options\": [\n    { \"id\": \"A\", \"text\": \"Actuar como broker de mensajería asíncrona desacoplada\" },\n    { \"id\": \"B\", \"text\": \"Servir páginas HTML estáticas al navegador\" },\n    { \"id\": \"C\", \"text\": \"Reemplazar el motor de base de datos relacional\" },\n    { \"id\": \"D\", \"text\": \"Compilar código fuente de Java a bytecode\" }\n  ],\n  \"correctOptionId\": \"A\",\n  \"authorId\": 2\n}"
+            },
+            "url": {
+              "raw": "{{questionServiceUrl}}/questions",
+              "host": ["{{questionServiceUrl}}"],
+              "path": ["questions"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201 Created', function () { pm.response.to.have.status(201); });",
+                  "var data = pm.response.json();",
+                  "pm.test('Pregunta en estado DRAFT', function () {",
+                  "    pm.expect(data.status).to.eql('DRAFT');",
+                  "    pm.environment.set('createdQuestionId', data.id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Caso 4 & 10: Crear pregunta inválida (400 Bad Request)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer token-docente-autor1" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Pregunta incompleta\",\n  \"options\": [\n    { \"id\": \"A\", \"text\": \"Opción A\" },\n    { \"id\": \"B\", \"text\": \"Todas las anteriores\" }\n  ],\n  \"correctOptionId\": \"A\",\n  \"authorId\": 2\n}"
+            },
+            "url": {
+              "raw": "{{questionServiceUrl}}/questions",
+              "host": ["{{questionServiceUrl}}"],
+              "path": ["questions"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400 Bad Request', function () { pm.response.to.have.status(400); });",
+                  "pm.test('Se informan errores de validación', function () {",
+                  "    var data = pm.response.json();",
+                  "    pm.expect(data.errors.length).to.be.above(0);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Caso 5: Enviar pregunta a revisión (202 Accepted + RabbitMQ)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{questionServiceUrl}}/questions/{{createdQuestionId}}/submit-review?requestedBy=2",
+              "host": ["{{questionServiceUrl}}"],
+              "path": ["questions", "{{createdQuestionId}}", "submit-review"],
+              "query": [{ "key": "requestedBy", "value": "2" }]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 202 Accepted', function () { pm.response.to.have.status(202); });",
+                  "var data = pm.response.json();",
+                  "pm.test('Retorna operationId y estado PENDING', function () {",
+                  "    pm.expect(data.operationId).to.not.be.empty;",
+                  "    pm.expect(data.status).to.eql('PENDING');",
+                  "    pm.environment.set('operationId', data.operationId);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar estado de operación asíncrona (Polling GET /operations)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{questionServiceUrl}}/operations/{{operationId}}",
+              "host": ["{{questionServiceUrl}}"],
+              "path": ["operations", "{{operationId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Operación completada exitosamente', function () {",
+                  "    var data = pm.response.json();",
+                  "    pm.expect(data.status).to.eql('COMPLETED');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar pregunta por ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{questionServiceUrl}}/questions/{{createdQuestionId}}",
+              "host": ["{{questionServiceUrl}}"],
+              "path": ["questions", "{{createdQuestionId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Lifecycle Service (Puerto 8084)",
+      "description": "Autoridad de estado y transiciones",
+      "item": [
+        {
+          "name": "Consultar estado actual en Lifecycle (Verificar PENDING_REVIEW)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{lifecycleServiceUrl}}/lifecycle/{{createdQuestionId}}",
+              "host": ["{{lifecycleServiceUrl}}"],
+              "path": ["lifecycle", "{{createdQuestionId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Estado actual es PENDING_REVIEW', function () {",
+                  "    var data = pm.response.json();",
+                  "    pm.expect(data.state).to.eql('PENDING_REVIEW');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Caso 6: Aprobar pregunta en DRAFT (400 Transición Rechazada)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"targetState\": \"APPROVED\",\n  \"changedBy\": \"Administrador\",\n  \"message\": \"Intento no permitido de aprobar en DRAFT\"\n}"
+            },
+            "url": {
+              "raw": "{{lifecycleServiceUrl}}/lifecycle/9999/transition",
+              "host": ["{{lifecycleServiceUrl}}"],
+              "path": ["lifecycle", "9999", "transition"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400 Bad Request', function () { pm.response.to.have.status(400); });",
+                  "pm.test('Transición rechazada por máquina de estados', function () {",
+                  "    var data = pm.response.json();",
+                  "    pm.expect(data.error).to.eql('TRANSICION_NO_PERMITIDA');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Caso 11: Falla en transición asíncrona y verificación de resultado FAILED",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{lifecycleServiceUrl}}/operations/op-test-failed-1",
+              "host": ["{{lifecycleServiceUrl}}"],
+              "path": ["operations", "op-test-failed-1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Review Service (Puerto 8085)",
+      "description": "Asignación síncrona con Lifecycle y notificación asíncrona con RabbitMQ",
+      "item": [
+        {
+          "name": "Caso 7: Asignar revisor a pregunta elegible (201 Created + Evento)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"questionId\": {{createdQuestionId}},\n  \"reviewerId\": 4,\n  \"assignedBy\": 1\n}"
+            },
+            "url": {
+              "raw": "{{reviewServiceUrl}}/reviews/assign",
+              "host": ["{{reviewServiceUrl}}"],
+              "path": ["reviews", "assign"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201 Created', function () { pm.response.to.have.status(201); });",
+                  "pm.test('Asignación registrada', function () {",
+                  "    var data = pm.response.json();",
+                  "    pm.expect(data.assignment.reviewerId).to.eql(4);",
+                  "    pm.expect(data.assignment.status).to.eql('ASSIGNED');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Verificar transición síncrona a IN_REVIEW en Lifecycle",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{lifecycleServiceUrl}}/lifecycle/{{createdQuestionId}}",
+              "host": ["{{lifecycleServiceUrl}}"],
+              "path": ["lifecycle", "{{createdQuestionId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Pregunta ahora está en estado IN_REVIEW', function () {",
+                  "    var data = pm.response.json();",
+                  "    pm.expect(data.state).to.eql('IN_REVIEW');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Caso 8: Rechazar pregunta en IN_REVIEW con observaciones",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"questionId\": {{createdQuestionId}},\n  \"reviewerId\": 4,\n  \"result\": \"REJECTED\",\n  \"comments\": \"El enunciado requiere mayor claridad en el contexto pedagógico.\"\n}"
+            },
+            "url": {
+              "raw": "{{reviewServiceUrl}}/reviews/evaluate",
+              "host": ["{{reviewServiceUrl}}"],
+              "path": ["reviews", "evaluate"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Estado REJECTED y motivo registrado', function () {",
+                  "    var data = pm.response.json();",
+                  "    pm.expect(data.status).to.eql('REJECTED');",
+                  "    pm.expect(data.review.comments).to.include('claridad');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Caso 9: Corregir pregunta rechazada y devolver a revisión",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"targetState\": \"PENDING_REVIEW\",\n  \"changedBy\": \"Autor 2\",\n  \"message\": \"Pregunta corregida atendiendo a las observaciones del revisor.\"\n}"
+            },
+            "url": {
+              "raw": "{{lifecycleServiceUrl}}/lifecycle/{{createdQuestionId}}/transition",
+              "host": ["{{lifecycleServiceUrl}}"],
+              "path": ["lifecycle", "{{createdQuestionId}}", "transition"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Pregunta corregida transiciona a PENDING_REVIEW', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var data = pm.response.json();",
+                  "    pm.expect(data.state).to.eql('PENDING_REVIEW');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "6. Notification Service (Puerto 8086)",
+      "description": "Consumo asíncrono de eventos de asignación de RabbitMQ",
+      "item": [
+        {
+          "name": "Consultar notificaciones generadas asíncronamente",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{notificationServiceUrl}}/notifications",
+              "host": ["{{notificationServiceUrl}}"],
+              "path": ["notifications"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Se generó al menos una notificación asíncrona', function () {",
+                  "    var list = pm.response.json();",
+                  "    pm.expect(list.length).to.be.above(0);",
+                  "    pm.expect(list[0].type).to.eql('REVIEWER_ASSIGNED');",
+                  "    pm.expect(list[0].status).to.eql('SENT');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar notificaciones del revisor #4",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{notificationServiceUrl}}/notifications/recipient/4",
+              "host": ["{{notificationServiceUrl}}"],
+              "path": ["notifications", "recipient", "4"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+co\unicauca\iso2\taller09\userservice\repository\UserRepository.class
+co\unicauca\iso2\taller09\userservice\domain\User.class
+co\unicauca\iso2\taller09\userservice\UserServiceApplication.class
+co\unicauca\iso2\taller09\userservice\controller\UserController.class
+co\unicauca\iso2\taller09\userservice\controller\AuthController.class

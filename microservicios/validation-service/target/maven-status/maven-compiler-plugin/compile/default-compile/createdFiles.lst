@@ -1,0 +1,4 @@
+co\unicauca\iso2\taller09\validationservice\controller\ValidationController.class
+co\unicauca\iso2\taller09\validationservice\domain\QuestionValidator.class
+co\unicauca\iso2\taller09\validationservice\ValidationServiceApplication.class
+co\unicauca\iso2\taller09\validationservice\domain\ValidationRule.class

@@ -110,19 +110,27 @@ autenticación y autorización por rol (RNF-06 a RNF-09).
 ```
 .
 ├── README.md               Este archivo: visión general del proyecto
+├── TALLER09_DOCUMENTACION.md Documentación técnica detallada del Taller 09 (Microservicios + RabbitMQ)
 ├── .github/workflows/      CI: compila y corre las pruebas en cada push
-└── banco-preguntas/        Corte 1: aplicación monolítica (Maven)
-    ├── README.md           Detalle técnico, ejecución y usuarios de prueba
-    ├── docker-compose.yml  PostgreSQL para desarrollo
-    ├── pom.xml
-    └── src/
-        ├── main/java/co/unicauca/iso2/bancopreguntas/
-        │   ├── app/  presentation/  domain/  access/  infra/
-        └── main/resources/db/  migraciones y datos de prueba (Flyway)
+├── banco-preguntas/        Corte 1 y 2: aplicación base y API REST (Maven)
+└── microservicios/         Taller 09: Arquitectura de microservicios distribuidos
+    ├── docker-compose.yml  Broker RabbitMQ con consola de administración
+    ├── pom.xml             POM Padre multi-módulo (Java 21, Spring Boot 3.3.4)
+    ├── shared-contracts/   DTOs, Comandos y Eventos compartidos
+    ├── user-service/       Microservicio de usuarios y login síncrono (:8083)
+    ├── validation-service/ Microservicio de validación estructural síncrona (:8082)
+    ├── question-service/   Microservicio de preguntas y orquestación (:8081)
+    ├── lifecycle-service/  Autoridad de ciclo de vida y consumidor RabbitMQ (:8084)
+    ├── review-service/     Microservicio de asignación y eventos RabbitMQ (:8085)
+    ├── notification-service/ Microservicio de notificaciones asíncronas (:8086)
+    ├── lisw2_taller09_postman_collection.json Colección completa de pruebas Postman
+    ├── start-all.ps1       Script de inicio de todos los microservicios
+    └── stop-all.ps1        Script de detención de todos los microservicios
 ```
 
-Los documentos del curso (enunciado, informe de arquitectura) no se
-versionan.
+### Taller 09 — Microservicios Distribuidos (REST + RabbitMQ)
+Para consultar la arquitectura, diagramas de secuencia, matriz de pruebas de Postman y guía de sustentación de los microservicios, consultar [TALLER09_DOCUMENTACION.md](TALLER09_DOCUMENTACION.md).
+
 
 ## Inicio rápido
 

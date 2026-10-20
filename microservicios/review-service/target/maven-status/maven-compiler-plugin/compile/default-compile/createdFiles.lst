@@ -1,0 +1,7 @@
+co\unicauca\iso2\taller09\reviewservice\config\RabbitMQConfig.class
+co\unicauca\iso2\taller09\reviewservice\domain\Review.class
+co\unicauca\iso2\taller09\reviewservice\ReviewServiceApplication.class
+co\unicauca\iso2\taller09\reviewservice\domain\ReviewAssignment.class
+co\unicauca\iso2\taller09\reviewservice\controller\ReviewController.class
+co\unicauca\iso2\taller09\reviewservice\repository\ReviewRepository.class
+co\unicauca\iso2\taller09\reviewservice\client\LifecycleClient.class
