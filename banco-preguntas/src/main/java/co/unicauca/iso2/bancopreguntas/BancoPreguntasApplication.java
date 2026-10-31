@@ -10,7 +10,9 @@ package co.unicauca.iso2.bancopreguntas;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
+import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
 
 /**
  * @brief Clase principal de Spring Boot.
@@ -18,7 +20,11 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
  * Habilita la API REST, documentación Swagger/OpenAPI y la arquitectura de microservicios
  * orientada a eventos para el segundo entregable.
  */
-@SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
+@SpringBootApplication(exclude = {
+        DataSourceAutoConfiguration.class,
+        HibernateJpaAutoConfiguration.class,
+        FlywayAutoConfiguration.class
+})
 public class BancoPreguntasApplication {
 
     public static void main(String[] args) {
