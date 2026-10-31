@@ -1,7 +1,16 @@
-# Documentos del curso y entregables (no van en el repositorio)
+# Carpetas de compilación Maven
+target/
+**/target/
+
+# Carpetas de documentación y entregables del curso (no van en el repositorio)
+Docs/
+docs/
+
+# Documentos individuales y formatos de oficina
 *.pdf
 *.docx
 *.doc
+*.Docs
 
 # Archivos de bloqueo de LibreOffice mientras un documento está abierto
 .~lock.*
@@ -9,3 +18,5 @@
 # Configuración local del editor
 .vscode/
 .idea/
+
+
