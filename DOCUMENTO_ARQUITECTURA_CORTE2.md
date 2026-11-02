@@ -427,7 +427,7 @@ sequenceDiagram
 | Contexto | Microservicio | Almacenamiento | Se integra con |
 |---|---|---|---|
 | Identidad y acceso | user-service | user_db (en memoria) | — |
-| Autoría de preguntas | question-service | question_db (en memoria) | Validación (REST), Ciclo de vida (REST + comando AMQP) |
+| Autoría de preguntas | question-service | question_db (JPA + Flyway; H2 o PostgreSQL) | Validación (REST), Ciclo de vida (REST + comando AMQP) |
 | Validación estructural | validation-service | sin estado | — |
 | Ciclo de vida | lifecycle-service | lifecycle_db (en memoria) | recibe comandos por RabbitMQ |
 | Revisión por pares | review-service | **review_db (JPA: H2 / PostgreSQL)** | Autoría, Identidad y Ciclo de vida (REST); publica eventos |
@@ -487,16 +487,16 @@ Se ejecutan con `mvn test` (JUnit 5, Java 21) y en GitHub Actions en cada push (
 
 | Módulo | Clases de prueba | Qué cubren |
 |---|---|---|
-| question-service | `QuestionBuilderTest`, `QuestionAuthoringFacadeTest` | Entidad, Builder, filtros, Facade: crear, validar, editar (403/409), enviar (403/404), paginar y filtrar por estado, tolerancia a lifecycle caído |
+| question-service | `QuestionBuilderTest`, `QuestionAuthoringFacadeTest`, `JpaQuestionRepositoryTest` | Entidad, Builder, filtros, Facade: crear, validar, editar (403/409), enviar (403/404), paginar y filtrar por estado, tolerancia a lifecycle caído; persistencia JPA con migración Flyway |
 | validation-service | `QuestionValidatorTest`, `ValidationControllerTest` | Cada estrategia de validación y extensión con una estrategia nueva |
-| lifecycle-service | `LifecycleControllerTest`, `QuestionSubmitConsumerTest` | Transiciones válidas e inválidas, consulta en lote, consumo del comando |
-| review-service | `ReviewDomainTest`, `ReviewServiceTest`, `RevisionControllerTest` | Reglas de asignación 1–3, autor no revisa, rechazo con observación, veredicto unánime, códigos HTTP |
-| notification-service | `EmailNotificationTest`, `NotificationIdempotencyTest`, `NotificationServiceConsumerTest` | Factory Method, Decorator, correo SENT/FAILED, idempotencia de eventos |
+| lifecycle-service | `LifecycleControllerTest`, `QuestionSubmitConsumerTest`, `QuestionSubmittedEventTest` | Transiciones válidas e inválidas, consulta en lote, consumo del comando y publicación de PreguntaEnviadaARevision |
+| review-service | `ReviewDomainTest`, `ReviewServiceTest`, `RevisionControllerTest`, `JpaReviewRepositoryAdapterTest` | Reglas de asignación 1–3, autor no revisa, rechazo con observación, veredicto unánime, códigos HTTP |
+| notification-service | `EmailNotificationTest`, `NotificationIdempotencyTest`, `NotificationServiceConsumerTest`, `QuestionSubmittedConsumerTest` | Factory Method, Decorator, correo SENT/FAILED, idempotencia de eventos, aviso al administrador |
 | user-service | `AuthControllerTest` | Login correcto e incorrecto |
 | api-gateway | `GatewayRoutesTest` | Rutas `/api/v1`, rutas de documentación y configuración por variables de entorno |
 | banco-preguntas (corte 1) | 23 clases | Dominio, patrones GoF, JDBC/H2, JPA, DDD y REST del monolito |
 
-Resultado de la última ejecución: **microservicios 78 pruebas** y **monolito 140 pruebas**, todas exitosas.
+Resultado de la última ejecución: **microservicios 89 pruebas** y **monolito 140 pruebas**, todas exitosas.
 
 ---
 
@@ -506,17 +506,17 @@ Tiempos según el protocolo (no acelerar el video ni pasarse del tiempo: −1 pu
 
 | Tiempo | Punto del protocolo | Qué mostrar | Responsable |
 |---|---|---|---|
-| 0:00–1:00 | 1. Historias de usuario | Sección 2 (HU-01 a HU-05, la HU-05 es la nueva) | |
-| 1:00–2:00 | 2. Escenario de escalabilidad | Sección 4 y el script k6 | |
-| 2:00–4:00 | 3. Arquitectura C4 y UML | C4 nivel 1, 2 (frontend y backend separados por la API REST) y 3; diagrama de clases y de secuencia | |
-| 4:00–6:00 | 4. Seis patrones GoF | Sección 7, abriendo cada clase en el IDE | |
-| 6:00–7:00 | 5. Bounded contexts | Sección 6 | |
-| 7:00–8:00 | 6. Pruebas unitarias | `mvn test` en `microservicios/` y la ejecución de GitHub Actions | |
-| 8:00–9:00 | 7. Git y Scrum | Commits de cada integrante en GitHub y tablero del Sprint 2 en Jira | |
-| 9:00–10:00 | 8. Swagger | http://localhost:8080/swagger-ui.html cambiando de servicio | |
-| 10:00–15:00 | 9. Software funcional | En http://localhost:5173: autor crea (mostrar un error de validación), envía a revisión → admin asigna 2 revisores → correos en la consola de notification-service → revisor 1 aprueba y revisor 2 rechaza con observación → el autor ve "Rechazada" en rojo, lee las observaciones, edita y reenvía. Mostrar en el código la fachada, el gateway y un consumidor de RabbitMQ | Yeferson Santiago Caicedo Orozco y Adrian Araujo Urbano |
+| 0:00–1:00 | 1. Historias de usuario | Sección 2 (HU-01 a HU-05, la HU-05 es la nueva) | Yeferson Santiago Caicedo Orozco |
+| 1:00–2:00 | 2. Escenario de escalabilidad | Sección 4 y el script k6 | Adrián Camilo Araujo Urbano |
+| 2:00–4:00 | 3. Arquitectura C4 y UML | C4 nivel 1, 2 (frontend y backend separados por la API REST) y 3; diagrama de clases y de secuencia | Iván Alexander López Lasso |
+| 4:00–6:00 | 4. Seis patrones GoF | Sección 7, abriendo cada clase en el IDE | Yeferson Santiago Caicedo Orozco |
+| 6:00–7:00 | 5. Bounded contexts | Sección 6 | Adrián Camilo Araujo Urbano |
+| 7:00–8:00 | 6. Pruebas unitarias | `mvn test` en `microservicios/` y la ejecución de GitHub Actions | Adrián Camilo Araujo Urbano |
+| 8:00–9:00 | 7. Git y Scrum | Commits de cada integrante en GitHub y tablero del Sprint 2 en Jira | Yeferson Santiago Caicedo Orozco |
+| 9:00–10:00 | 8. Swagger | http://localhost:8080/swagger-ui.html cambiando de servicio | Iván Alexander López Lasso |
+| 10:00–15:00 | 9. Software funcional | En http://localhost:5173: autor crea (mostrar un error de validación), envía a revisión → admin asigna 2 revisores → correos en la consola de notification-service → revisor 1 aprueba y revisor 2 rechaza con observación → el autor ve "Rechazada" en rojo, lee las observaciones, edita y reenvía. Mostrar en el código la fachada, el gateway y un consumidor de RabbitMQ | Los tres: Santiago (autor), Iván (administrador) y Adrián (revisor y eventos) |
 
-Cómo levantar todo para la demostración: `cd microservicios` y `.\start-all.ps1` (RabbitMQ, 7 servicios y el frontend).
+Cómo levantar todo para la demostración: `cd microservicios` y `.\start-all.ps1` (RabbitMQ, 7 servicios y el frontend). El guion detallado, con lo que dice cada integrante, está en [`arquitectura/06-guion-video.md`](arquitectura/06-guion-video.md).
 
 ---
 

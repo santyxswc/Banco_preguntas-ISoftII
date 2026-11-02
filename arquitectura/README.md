@@ -7,6 +7,7 @@
 | [03-c4-contenedores.md](03-c4-contenedores.md) | HU-T8.3 | Diagrama C4 nivel 2: frontend web, API Gateway, microservicios, RabbitMQ y Swagger unificado |
 | [04-escenario-escalabilidad.md](04-escenario-escalabilidad.md) | HU-T13 | Escenario de calidad y prueba de carga k6 |
 | [05-entrega-garantizada.md](05-entrega-garantizada.md) | HU-T9.3 | Prueba de eventos pendientes al reiniciar el consumidor |
+| [06-guion-video.md](06-guion-video.md) | HU-T16.1 | Guion del video con tiempos, responsables y qué decir |
 
 Los diagramas están en `diagramas/`: el `.png` sirve para el documento Word y el video, y el `.mmd` (Mermaid) es la fuente editable.
 
