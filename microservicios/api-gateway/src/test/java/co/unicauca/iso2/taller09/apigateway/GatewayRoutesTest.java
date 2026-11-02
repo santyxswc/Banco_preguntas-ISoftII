@@ -42,4 +42,12 @@ class GatewayRoutesTest {
         assertEquals("http://revision:9005", routes.get("asignaciones").getUri().toString());
         assertEquals("http://revision:9005", routes.get("revisiones").getUri().toString());
     }
+
+    @Test
+    void exposesTheOpenApiDocsOfEveryServiceForTheUnifiedSwaggerUi() {
+        Map<String, Route> routes = routes();
+        assertTrue(routes.keySet().containsAll(List.of("docs-preguntas", "docs-revisiones", "docs-ciclo-vida",
+                "docs-validaciones", "docs-usuarios", "docs-notificaciones")));
+        assertEquals("http://preguntas:9001", routes.get("docs-preguntas").getUri().toString());
+    }
 }

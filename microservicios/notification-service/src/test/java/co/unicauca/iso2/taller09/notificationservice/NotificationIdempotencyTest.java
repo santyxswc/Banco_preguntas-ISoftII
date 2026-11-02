@@ -5,7 +5,10 @@ import co.unicauca.iso2.taller09.common.enums.QuestionStatus;
 import co.unicauca.iso2.taller09.common.enums.ReviewResult;
 import co.unicauca.iso2.taller09.common.messages.ReviewCompleted;
 import co.unicauca.iso2.taller09.common.messages.ReviewerAssigned;
+import co.unicauca.iso2.taller09.notificationservice.application.NotificationDispatcher;
+import co.unicauca.iso2.taller09.notificationservice.client.UserRestClient;
 import co.unicauca.iso2.taller09.notificationservice.consumer.ReviewCompletedConsumer;
+import co.unicauca.iso2.taller09.notificationservice.email.ConsoleEmailSender;
 import co.unicauca.iso2.taller09.notificationservice.consumer.ReviewerAssignedConsumer;
 import co.unicauca.iso2.taller09.notificationservice.domain.Notification;
 import co.unicauca.iso2.taller09.notificationservice.idempotency.ProcessedEventRegistry;
@@ -30,8 +33,10 @@ class NotificationIdempotencyTest {
     void setUp() {
         repository = new NotificationRepository();
         ProcessedEventRegistry registry = new ProcessedEventRegistry();
-        assignedConsumer = new ReviewerAssignedConsumer(repository, registry);
-        completedConsumer = new ReviewCompletedConsumer(repository, registry, 1L);
+        NotificationDispatcher dispatcher = new NotificationDispatcher(repository, new ConsoleEmailSender(),
+                UserRestClient::fallbackEmail);
+        assignedConsumer = new ReviewerAssignedConsumer(dispatcher, registry);
+        completedConsumer = new ReviewCompletedConsumer(dispatcher, registry, 1L);
     }
 
     @Test

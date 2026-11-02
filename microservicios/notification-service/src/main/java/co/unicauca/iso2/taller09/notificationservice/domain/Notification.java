@@ -14,6 +14,7 @@ public class Notification {
     private String message;
     private NotificationStatus status;
     private LocalDateTime sentAt;
+    private String recipientEmail;
 
     public Notification() {}
 
@@ -28,8 +29,13 @@ public class Notification {
     }
 
     public NotificationDTO toDTO() {
-        return new NotificationDTO(id, recipientId, type, subject, message, status, sentAt);
+        NotificationDTO dto = new NotificationDTO(id, recipientId, type, subject, message, status, sentAt);
+        dto.setRecipientEmail(recipientEmail);
+        return dto;
     }
+
+    public String getRecipientEmail() { return recipientEmail; }
+    public void setRecipientEmail(String recipientEmail) { this.recipientEmail = recipientEmail; }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

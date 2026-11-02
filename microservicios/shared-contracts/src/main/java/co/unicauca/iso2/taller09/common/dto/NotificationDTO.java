@@ -13,6 +13,7 @@ public class NotificationDTO implements Serializable {
     private String message;
     private NotificationStatus status;
     private LocalDateTime sentAt;
+    private String recipientEmail;
 
     public NotificationDTO() {}
 
@@ -46,4 +47,8 @@ public class NotificationDTO implements Serializable {
 
     public LocalDateTime getSentAt() { return sentAt; }
     public void setSentAt(LocalDateTime sentAt) { this.sentAt = sentAt; }
+
+    /** Correo al que se envió la notificación. */
+    public String getRecipientEmail() { return recipientEmail; }
+    public void setRecipientEmail(String recipientEmail) { this.recipientEmail = recipientEmail; }
 }

@@ -23,6 +23,7 @@ class ValidationControllerTest {
     @Test
     void testPreguntaValida() {
         CreateQuestionRequest req = new CreateQuestionRequest(
+                "Un equipo necesita variar la abstracción y la implementación de forma independiente.",
                 "¿Cuál es el patrón GoF adecuado para desacoplar una jerarquía de clases de su implementación?",
                 List.of(
                         new OptionDTO("A", "Patrón Bridge"),
@@ -31,6 +32,9 @@ class ValidationControllerTest {
                         new OptionDTO("D", "Patrón Decorator")
                 ),
                 "A",
+                "Bridge separa la abstracción de su implementación para que ambas varíen.",
+                "Gamma et al. Design Patterns, 1994",
+                "Diseño de software", "Patrones de diseño", "Patrones estructurales", "MEDIO",
                 2L
         );
 

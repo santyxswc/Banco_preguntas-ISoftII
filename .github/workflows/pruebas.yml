@@ -8,7 +8,8 @@ on:
     branches: [main]
 
 jobs:
-  pruebas:
+  monolito:
+    name: Monolito (corte 1)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -22,3 +23,35 @@ jobs:
           cache: maven
       - name: Compilar y correr las pruebas
         run: mvn -B test
+
+  microservicios:
+    name: Microservicios (corte 2)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: microservicios
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+      # Las pruebas no necesitan RabbitMQ: los listeners solo registran que el broker no está.
+      - name: Compilar y correr las pruebas de todos los servicios
+        run: mvn -B test
+
+  frontend:
+    name: Frontend web
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Verificar la sintaxis del JavaScript
+        run: |
+          node --check frontend/server.mjs
+          node --check frontend/public/api.js
+          node --check frontend/public/app.js
+          node --check frontend/public/config.js

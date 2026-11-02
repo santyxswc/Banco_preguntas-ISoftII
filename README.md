@@ -43,7 +43,7 @@ El proyecto se desarrolla en tres iteraciones, una por corte:
 | Corte | Iteración | Estilo arquitectónico | Estado |
 |-------|-----------|-----------------------|--------|
 | 1 | Monolito en capas | 3 capas + MVC, principios SOLID y patrones GoF | ✅ Entregado |
-| 2 | Refactorización distribuida | Microservicios + arquitectura orientada a eventos, para escalabilidad | 🚧 En curso |
+| 2 | Refactorización distribuida | Microservicios + arquitectura orientada a eventos, frontend web separado por API REST | ✅ Implementado ([documento de arquitectura](DOCUMENTO_ARQUITECTURA_CORTE2.md)) |
 | 3 | Evolución de la solución distribuida | Arquitectura hexagonal, tres requisitos funcionales nuevos, más patrones GoF, autenticación y autorización | ⏳ Pendiente |
 
 ## Historias de usuario
@@ -90,7 +90,16 @@ las vistas no contienen lógica de negocio. Patrones aplicados:
 El detalle de clases, patrones y pruebas está en
 [`banco-preguntas/README.md`](banco-preguntas/README.md).
 
-### Corte 2 — Microservicios y eventos (siguiente)
+### Corte 2 — Microservicios y eventos
+
+Siete microservicios Spring Boot detrás de un API Gateway, RabbitMQ para
+comandos y eventos, y un frontend web (`frontend/`) que solo consume la
+API REST. Patrones GoF en los microservicios: Builder, Factory Method,
+Facade, Decorator, Adapter, Strategy y Observer. Todo el detalle (HU,
+C4, UML, contextos, patrones, Swagger y pruebas) está en
+[`DOCUMENTO_ARQUITECTURA_CORTE2.md`](DOCUMENTO_ARQUITECTURA_CORTE2.md).
+
+Motivación de la refactorización:
 
 Se refactoriza el monolito en servicios independientes que se comunican
 por eventos, para cumplir los requisitos de escalabilidad (RNF-17 y
@@ -115,7 +124,10 @@ autenticación y autorización por rol (RNF-06 a RNF-09).
 ├── README.md               Este archivo: visión general del proyecto
 ├── TALLER09_DOCUMENTACION.md Documentación técnica detallada del Taller 09 (Microservicios + RabbitMQ)
 ├── .github/workflows/      CI: compila y corre las pruebas en cada push
-├── banco-preguntas/        Corte 1 y 2: aplicación base y API REST (Maven)
+├── DOCUMENTO_ARQUITECTURA_CORTE2.md Documento de arquitectura del corte 2
+├── arquitectura/           Contextos, contratos, C4 y escenario de escalabilidad
+├── frontend/               Frontend web (HTML + JS) que consume la API del gateway (:5173)
+├── banco-preguntas/        Corte 1: monolito en capas (Maven)
 └── microservicios/         Taller 09: Arquitectura de microservicios distribuidos
     ├── docker-compose.yml  Broker RabbitMQ con consola de administración
     ├── pom.xml             POM Padre multi-módulo (Java 21, Spring Boot 3.3.4)
@@ -137,7 +149,38 @@ Para consultar la arquitectura, diagramas de secuencia, matriz de pruebas de Pos
 
 ## Inicio rápido
 
-Requisitos: Java 21, Maven y, opcionalmente, Docker para PostgreSQL.
+Requisitos: **Java 21** (`JAVA_HOME` debe apuntar a un JDK 21; con Java 25
+fallan las pruebas que usan Mockito), Maven, Node.js 18+ y Docker.
+
+### Corte 2 — microservicios + frontend
+
+```powershell
+cd microservicios
+mvn clean install          # compila y corre las pruebas
+.\start-all.ps1            # RabbitMQ, 7 servicios y el frontend
+```
+
+- Frontend: http://localhost:5173 (usuarios de prueba: `admin`, `autor1`, `revisor1`, `revisor2`; ver `frontend/README.md`)
+- Swagger unificado: http://localhost:8080/swagger-ui.html
+- Consola de RabbitMQ: http://localhost:15672
+- Detener todo: `.\stop-all.ps1`
+
+Correo: por defecto se simula en la consola de notification-service
+(`EMAIL_MODE=console`). Para enviar correos reales use `EMAIL_MODE=smtp` y
+las variables `SPRING_MAIL_HOST`, `SPRING_MAIL_PORT`,
+`SPRING_MAIL_USERNAME` y `SPRING_MAIL_PASSWORD`.
+
+**Problema conocido:** si una versión anterior creó la cola
+`reviewer.assigned.queue` sin la configuración de DLQ, los servicios
+registran `PRECONDITION_FAILED` y los correos de asignación no salen.
+Borre la cola y reinicie review-service y notification-service:
+
+```bash
+docker exec rabbitmq-taller09 rabbitmqctl delete_queue reviewer.assigned.queue
+# o, para empezar desde cero: docker compose down -v
+```
+
+### Corte 1 — monolito
 
 ```bash
 cd banco-preguntas
@@ -177,7 +220,7 @@ ver [`banco-preguntas/README.md`](banco-preguntas/README.md#ejecución).
 
 ## Integrantes
 
-- Santiago Caicedo
+- Yeferson Santiago Caicedo Orozco
 - Ivan Alexander Lopez
 - Adrian Araujo Urbano
 - Carlos Bambague

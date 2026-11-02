@@ -18,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -45,6 +46,22 @@ public class LifecycleController {
     public ResponseEntity<QuestionStateDTO> getQuestionState(@PathVariable Long questionId) {
         QuestionState state = lifecycleRepository.getOrCreateState(questionId);
         return ResponseEntity.ok(state.toDTO());
+    }
+
+    @GetMapping("/lifecycle")
+    @Operation(summary = "Obtener el estado de varias preguntas en una sola consulta",
+            description = "Lo usa question-service al listar preguntas paginadas (HU-03): evita una llamada REST por cada pregunta.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Estados obtenidos; las preguntas sin historial aparecen en DRAFT"),
+            @ApiResponse(responseCode = "400", description = "Parámetro ids ausente o mal formado", content = @Content)
+    })
+    public ResponseEntity<List<QuestionStateDTO>> getQuestionStates(@RequestParam List<Long> ids) {
+        List<QuestionStateDTO> states = ids.stream()
+                .distinct()
+                .map(lifecycleRepository::getOrCreateState)
+                .map(QuestionState::toDTO)
+                .toList();
+        return ResponseEntity.ok(states);
     }
 
     @PostMapping("/lifecycle/{questionId}/transition")
