@@ -8,7 +8,7 @@
 - **Docente:** Ing. Paola Andrea Bedoya Toro  
 - **Periodo Académico:** 2026.2  
 - **Autores / Equipo:**  
-  - Santiago Caicedo  
+  - Yeferson Santiago Caicedo Orozco  
   - Ivan Alexander Lopez  
   - Adrian Araujo Urbano  
   - Carlos Bambague  

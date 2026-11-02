@@ -116,11 +116,12 @@ Actions las corre en cada push y pull request a `main`.
 
 ## Integrantes
 
-- Santiago Caicedo
+- Yeferson Santiago Caicedo Orozco
 - Ivan Alexander Lopez
 - Adrian Araujo Urbano
 - Carlos Bambague
 
 ## Docentes
 
-- Wilson Pantoja Yepez, Paola Bedoya
+- Paola Andrea Bedoya Toro
+- Libardo Pantoja

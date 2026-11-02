@@ -48,16 +48,20 @@ El proyecto se desarrolla en tres iteraciones, una por corte:
 
 ## Historias de usuario
 
-| HU | Nombre | Corte 1 |
-|----|--------|---------|
-| HU01 | Gestión de usuarios y roles | Login con roles (usuarios de prueba) |
-| HU02 | Gestión del banco de preguntas | ✅ Crear, editar en borrador, listar con filtros, orden y paginación |
-| HU03 | Validación estructural | ✅ Contexto, pregunta única, 4 opciones, una respuesta correcta, sin "Todas/Ninguna de las anteriores", longitud similar |
-| HU04 | Ciclo de vida de la pregunta | ✅ Estados con colores y transiciones válidas |
-| HU05 | Revisión por pares | Parcial: asignación de revisores con notificación por correo; el autor no puede revisar su propia pregunta |
-| HU06 | Simulacros | — |
-| HU07 | Seguimiento académico | — |
-| HU08 | Administración y trazabilidad | — |
+Historias de la iteración 2 (corte 2), implementadas en los microservicios
+y el frontend web. Los criterios de aceptación están en el
+[documento de arquitectura](DOCUMENTO_ARQUITECTURA_CORTE2.md#2-historias-de-usuario-de-la-segunda-iteración).
+
+| HU | Rol | Historia | Corte 1 (monolito) | Corte 2 (microservicios) |
+|----|-----|----------|--------------------|--------------------------|
+| HU-01 | Autor | Crear preguntas con validación estructural DCE | ✅ | ✅ question-service + validation-service |
+| HU-02 | Autor | Enviar a revisión; estados con colores | ✅ | ✅ asíncrono por RabbitMQ (202 + operationId) |
+| HU-03 | Autor | Listar con filtros y paginación, editar en Borrador/Rechazada | ✅ | ✅ |
+| HU-04 | Administrador | Asignar entre 1 y 3 revisores con aviso por correo | ✅ | ✅ review-service + notification-service |
+| HU-05 | Revisor | Evaluar las preguntas asignadas (aprobar/rechazar con observaciones) | — | ✅ nueva en el corte 2 |
+
+Simulacros, seguimiento académico y administración/trazabilidad quedan
+para iteraciones posteriores.
 
 Estados de una pregunta: *Borrador → Pendiente de revisión → En
 revisión → Aprobada / Rechazada → Publicada → Archivada*. Ninguna
@@ -65,7 +69,7 @@ pregunta se elimina físicamente (RNF-16).
 
 ## Arquitectura por corte
 
-### Corte 1 — Monolito en capas (actual)
+### Corte 1 — Monolito en capas
 
 Aplicación de escritorio en Java Swing organizada en capas:
 
@@ -83,33 +87,44 @@ app            Punto de entrada: arma las dependencias y abre el login
 ```
 
 El dominio no depende de la persistencia (inversión de dependencias) y
-las vistas no contienen lógica de negocio. Patrones aplicados:
-**Observer**, **Strategy**, **Builder**, **State**, **Repository** y
-**Publicador/Suscriptor**.
+las vistas no contienen lógica de negocio. Patrones aplicados: Builder,
+Factory Method, Singleton, Facade, Decorator, Strategy, Observer y State.
 
 El detalle de clases, patrones y pruebas está en
 [`banco-preguntas/README.md`](banco-preguntas/README.md).
 
 ### Corte 2 — Microservicios y eventos
 
-Siete microservicios Spring Boot detrás de un API Gateway, RabbitMQ para
-comandos y eventos, y un frontend web (`frontend/`) que solo consume la
-API REST. Patrones GoF en los microservicios: Builder, Factory Method,
-Facade, Decorator, Adapter, Strategy y Observer. Todo el detalle (HU,
-C4, UML, contextos, patrones, Swagger y pruebas) está en
-[`DOCUMENTO_ARQUITECTURA_CORTE2.md`](DOCUMENTO_ARQUITECTURA_CORTE2.md).
+El monolito se refactorizó en servicios independientes para cumplir el
+escenario de escalabilidad (RNF-17 y RNF-18: 500 usuarios concurrentes
+con latencia p95 < 500 ms, y crecer añadiendo instancias sin tocar la
+lógica de negocio).
 
-Motivación de la refactorización:
+```
+Frontend web (:5173) ──REST JSON──▶ API Gateway (:8080) ──▶ user · question · validation
+                                                            lifecycle · review · notification
+question ──AMQP──▶ RabbitMQ ──▶ lifecycle          review ──AMQP──▶ RabbitMQ ──▶ notification ──▶ SMTP
+```
 
-Se refactoriza el monolito en servicios independientes que se comunican
-por eventos, para cumplir los requisitos de escalabilidad (RNF-17 y
-RNF-18: 500 usuarios concurrentes con latencia p95 < 500 ms y crecimiento añadiendo instancias
-sin tocar la lógica de negocio). Los eventos de dominio que ya existen
-en el corte 1 (por ejemplo, la asignación de revisores) son el punto de
-partida para separar los servicios.
+- **Frontend y backend separados:** el frontend (`frontend/`) solo conoce
+  la URL del gateway y consume la API REST `/api/v1/*`.
+- **Comunicación síncrona (REST)** para validar y consultar estados, y
+  **asíncrona (RabbitMQ)** para enviar a revisión y notificar, con colas
+  durables, DLQ y consumidores idempotentes.
+- **Patrones GoF en los microservicios:** Builder, Factory Method, Facade,
+  Decorator, Adapter, Strategy y Observer.
+- **Swagger unificado** en el gateway.
 
-El diseño de esta iteración (contextos delimitados, contratos, C4 con API
-Gateway y escenario de escalabilidad) está en [`arquitectura/`](arquitectura/README.md).
+Documentación de esta iteración:
+
+| Documento | Contenido |
+|---|---|
+| [`DOCUMENTO_ARQUITECTURA_CORTE2.md`](DOCUMENTO_ARQUITECTURA_CORTE2.md) | Documento de entrega: HU, Sprint 2, escalabilidad, C4 + UML, contextos, patrones, API, pruebas y guía del video |
+| [`arquitectura/`](arquitectura/README.md) | Contextos delimitados, contratos REST/eventos, C4 de contenedores, escenario de escalabilidad y entrega garantizada |
+| [`frontend/README.md`](frontend/README.md) | Pantallas por rol y cómo ejecutar el frontend |
+| [`TALLER09_DOCUMENTACION.md`](TALLER09_DOCUMENTACION.md) | Taller 09: comunicación síncrona y asíncrona, colección de Postman |
+| [`TALLER10_JPA_DOCUMENTACION.md`](TALLER10_JPA_DOCUMENTACION.md) | Taller 10: persistencia limpia con JPA |
+| [`TALLER11_DDD_DOCUMENTACION.md`](TALLER11_DDD_DOCUMENTACION.md) | Taller 11: DDD estratégico y táctico |
 
 ### Corte 3 — Arquitectura hexagonal
 
@@ -121,30 +136,30 @@ autenticación y autorización por rol (RNF-06 a RNF-09).
 
 ```
 .
-├── README.md               Este archivo: visión general del proyecto
-├── TALLER09_DOCUMENTACION.md Documentación técnica detallada del Taller 09 (Microservicios + RabbitMQ)
-├── .github/workflows/      CI: compila y corre las pruebas en cada push
-├── DOCUMENTO_ARQUITECTURA_CORTE2.md Documento de arquitectura del corte 2
-├── arquitectura/           Contextos, contratos, C4 y escenario de escalabilidad
-├── frontend/               Frontend web (HTML + JS) que consume la API del gateway (:5173)
-├── banco-preguntas/        Corte 1: monolito en capas (Maven)
-└── microservicios/         Taller 09: Arquitectura de microservicios distribuidos
-    ├── docker-compose.yml  Broker RabbitMQ con consola de administración
-    ├── pom.xml             POM Padre multi-módulo (Java 21, Spring Boot 3.3.4)
-    ├── shared-contracts/   DTOs, Comandos y Eventos compartidos
-    ├── user-service/       Microservicio de usuarios y login síncrono (:8083)
-    ├── validation-service/ Microservicio de validación estructural síncrona (:8082)
-    ├── question-service/   Microservicio de preguntas y orquestación (:8081)
-    ├── lifecycle-service/  Autoridad de ciclo de vida y consumidor RabbitMQ (:8084)
-    ├── review-service/     Microservicio de asignación y eventos RabbitMQ (:8085)
-    ├── notification-service/ Microservicio de notificaciones asíncronas (:8086)
-    ├── lisw2_taller09_postman_collection.json Colección completa de pruebas Postman
-    ├── start-all.ps1       Script de inicio de todos los microservicios
-    └── stop-all.ps1        Script de detención de todos los microservicios
+├── README.md                         Este archivo: visión general del proyecto
+├── DOCUMENTO_ARQUITECTURA_CORTE2.md  Documento de arquitectura del corte 2 (entrega)
+├── TALLER09/10/11_*.md               Documentación de los talleres de laboratorio
+├── .github/workflows/                CI: pruebas del monolito, de los microservicios y del frontend
+├── arquitectura/                     Contextos, contratos, C4, escalabilidad y diagramas (.mmd/.png)
+├── frontend/                         Frontend web (HTML + JS) que consume la API del gateway (:5173)
+├── banco-preguntas/                  Corte 1: monolito en capas (Swing)
+└── microservicios/                   Corte 2: microservicios (Maven multi-módulo)
+    ├── pom.xml                       POM padre (Java 21, Spring Boot 3.3.4, Spring Cloud 2023.0)
+    ├── docker-compose.yml            RabbitMQ con consola de administración
+    ├── shared-contracts/             DTO, comandos y eventos compartidos
+    ├── api-gateway/                  Punto de entrada /api/v1, CORS, balanceo y Swagger unificado (:8080)
+    ├── question-service/             Autoría de preguntas (:8081)
+    ├── validation-service/           Validación estructural DCE (:8082)
+    ├── user-service/                 Usuarios, roles y login (:8083)
+    ├── lifecycle-service/            Estados y transiciones; consumidor RabbitMQ (:8084)
+    ├── review-service/               Asignación y evaluación de revisores, JPA (:8085)
+    ├── notification-service/         Notificaciones por eventos y correo (:8086)
+    ├── pruebas/                      Script de prueba de entrega garantizada de eventos
+    ├── pruebas-carga/                Prueba de carga k6 del escenario de escalabilidad
+    ├── lisw2_taller09_postman_collection.json  Colección de Postman
+    ├── start-all.ps1                 Inicia RabbitMQ, los servicios, el gateway y el frontend
+    └── stop-all.ps1                  Detiene todo
 ```
-
-### Taller 09 — Microservicios Distribuidos (REST + RabbitMQ)
-Para consultar la arquitectura, diagramas de secuencia, matriz de pruebas de Postman y guía de sustentación de los microservicios, consultar [TALLER09_DOCUMENTACION.md](TALLER09_DOCUMENTACION.md).
 
 
 ## Inicio rápido
@@ -201,15 +216,17 @@ ver [`banco-preguntas/README.md`](banco-preguntas/README.md#ejecución).
 
 ## Tecnologías
 
-| Uso | Tecnología |
-|-----|------------|
-| Lenguaje y build | Java 21, Maven |
-| Interfaz | Swing |
-| Base de datos | PostgreSQL 16, migraciones con Flyway, H2 para pruebas |
-| Pruebas | JUnit 5 |
-| Correo | Jakarta Mail (simulado en consola por defecto) |
-| Contenedores | Docker / Docker Compose |
-| Integración continua | GitHub Actions |
+| Uso | Corte 1 (monolito) | Corte 2 (microservicios) |
+|-----|--------------------|--------------------------|
+| Lenguaje y build | Java 21, Maven | Java 21, Maven multi-módulo |
+| Framework | — | Spring Boot 3.3, Spring Cloud Gateway 2023.0 |
+| Interfaz | Swing | Frontend web HTML + CSS + JavaScript (servidor Node) |
+| Mensajería | Observer en memoria | RabbitMQ 3.13 (Spring AMQP) con DLQ |
+| Base de datos | PostgreSQL 16 + Flyway, H2 para pruebas | review-service con Spring Data JPA (H2 / PostgreSQL); el resto en memoria |
+| Documentación de la API | — | springdoc-openapi (Swagger UI) |
+| Pruebas | JUnit 5 | JUnit 5, Mockito, Spring Boot Test; k6 para carga |
+| Correo | Jakarta Mail (simulado en consola) | Spring Mail (consola o SMTP) |
+| Contenedores e integración continua | Docker Compose, GitHub Actions | Docker Compose, GitHub Actions |
 
 ## Forma de trabajo
 
@@ -225,6 +242,6 @@ ver [`banco-preguntas/README.md`](banco-preguntas/README.md#ejecución).
 - Adrian Araujo Urbano
 - Carlos Bambague
 
-**Docentes:** Wilson Pantoja Yepez, Paola Bedoya
+**Docentes:** Paola Andrea Bedoya Toro, Libardo Pantoja
 
 Universidad del Cauca — Ingeniería de Software II, 2026.2

@@ -9,7 +9,7 @@
 - **Facultad:** Facultad de Ingeniería Electrónica y Telecomunicaciones (FIET)
 - **Programa:** Ingeniería de Sistemas
 - **Asignatura:** Ingeniería de Software II (teoría y laboratorio)
-- **Docentes:** Paola Andrea Bedoya, Pablo Magé, W. Libardo Pantoja, Julio Hurtado
+- **Docentes:** Paola Andrea Bedoya Toro, Libardo Pantoja
 - **Periodo académico:** 2026.2
 - **Integrantes del equipo:**
   - Yeferson Santiago Caicedo Orozco
