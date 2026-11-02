@@ -115,18 +115,6 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
 
-            <!-- Mantener exec:java para el cliente Swing (corte 1) -->
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>3.2.0</version>
-                <configuration>
-                    <mainClass>
-                        co.unicauca.iso2.bancopreguntas.app.ClientMain
-                    </mainClass>
-                </configuration>
-            </plugin>
-
         </plugins>
     </build>
 
