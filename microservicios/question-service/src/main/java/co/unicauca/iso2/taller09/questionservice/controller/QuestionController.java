@@ -13,6 +13,10 @@ import co.unicauca.iso2.taller09.questionservice.client.ValidationClient;
 import co.unicauca.iso2.taller09.questionservice.domain.Question;
 import co.unicauca.iso2.taller09.questionservice.repository.QuestionRepository;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,14 +63,21 @@ public class QuestionController {
      * Paso 2 y 3 del Taller: Creación síncrona + Validación síncrona con Validation Service.
      */
     @PostMapping
-    @Operation(summary = "Crear pregunta síncronamente (Puntos 2 y 3)", description = "Solicita validación al Validation Service vía REST. Si es exitosa, persiste en estado DRAFT (201 Created); si falla, retorna 400 Bad Request.")
+    @Operation(summary = "Crear pregunta síncronamente (Puntos 2 y 3)",
+            description = "Solicita validación al Validation Service vía REST. Si es exitosa, persiste en estado DRAFT (201 Created); si falla, retorna 400 Bad Request.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Pregunta validada y creada exitosamente",
+                    content = @Content(schema = @Schema(implementation = CreateQuestionResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Error de validación estructural en la solicitud", content = @Content),
+            @ApiResponse(responseCode = "403", description = "No cuenta con los permisos necesarios para realizar la acción", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Recurso no encontrado", content = @Content)
+    })
     public ResponseEntity<?> createQuestion(
             @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
             @RequestBody CreateQuestionRequest request) {
 
         log.info("Recibida solicitud de creación de pregunta. AutorId: {}", request.getAuthorId());
 
-        // Invocación síncrona al Validation Service
         ValidationResult validationResult = validationClient.validateQuestion(request);
 
         if (!validationResult.isValid()) {
@@ -78,7 +89,6 @@ public class QuestionController {
                     ));
         }
 
-        // Persistir en DRAFT
         Question question = new Question(
                 null,
                 request.getText(),
@@ -104,7 +114,14 @@ public class QuestionController {
      * Paso 4 y 5 del Taller: Envío asíncrono a revisión mediante comando SubmitQuestionForReview en RabbitMQ.
      */
     @PostMapping("/{id}/submit-review")
-    @Operation(summary = "Enviar pregunta a revisión asíncronamente (Puntos 4 y 5)", description = "Publica en RabbitMQ el comando SubmitQuestionForReview hacia Lifecycle Service y responde 202 Accepted con operationId.")
+    @Operation(summary = "Enviar pregunta a revisión asíncronamente (Puntos 4 y 5)",
+            description = "Publica en RabbitMQ el comando SubmitQuestionForReview hacia Lifecycle Service y responde 202 Accepted con operationId.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "202", description = "Solicitud aceptada para procesamiento asíncrono"),
+            @ApiResponse(responseCode = "400", description = "Parámetros de entrada no válidos", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Acceso denegado para enviar a revisión", content = @Content),
+            @ApiResponse(responseCode = "404", description = "La pregunta especificada no existe", content = @Content)
+    })
     public ResponseEntity<?> submitForReview(
             @PathVariable Long id,
             @RequestParam(required = false, defaultValue = "2") Long requestedBy) {
@@ -117,7 +134,6 @@ public class QuestionController {
 
         Question question = questionOpt.get();
 
-        // Generar identificador único de operación
         String operationId = UUID.randomUUID().toString();
 
         SubmitQuestionForReview command = new SubmitQuestionForReview(
@@ -130,14 +146,12 @@ public class QuestionController {
         log.info("Publicando comando SubmitQuestionForReview en RabbitMQ [routingKey: {}] para questionId: {}, operationId: {}",
                 RabbitMQConstants.ROUTING_KEY_QUESTION_SUBMIT, id, operationId);
 
-        // Publicar comando en RabbitMQ
         rabbitTemplate.convertAndSend(
                 RabbitMQConstants.EXCHANGE_NAME,
                 RabbitMQConstants.ROUTING_KEY_QUESTION_SUBMIT,
                 command
         );
 
-        // Retornar 202 Accepted
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(Map.of(
                 "operationId", operationId,
                 "questionId", id,
@@ -147,10 +161,18 @@ public class QuestionController {
     }
 
     /**
-     * Consultar estado de una operación asíncrona (para polling en Postman como en la figura 2).
+     * Consultar estado de una operación asíncrona.
      */
     @GetMapping("/operations/{operationId}")
-    @Operation(summary = "Consultar estado de operación asíncrona", description = "Permite verificar mediante polling si la transición asíncrona en Lifecycle Service se completó o falló.")
+    @Operation(summary = "Consultar estado de operación asíncrona",
+            description = "Permite verificar mediante polling si la transición asíncrona en Lifecycle Service se completó o falló.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Estado de la operación obtenido con éxito",
+                    content = @Content(schema = @Schema(implementation = OperationResultDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Formato de identificador de operación inválido", content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado para consultar la operación", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Operación no encontrada o servicio de ciclo de vida no disponible", content = @Content)
+    })
     public ResponseEntity<?> checkOperationStatus(@PathVariable String operationId) {
         try {
             String url = lifecycleServiceUrl + "/operations/" + operationId;
@@ -165,6 +187,13 @@ public class QuestionController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Obtener detalles de una pregunta por ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Pregunta encontrada",
+                    content = @Content(schema = @Schema(implementation = QuestionDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Identificador de pregunta inválido", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Sin privilegios para ver el recurso", content = @Content),
+            @ApiResponse(responseCode = "404", description = "La pregunta solicitada no existe", content = @Content)
+    })
     public ResponseEntity<?> getById(@PathVariable Long id) {
         Optional<Question> questionOpt = questionRepository.findById(id);
         if (questionOpt.isEmpty()) {
@@ -173,7 +202,6 @@ public class QuestionController {
 
         Question q = questionOpt.get();
 
-        // Opcionalmente sincronizar estado con Lifecycle Service si está disponible
         try {
             ResponseEntity<QuestionStateDTO> stateResp = restTemplate.getForEntity(
                     lifecycleServiceUrl + "/lifecycle/" + id, QuestionStateDTO.class);
@@ -187,6 +215,12 @@ public class QuestionController {
 
     @GetMapping
     @Operation(summary = "Listar todas las preguntas")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista de preguntas obtenida con éxito"),
+            @ApiResponse(responseCode = "400", description = "Parámetros de búsqueda inválidos", content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado para consultar las preguntas", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Recursos no encontrados", content = @Content)
+    })
     public ResponseEntity<List<QuestionDTO>> listAll() {
         List<QuestionDTO> dtos = questionRepository.findAll().stream()
                 .map(Question::toDTO)
