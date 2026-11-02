@@ -4,11 +4,13 @@
 - **Institución:** Universidad del Cauca  
 - **Facultad:** Facultad de Ingeniería Electrónica y Telecomunicaciones (FIET)  
 - **Programa:** Ingeniería de Sistemas  
-- **Docentes:** Pablo Magé, Paola Andrea Bedoya Toro  
+- **Docentes:** Paola Andrea Bedoya Toro, Libardo Pantoja  
 - **Periodo Académico:** 2026.2  
-- **Estudiante / Equipo:** Santiago Caicedo, Ivan Alexander Lopez, Adrian Araujo Urbano, Carlos Bambague  
+- **Estudiante / Equipo:** Yeferson Santiago Caicedo Orozco, Ivan Alexander Lopez, Adrian Araujo Urbano, Carlos Bambague  
 
 ---
+
+> **Nota (corte 2):** este documento describe el Taller 09 tal como se entregó. Después del taller el sistema creció: se agregaron el **API Gateway** (:8080), el **frontend web** (:5173), la evaluación de revisores (HU-05), el correo real y los patrones GoF en los microservicios. La pregunta ahora exige todos los campos DCE (contexto, justificación, bibliografía, competencia, tema, subtema y dificultad), y la colección de Postman ya está actualizada con ellos. La arquitectura vigente está en [`DOCUMENTO_ARQUITECTURA_CORTE2.md`](DOCUMENTO_ARQUITECTURA_CORTE2.md).
 
 ## 1. Introducción y Objetivo del Taller
 
@@ -76,7 +78,7 @@ graph TD
    - El cliente envía credenciales a `POST /auth/login`.
    - Si son válidas (`autor1` / `autor123`), retorna `200 OK` con datos y roles (`AUTOR`, `DOCENTE`). Si no, `401 Unauthorized`.
 2. **Creación de Pregunta (Question Service - 8081):**
-   - El docente envía `POST /questions` con el texto, 4 opciones y la respuesta correcta.
+   - El docente envía `POST /questions` con el contexto, la pregunta, 4 opciones, la respuesta correcta, la justificación, la bibliografía, la competencia, el tema, el subtema y la dificultad.
 3. **Validación Síncrona (Validation Service - 8082):**
    - `Question Service` realiza una llamada REST bloqueante a `POST /validate` en `Validation Service`.
    - Si la validación es exitosa, `Question Service` persiste la pregunta en estado `DRAFT` y responde `201 Created`.
@@ -138,12 +140,12 @@ docker compose up -d
 
 ### 5.3 Paso 2: Compilar y Ejecutar Pruebas Automatizadas
 ```powershell
-.\mvnw.cmd test
+..\mvnw.cmd test    # desde la carpeta microservicios (el wrapper está en la raíz)
 ```
 *Se ejecutarán las pruebas unitarias y de integración de cada microservicio, validando la interacción con RabbitMQ, la máquina de estados y las reglas de validación.*
 
-### 5.4 Paso 3: Iniciar los 6 Microservicios
-Se puede utilizar el script automatizado:
+### 5.4 Paso 3: Iniciar los Microservicios
+Se puede utilizar el script automatizado (también inicia RabbitMQ, el API Gateway y el frontend web):
 ```powershell
 .\microservicios\start-all.ps1
 ```
@@ -166,6 +168,9 @@ cd microservicios/review-service; ..\..\mvnw.cmd spring-boot:run
 
 # Terminal 6 - Notification Service (:8086)
 cd microservicios/notification-service; ..\..\mvnw.cmd spring-boot:run
+
+# Terminal 7 - API Gateway (:8080)
+cd microservicios/api-gateway; ..\..\mvnw.cmd spring-boot:run
 ```
 
 ### 5.5 Paso 4: Ejecutar la Colección de Postman

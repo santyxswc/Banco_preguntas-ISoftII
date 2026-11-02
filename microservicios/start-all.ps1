@@ -6,7 +6,7 @@ Write-Host "==========================================================" -Foregro
 
 # 1. Verificar y levantar RabbitMQ
 Write-Host "`n[1/7] Verificando contenedor Docker de RabbitMQ..." -ForegroundColor Yellow
-docker compose up -d
+docker compose -f (Join-Path $PSScriptRoot "docker-compose.yml") up -d
 
 # 2. Configurar JAVA_HOME si es necesario
 $env:JAVA_HOME = "C:\Program Files\Eclipse Adoptium\jdk-21.0.12.101-hotspot"

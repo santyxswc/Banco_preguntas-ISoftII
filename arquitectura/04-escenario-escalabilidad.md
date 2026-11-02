@@ -69,5 +69,5 @@ Pendiente de ejecutar en el equipo del grupo. Al correr `comparar-resultados.ps1
 ## 4. Limitaciones conocidas
 
 - Las dos instancias corren en el mismo equipo, así que comparten CPU. La mejora que se mida es menor que la que habría en máquinas separadas.
-- question-service guarda las preguntas en memoria hasta que tenga su base de datos (HU-T3.3). Por eso la prueba solo crea preguntas y no consulta una pregunta por id: cada instancia tiene sus propios datos.
+- question-service guarda las preguntas en su propia base de datos (H2 en archivo por defecto). Con dos instancias en el mismo equipo ambas usan el mismo archivo gracias a `AUTO_SERVER=TRUE`; en producción se apuntan a un PostgreSQL con `QUESTION_DB_URL`.
 - Si RabbitMQ está caído en el momento de publicar, review-service registra el error y no reintenta. Para cubrir ese caso haría falta un *outbox* transaccional.

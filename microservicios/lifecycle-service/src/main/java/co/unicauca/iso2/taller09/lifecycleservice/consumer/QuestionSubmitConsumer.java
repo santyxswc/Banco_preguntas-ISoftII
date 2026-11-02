@@ -3,23 +3,29 @@ package co.unicauca.iso2.taller09.lifecycleservice.consumer;
 import co.unicauca.iso2.taller09.common.constants.RabbitMQConstants;
 import co.unicauca.iso2.taller09.common.enums.OperationStatus;
 import co.unicauca.iso2.taller09.common.enums.QuestionStatus;
+import co.unicauca.iso2.taller09.common.messages.QuestionSubmittedForReview;
 import co.unicauca.iso2.taller09.common.messages.SubmitQuestionForReview;
 import co.unicauca.iso2.taller09.lifecycleservice.domain.OperationResult;
 import co.unicauca.iso2.taller09.lifecycleservice.domain.QuestionState;
+import co.unicauca.iso2.taller09.lifecycleservice.messaging.QuestionEventPublisher;
 import co.unicauca.iso2.taller09.lifecycleservice.repository.LifecycleRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+
 @Component
 public class QuestionSubmitConsumer {
     private static final Logger log = LoggerFactory.getLogger(QuestionSubmitConsumer.class);
 
     private final LifecycleRepository lifecycleRepository;
+    private final QuestionEventPublisher eventPublisher;
 
-    public QuestionSubmitConsumer(LifecycleRepository lifecycleRepository) {
+    public QuestionSubmitConsumer(LifecycleRepository lifecycleRepository, QuestionEventPublisher eventPublisher) {
         this.lifecycleRepository = lifecycleRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     /**
@@ -61,6 +67,9 @@ public class QuestionSubmitConsumer {
 
         operation.complete("Transición completada exitosamente a PENDING_REVIEW");
         lifecycleRepository.saveOperation(operation);
+
+        eventPublisher.questionSubmittedForReview(new QuestionSubmittedForReview(
+                command.getOperationId(), command.getQuestionId(), QuestionStatus.PENDING_REVIEW, LocalDateTime.now()));
 
         log.info("<<< [LIFECYCLE-SERVICE] Transición exitosa a PENDING_REVIEW para questionId={}. Operación {} marcada como COMPLETED",
                 command.getQuestionId(), command.getOperationId());

@@ -11,7 +11,7 @@ Historia técnica **HU-T1.2** (SCRUM-65). Las clases de los mensajes y los DTO c
 | Evento / comando | Clase Java | Routing key → cola | Productor | Consumidores | Contenido | Estado |
 |---|---|---|---|---|---|---|
 | SubmitQuestionForReview (comando) | `SubmitQuestionForReview` | `question.submit` → `question.submit.queue` | question-service | lifecycle-service | operationId, questionId, requestedBy, requestedAt | Implementado (Taller 09) |
-| PreguntaEnviadaARevision | `QuestionSubmittedForReview` | `question.submitted.event` → `question.submitted.event.queue` | lifecycle-service | notification-service | operationId, questionId, newState, occurredAt | Contrato definido; falta publicarlo (HU-T3.4) |
+| PreguntaEnviadaARevision | `QuestionSubmittedForReview` | `question.submitted.event` → `question.submitted.event.queue` | lifecycle-service | notification-service | operationId, questionId, newState, occurredAt | **Implementado**: lifecycle-service lo publica al pasar a PENDING_REVIEW y notification-service avisa al administrador que debe asignar revisores |
 | RevisorAsignado | `ReviewerAssigned` | `reviewer.assigned` → `reviewer.assigned.queue` | review-service | notification-service | operationId, questionId, reviewerId, assignedBy, occurredAt | **Implementado** (uno por revisor asignado) |
 | RevisionCompletada | `ReviewCompleted` | `review.completed` → `review.completed.queue` | review-service | notification-service | operationId, questionId, reviewerId, authorId, result, comments, questionFinalState, occurredAt | **Implementado** (uno por evaluación; `questionFinalState` solo trae valor en la última) |
 

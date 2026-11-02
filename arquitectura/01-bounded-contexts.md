@@ -31,11 +31,11 @@ flowchart LR
 | Contexto | Microservicio | Puerto | Responsabilidad | Base de datos propia | Estado en el repositorio |
 |---|---|---|---|---|---|
 | Identidad y acceso | `user-service` | 8083 | Usuarios, roles (AUTOR, ADMINISTRADOR, REVISOR, DOCENTE, ESTUDIANTE) y login | `user_db` | En memoria; la BD propia llega con HU-T4 |
-| Autoría de preguntas | `question-service` | 8081 | Crear preguntas, listar con paginación y filtros, solicitar envío a revisión | `question_db` | En memoria; la BD propia llega con HU-T3.3 |
+| Autoría de preguntas | `question-service` | 8081 | Crear y editar preguntas, listar con paginación y filtros, solicitar envío a revisión | `question_db` | **Implementada con JPA y migraciones Flyway** (H2 en archivo por defecto, PostgreSQL con `QUESTION_DB_URL`) |
 | Validación estructural | `validation-service` | 8082 | Reglas estructurales de la pregunta (Strategy) | Sin estado | No necesita BD |
 | Ciclo de vida | `lifecycle-service` | 8084 | Estado de cada pregunta y transiciones permitidas | `lifecycle_db` | En memoria |
 | **Revisión por pares** | `review-service` | 8085 | Asignaciones, evaluaciones y observaciones (HU-04 y HU-05) | `review_db` | **Implementada con JPA** (H2 en archivo por defecto, PostgreSQL con `REVIEW_DB_URL`) |
-| Notificaciones | `notification-service` | 8086 | Consumir eventos y avisar a revisores, autores y administrador | `notification_db` | En memoria; la BD propia llega con HU-T6 |
+| Notificaciones | `notification-service` | 8086 | Consumir eventos y enviar correo a revisores, autores y administrador | `notification_db` | En memoria; la BD propia llega con HU-T6 |
 | — | `api-gateway` | 8080 | Punto de entrada único del frontend | Sin estado | Implementado (HU-T8) |
 
 Regla común: ningún servicio lee la base de datos de otro. Lo que necesita de otro contexto lo pide por REST (consulta síncrona) o lo recibe como evento por RabbitMQ.

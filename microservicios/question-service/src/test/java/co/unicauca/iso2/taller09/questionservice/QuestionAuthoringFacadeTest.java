@@ -11,6 +11,7 @@ import co.unicauca.iso2.taller09.questionservice.domain.Question;
 import co.unicauca.iso2.taller09.questionservice.domain.QuestionException;
 import co.unicauca.iso2.taller09.questionservice.domain.QuestionFilter;
 import co.unicauca.iso2.taller09.questionservice.domain.port.QuestionLifecycle;
+import co.unicauca.iso2.taller09.questionservice.repository.InMemoryQuestionRepository;
 import co.unicauca.iso2.taller09.questionservice.repository.QuestionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -38,7 +39,7 @@ class QuestionAuthoringFacadeTest {
 
     @BeforeEach
     void setUp() {
-        repository = new QuestionRepository();
+        repository = new InMemoryQuestionRepository();
         lifecycle = new FakeLifecycle();
         published = new ArrayList<>();
         validationErrors = new ArrayList<>();

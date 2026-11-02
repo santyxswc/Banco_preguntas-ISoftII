@@ -6,14 +6,38 @@
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    { "key": "userServiceUrl", "value": "http://localhost:8083" },
-    { "key": "questionServiceUrl", "value": "http://localhost:8081" },
-    { "key": "validationServiceUrl", "value": "http://localhost:8082" },
-    { "key": "lifecycleServiceUrl", "value": "http://localhost:8084" },
-    { "key": "reviewServiceUrl", "value": "http://localhost:8085" },
-    { "key": "notificationServiceUrl", "value": "http://localhost:8086" },
-    { "key": "createdQuestionId", "value": "101" },
-    { "key": "operationId", "value": "" }
+    {
+      "key": "userServiceUrl",
+      "value": "http://localhost:8083"
+    },
+    {
+      "key": "questionServiceUrl",
+      "value": "http://localhost:8081"
+    },
+    {
+      "key": "validationServiceUrl",
+      "value": "http://localhost:8082"
+    },
+    {
+      "key": "lifecycleServiceUrl",
+      "value": "http://localhost:8084"
+    },
+    {
+      "key": "reviewServiceUrl",
+      "value": "http://localhost:8085"
+    },
+    {
+      "key": "notificationServiceUrl",
+      "value": "http://localhost:8086"
+    },
+    {
+      "key": "createdQuestionId",
+      "value": "101"
+    },
+    {
+      "key": "operationId",
+      "value": ""
+    }
   ],
   "item": [
     {
@@ -24,15 +48,25 @@
           "name": "Caso 1: Login con credenciales válidas (200 OK)",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"username\": \"autor1\",\n  \"password\": \"autor123\"\n}"
             },
             "url": {
               "raw": "{{userServiceUrl}}/auth/login",
-              "host": ["{{userServiceUrl}}"],
-              "path": ["auth", "login"]
+              "host": [
+                "{{userServiceUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
             }
           },
           "event": [
@@ -56,15 +90,25 @@
           "name": "Caso 2: Login con credenciales incorrectas (401 Unauthorized)",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"username\": \"autor1\",\n  \"password\": \"clave_erronea\"\n}"
             },
             "url": {
               "raw": "{{userServiceUrl}}/auth/login",
-              "host": ["{{userServiceUrl}}"],
-              "path": ["auth", "login"]
+              "host": [
+                "{{userServiceUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
             }
           },
           "event": [
@@ -88,8 +132,12 @@
             "method": "GET",
             "url": {
               "raw": "{{userServiceUrl}}/users",
-              "host": ["{{userServiceUrl}}"],
-              "path": ["users"]
+              "host": [
+                "{{userServiceUrl}}"
+              ],
+              "path": [
+                "users"
+              ]
             }
           }
         }
@@ -103,15 +151,24 @@
           "name": "Validar pregunta estructuralmente válida (Directo REST)",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"text\": \"¿Qué mecanismo asegura el desacoplamiento temporal entre microservicios?\",\n  \"options\": [\n    { \"id\": \"A\", \"text\": \"Colas de mensajería asíncrona como RabbitMQ\" },\n    { \"id\": \"B\", \"text\": \"Llamadas síncronas HTTP/REST directas\" },\n    { \"id\": \"C\", \"text\": \"Bases de datos centralizadas compartidas\" },\n    { \"id\": \"D\", \"text\": \"Llamadas RPC bloqueantes\" }\n  ],\n  \"correctOptionId\": \"A\",\n  \"authorId\": 2\n}"
+              "raw": "{\n  \"context\": \"En un sistema distribuido varios servicios deben comunicarse sin depender de que todos esten disponibles al mismo tiempo.\",\n  \"text\": \"¿Qué mecanismo asegura el desacoplamiento temporal entre microservicios?\",\n  \"options\": [\n    {\n      \"id\": \"A\",\n      \"text\": \"Colas de mensajería asíncrona como RabbitMQ\"\n    },\n    {\n      \"id\": \"B\",\n      \"text\": \"Llamadas síncronas HTTP/REST directas\"\n    },\n    {\n      \"id\": \"C\",\n      \"text\": \"Bases de datos centralizadas compartidas\"\n    },\n    {\n      \"id\": \"D\",\n      \"text\": \"Llamadas RPC bloqueantes\"\n    }\n  ],\n  \"correctOptionId\": \"A\",\n  \"authorId\": 2,\n  \"justification\": \"Un broker como RabbitMQ guarda los mensajes en colas durables y desacopla emisor y receptor en el tiempo.\",\n  \"bibliography\": \"Richardson, C. (2018). Microservices Patterns. Manning.\",\n  \"competency\": \"Diseño de software\",\n  \"topic\": \"Arquitectura de software\",\n  \"subtopic\": \"Comunicación asíncrona\",\n  \"difficulty\": \"MEDIO\"\n}"
             },
             "url": {
               "raw": "{{validationServiceUrl}}/validate",
-              "host": ["{{validationServiceUrl}}"],
-              "path": ["validate"]
+              "host": [
+                "{{validationServiceUrl}}"
+              ],
+              "path": [
+                "validate"
+              ]
             }
           },
           "event": [
@@ -133,15 +190,24 @@
           "name": "Validar pregunta inválida (Opciones comodín / menos de 4 opciones)",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"text\": \"Pregunta corta\",\n  \"options\": [\n    { \"id\": \"A\", \"text\": \"Opción A\" },\n    { \"id\": \"B\", \"text\": \"Todas las anteriores\" }\n  ],\n  \"correctOptionId\": \"A\",\n  \"authorId\": 2\n}"
             },
             "url": {
               "raw": "{{validationServiceUrl}}/validate",
-              "host": ["{{validationServiceUrl}}"],
-              "path": ["validate"]
+              "host": [
+                "{{validationServiceUrl}}"
+              ],
+              "path": [
+                "validate"
+              ]
             }
           },
           "event": [
@@ -170,17 +236,27 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer token-docente-autor1" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer token-docente-autor1"
+              }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"text\": \"¿Cuál es la función principal de RabbitMQ en una arquitectura distribuida?\",\n  \"options\": [\n    { \"id\": \"A\", \"text\": \"Actuar como broker de mensajería asíncrona desacoplada\" },\n    { \"id\": \"B\", \"text\": \"Servir páginas HTML estáticas al navegador\" },\n    { \"id\": \"C\", \"text\": \"Reemplazar el motor de base de datos relacional\" },\n    { \"id\": \"D\", \"text\": \"Compilar código fuente de Java a bytecode\" }\n  ],\n  \"correctOptionId\": \"A\",\n  \"authorId\": 2\n}"
+              "raw": "{\n  \"context\": \"En un sistema distribuido varios servicios deben comunicarse sin depender de que todos esten disponibles al mismo tiempo.\",\n  \"text\": \"¿Cuál es la función principal de RabbitMQ en una arquitectura distribuida?\",\n  \"options\": [\n    {\n      \"id\": \"A\",\n      \"text\": \"Actuar como broker de mensajería asíncrona desacoplada\"\n    },\n    {\n      \"id\": \"B\",\n      \"text\": \"Servir páginas HTML estáticas al navegador\"\n    },\n    {\n      \"id\": \"C\",\n      \"text\": \"Reemplazar el motor de base de datos relacional\"\n    },\n    {\n      \"id\": \"D\",\n      \"text\": \"Compilar código fuente de Java a bytecode\"\n    }\n  ],\n  \"correctOptionId\": \"A\",\n  \"authorId\": 2,\n  \"justification\": \"Un broker como RabbitMQ guarda los mensajes en colas durables y desacopla emisor y receptor en el tiempo.\",\n  \"bibliography\": \"Richardson, C. (2018). Microservices Patterns. Manning.\",\n  \"competency\": \"Diseño de software\",\n  \"topic\": \"Arquitectura de software\",\n  \"subtopic\": \"Comunicación asíncrona\",\n  \"difficulty\": \"MEDIO\"\n}"
             },
             "url": {
               "raw": "{{questionServiceUrl}}/questions",
-              "host": ["{{questionServiceUrl}}"],
-              "path": ["questions"]
+              "host": [
+                "{{questionServiceUrl}}"
+              ],
+              "path": [
+                "questions"
+              ]
             }
           },
           "event": [
@@ -204,8 +280,14 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer token-docente-autor1" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer token-docente-autor1"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -213,8 +295,12 @@
             },
             "url": {
               "raw": "{{questionServiceUrl}}/questions",
-              "host": ["{{questionServiceUrl}}"],
-              "path": ["questions"]
+              "host": [
+                "{{questionServiceUrl}}"
+              ],
+              "path": [
+                "questions"
+              ]
             }
           },
           "event": [
@@ -238,9 +324,20 @@
             "method": "POST",
             "url": {
               "raw": "{{questionServiceUrl}}/questions/{{createdQuestionId}}/submit-review?requestedBy=2",
-              "host": ["{{questionServiceUrl}}"],
-              "path": ["questions", "{{createdQuestionId}}", "submit-review"],
-              "query": [{ "key": "requestedBy", "value": "2" }]
+              "host": [
+                "{{questionServiceUrl}}"
+              ],
+              "path": [
+                "questions",
+                "{{createdQuestionId}}",
+                "submit-review"
+              ],
+              "query": [
+                {
+                  "key": "requestedBy",
+                  "value": "2"
+                }
+              ]
             }
           },
           "event": [
@@ -265,9 +362,15 @@
           "request": {
             "method": "GET",
             "url": {
-              "raw": "{{questionServiceUrl}}/operations/{{operationId}}",
-              "host": ["{{questionServiceUrl}}"],
-              "path": ["operations", "{{operationId}}"]
+              "raw": "{{questionServiceUrl}}/questions/operations/{{operationId}}",
+              "host": [
+                "{{questionServiceUrl}}"
+              ],
+              "path": [
+                "questions",
+                "operations",
+                "{{operationId}}"
+              ]
             }
           },
           "event": [
@@ -291,8 +394,13 @@
             "method": "GET",
             "url": {
               "raw": "{{questionServiceUrl}}/questions/{{createdQuestionId}}",
-              "host": ["{{questionServiceUrl}}"],
-              "path": ["questions", "{{createdQuestionId}}"]
+              "host": [
+                "{{questionServiceUrl}}"
+              ],
+              "path": [
+                "questions",
+                "{{createdQuestionId}}"
+              ]
             }
           }
         }
@@ -308,8 +416,13 @@
             "method": "GET",
             "url": {
               "raw": "{{lifecycleServiceUrl}}/lifecycle/{{createdQuestionId}}",
-              "host": ["{{lifecycleServiceUrl}}"],
-              "path": ["lifecycle", "{{createdQuestionId}}"]
+              "host": [
+                "{{lifecycleServiceUrl}}"
+              ],
+              "path": [
+                "lifecycle",
+                "{{createdQuestionId}}"
+              ]
             }
           },
           "event": [
@@ -331,15 +444,26 @@
           "name": "Caso 6: Aprobar pregunta en DRAFT (400 Transición Rechazada)",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"targetState\": \"APPROVED\",\n  \"changedBy\": \"Administrador\",\n  \"message\": \"Intento no permitido de aprobar en DRAFT\"\n}"
             },
             "url": {
               "raw": "{{lifecycleServiceUrl}}/lifecycle/9999/transition",
-              "host": ["{{lifecycleServiceUrl}}"],
-              "path": ["lifecycle", "9999", "transition"]
+              "host": [
+                "{{lifecycleServiceUrl}}"
+              ],
+              "path": [
+                "lifecycle",
+                "9999",
+                "transition"
+              ]
             }
           },
           "event": [
@@ -363,8 +487,13 @@
             "method": "GET",
             "url": {
               "raw": "{{lifecycleServiceUrl}}/operations/op-test-failed-1",
-              "host": ["{{lifecycleServiceUrl}}"],
-              "path": ["operations", "op-test-failed-1"]
+              "host": [
+                "{{lifecycleServiceUrl}}"
+              ],
+              "path": [
+                "operations",
+                "op-test-failed-1"
+              ]
             }
           }
         }
@@ -378,15 +507,25 @@
           "name": "Caso 7: Asignar revisor a pregunta elegible (201 Created + Evento)",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"questionId\": {{createdQuestionId}},\n  \"reviewerId\": 4,\n  \"assignedBy\": 1\n}"
             },
             "url": {
               "raw": "{{reviewServiceUrl}}/reviews/assign",
-              "host": ["{{reviewServiceUrl}}"],
-              "path": ["reviews", "assign"]
+              "host": [
+                "{{reviewServiceUrl}}"
+              ],
+              "path": [
+                "reviews",
+                "assign"
+              ]
             }
           },
           "event": [
@@ -411,8 +550,13 @@
             "method": "GET",
             "url": {
               "raw": "{{lifecycleServiceUrl}}/lifecycle/{{createdQuestionId}}",
-              "host": ["{{lifecycleServiceUrl}}"],
-              "path": ["lifecycle", "{{createdQuestionId}}"]
+              "host": [
+                "{{lifecycleServiceUrl}}"
+              ],
+              "path": [
+                "lifecycle",
+                "{{createdQuestionId}}"
+              ]
             }
           },
           "event": [
@@ -433,15 +577,25 @@
           "name": "Caso 8: Rechazar pregunta en IN_REVIEW con observaciones",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"questionId\": {{createdQuestionId}},\n  \"reviewerId\": 4,\n  \"result\": \"REJECTED\",\n  \"comments\": \"El enunciado requiere mayor claridad en el contexto pedagógico.\"\n}"
             },
             "url": {
               "raw": "{{reviewServiceUrl}}/reviews/evaluate",
-              "host": ["{{reviewServiceUrl}}"],
-              "path": ["reviews", "evaluate"]
+              "host": [
+                "{{reviewServiceUrl}}"
+              ],
+              "path": [
+                "reviews",
+                "evaluate"
+              ]
             }
           },
           "event": [
@@ -464,15 +618,26 @@
           "name": "Caso 9: Corregir pregunta rechazada y devolver a revisión",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"targetState\": \"PENDING_REVIEW\",\n  \"changedBy\": \"Autor 2\",\n  \"message\": \"Pregunta corregida atendiendo a las observaciones del revisor.\"\n}"
             },
             "url": {
               "raw": "{{lifecycleServiceUrl}}/lifecycle/{{createdQuestionId}}/transition",
-              "host": ["{{lifecycleServiceUrl}}"],
-              "path": ["lifecycle", "{{createdQuestionId}}", "transition"]
+              "host": [
+                "{{lifecycleServiceUrl}}"
+              ],
+              "path": [
+                "lifecycle",
+                "{{createdQuestionId}}",
+                "transition"
+              ]
             }
           },
           "event": [
@@ -502,8 +667,12 @@
             "method": "GET",
             "url": {
               "raw": "{{notificationServiceUrl}}/notifications",
-              "host": ["{{notificationServiceUrl}}"],
-              "path": ["notifications"]
+              "host": [
+                "{{notificationServiceUrl}}"
+              ],
+              "path": [
+                "notifications"
+              ]
             }
           },
           "event": [
@@ -529,8 +698,14 @@
             "method": "GET",
             "url": {
               "raw": "{{notificationServiceUrl}}/notifications/recipient/4",
-              "host": ["{{notificationServiceUrl}}"],
-              "path": ["notifications", "recipient", "4"]
+              "host": [
+                "{{notificationServiceUrl}}"
+              ],
+              "path": [
+                "notifications",
+                "recipient",
+                "4"
+              ]
             }
           }
         }
