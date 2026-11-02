@@ -71,7 +71,7 @@ public class JpaReviewRepositoryAdapter implements ReviewRepository {
     @Override
     @Transactional(readOnly = true)
     public List<Review> findReviewsByQuestion(Long questionId) {
-        return reviews.findByQuestionIdOrderByCreatedAtAsc(questionId).stream()
+        return reviews.findByQuestionIdOrderByCreatedAtAscIdAsc(questionId).stream()
                 .map(e -> new Review(e.getId(), e.getQuestionId(), e.getReviewerId(), e.getRound(), e.getResult(),
                         e.getComments(), e.getCreatedAt()))
                 .toList();

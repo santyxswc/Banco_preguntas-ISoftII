@@ -6,5 +6,5 @@ import java.util.List;
 
 public interface ReviewJpaRepository extends JpaRepository<ReviewEntity, Long> {
 
-    List<ReviewEntity> findByQuestionIdOrderByCreatedAtAsc(Long questionId);
+    List<ReviewEntity> findByQuestionIdOrderByCreatedAtAscIdAsc(Long questionId);
 }
