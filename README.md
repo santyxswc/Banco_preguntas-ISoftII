@@ -90,6 +90,9 @@ El dominio no depende de la persistencia (inversión de dependencias) y
 las vistas no contienen lógica de negocio. Patrones aplicados: Builder,
 Factory Method, Singleton, Facade, Decorator, Strategy, Observer y State.
 
+La interfaz Swing se retiró en el corte 2 (HU-T7.4): sus pantallas ya
+existen en el frontend web, y el monolito queda como backend con API REST.
+
 El detalle de clases, patrones y pruebas está en
 [`banco-preguntas/README.md`](banco-preguntas/README.md).
 
@@ -142,7 +145,7 @@ autenticación y autorización por rol (RNF-06 a RNF-09).
 ├── .github/workflows/                CI: pruebas del monolito, de los microservicios y del frontend
 ├── arquitectura/                     Contextos, contratos, C4, escalabilidad y diagramas (.mmd/.png)
 ├── frontend/                         Frontend web (HTML + JS) que consume la API del gateway (:5173)
-├── banco-preguntas/                  Corte 1: monolito en capas (Swing)
+├── banco-preguntas/                  Corte 1: monolito en capas (API REST; la GUI Swing se retiró)
 └── microservicios/                   Corte 2: microservicios (Maven multi-módulo)
     ├── pom.xml                       POM padre (Java 21, Spring Boot 3.3.4, Spring Cloud 2023.0)
     ├── docker-compose.yml            RabbitMQ con consola de administración
@@ -201,7 +204,7 @@ docker exec rabbitmq-taller09 rabbitmqctl delete_queue reviewer.assigned.queue
 cd banco-preguntas
 docker compose up -d     # base de datos (opcional)
 mvn clean install
-mvn exec:java
+mvn spring-boot:run
 ```
 
 Si no hay base de datos disponible, la aplicación guarda las preguntas
@@ -220,9 +223,9 @@ ver [`banco-preguntas/README.md`](banco-preguntas/README.md#ejecución).
 |-----|--------------------|--------------------------|
 | Lenguaje y build | Java 21, Maven | Java 21, Maven multi-módulo |
 | Framework | — | Spring Boot 3.3, Spring Cloud Gateway 2023.0 |
-| Interfaz | Swing | Frontend web HTML + CSS + JavaScript (servidor Node) |
+| Interfaz | Swing (retirada en el corte 2) | Frontend web HTML + CSS + JavaScript (servidor Node) |
 | Mensajería | Observer en memoria | RabbitMQ 3.13 (Spring AMQP) con DLQ |
-| Base de datos | PostgreSQL 16 + Flyway, H2 para pruebas | review-service con Spring Data JPA (H2 / PostgreSQL); el resto en memoria |
+| Base de datos | PostgreSQL 16 + Flyway, H2 para pruebas | Una base por servicio con Spring Data JPA + Flyway (H2 / PostgreSQL): question_db, review_db y user_db |
 | Documentación de la API | — | springdoc-openapi (Swagger UI) |
 | Pruebas | JUnit 5 | JUnit 5, Mockito, Spring Boot Test; k6 para carga |
 | Correo | Jakarta Mail (simulado en consola) | Spring Mail (consola o SMTP) |

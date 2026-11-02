@@ -72,10 +72,19 @@ Consultas que hace review-service a otros servicios:
 
 | Verbo | Ruta pública | Ruta en el servicio | Descripción | Códigos |
 |---|---|---|---|---|
-| POST | `/api/v1/auth/login` | `/auth/login` | Iniciar sesión | 200, 401 |
+| POST | `/api/v1/auth/login` | `/auth/login` | Iniciar sesión; devuelve el usuario y un token firmado | 200, 401 |
 | GET | `/api/v1/usuarios` | `/users` | Listar usuarios | 200 |
 | GET | `/api/v1/usuarios/{id}` | `/users/{id}` | Usuario por id | 200, 404 |
-| GET | `/api/v1/usuarios/role/{role}` | `/users/role/{role}` | Usuarios por rol (revisores elegibles) | 200 |
+| GET | `/api/v1/usuarios/role/{role}` | `/users/role/{role}` | Usuarios por rol | 200, 400 |
+| GET | `/api/v1/usuarios/reviewers/eligible?authorId=&excluding=` | `/users/reviewers/eligible` | Revisores elegibles: rol REVISOR, sin el autor ni los ya asignados | 200 |
+| GET | `/api/v1/usuarios/me` | `/users/me` | Usuario de la sesión, según la cabecera `X-User-Id` | 200, 401, 404 |
+
+### 2.3.1 Propagación de la identidad (HU-T4.3)
+
+1. `POST /api/v1/auth/login` valida la contraseña (hash SHA-256 con sal, guardado en `user_db`) y devuelve un token firmado con HMAC-SHA256 que lleva el id, el usuario, los roles y la fecha de vencimiento (`AuthTokenCodec`, en shared-contracts).
+2. El frontend envía el token en `Authorization: Bearer <token>` en cada petición.
+3. El filtro global `IdentityPropagationFilter` del api-gateway borra cualquier cabecera `X-User-*` que mande el cliente, valida el token con el mismo secreto (`AUTH_TOKEN_SECRET`) y agrega `X-User-Id`, `X-User-Name` y `X-User-Roles` antes de reenviar la petición. Un token alterado o vencido recibe 401 sin llegar al servicio.
+4. Los servicios toman la identidad de `X-User-Id`: question-service para editar y enviar a revisión, review-service para asignar, listar las asignadas y evaluar. Si la cabecera no viene (pruebas de carga o llamadas directas), usan el parámetro de siempre (`requestedBy`, `assignedBy`, `revisorId`, `reviewerId`).
 
 ### 2.4 Ciclo de vida, validación y notificaciones
 
