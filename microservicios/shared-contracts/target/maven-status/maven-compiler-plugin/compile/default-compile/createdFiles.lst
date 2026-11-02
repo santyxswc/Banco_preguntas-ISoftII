@@ -3,6 +3,7 @@ co\unicauca\iso2\taller09\common\dto\ValidationResult.class
 co\unicauca\iso2\taller09\common\enums\AssignmentStatus.class
 co\unicauca\iso2\taller09\common\enums\ReviewResult.class
 co\unicauca\iso2\taller09\common\dto\CreateQuestionResponse.class
+co\unicauca\iso2\taller09\common\messages\ReviewCompleted.class
 co\unicauca\iso2\taller09\common\dto\ReviewEvaluationRequest.class
 co\unicauca\iso2\taller09\common\dto\UserDTO.class
 co\unicauca\iso2\taller09\common\dto\QuestionStateDTO.class
