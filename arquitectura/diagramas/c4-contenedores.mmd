@@ -5,8 +5,8 @@ flowchart TB
     smtp[["Servidor SMTP<br/>(sistema externo)"]]
 
     subgraph SIS["Sistema Banco de Preguntas Saber PRO"]
-        FE["Frontend web<br/>[SPA]<br/>pantallas de autor, administrador y revisor"]
-        GW["API Gateway<br/>[Spring Cloud Gateway, :8080]<br/>rutas /api/v1/*, CORS, balanceo"]
+        FE["Frontend web<br/>[HTML + JS, Node :5173]<br/>pantallas de autor, administrador y revisor"]
+        GW["API Gateway<br/>[Spring Cloud Gateway, :8080]<br/>rutas /api/v1/*, CORS, balanceo, Swagger"]
         US["user-service<br/>[Spring Boot, :8083]"]
         QS["question-service<br/>[Spring Boot, :8081, N instancias]"]
         VS["validation-service<br/>[Spring Boot, :8082]"]
@@ -25,6 +25,7 @@ flowchart TB
     GW -- "/api/v1/ciclo-vida" --> LS
     GW -- "/api/v1/notificaciones" --> NS
     QS -- "REST" --> VS
+    QS -- "REST: estados en lote" --> LS
     QS -- "AMQP: SubmitQuestionForReview" --> MQ
     MQ -- "AMQP" --> LS
     RS -- "REST" --> QS
@@ -33,4 +34,5 @@ flowchart TB
     RS -- "JPA" --> RDB
     RS -- "AMQP: RevisorAsignado, RevisionCompletada" --> MQ
     MQ -- "AMQP" --> NS
+    NS -- "REST: correo" --> US
     NS -- "SMTP" --> smtp

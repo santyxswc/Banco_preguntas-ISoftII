@@ -60,10 +60,12 @@ Consultas que hace review-service a otros servicios:
 
 | Verbo | Ruta pública | Ruta en el servicio | Descripción | Códigos |
 |---|---|---|---|---|
-| POST | `/api/v1/preguntas` | `/questions` | Crear pregunta (valida con validation-service) | 201, 400 |
-| GET | `/api/v1/preguntas` | `/questions` | Listar preguntas | 200 |
-| GET | `/api/v1/preguntas/{id}` | `/questions/{id}` | Detalle de la pregunta | 200, 404 |
-| POST | `/api/v1/preguntas/{id}/submit-review` | `/questions/{id}/submit-review` | Enviar a revisión (asíncrono) | 202, 404 |
+| POST | `/api/v1/preguntas` | `/questions` | Crear pregunta con todos los campos DCE (contexto, enunciado, 4 opciones, clave, justificación, bibliografía, competencia, tema, subtema, dificultad). Valida con validation-service | 201, 400, 503 |
+| PUT | `/api/v1/preguntas/{id}?requestedBy=` | `/questions/{id}` | Editar; solo el autor y solo en DRAFT o REJECTED | 200, 400, 403, 404, 409 |
+| GET | `/api/v1/preguntas?authorId=&status=&competency=&topic=&difficulty=&keyword=&page=&size=` | `/questions` | Listado paginado con filtros; cada pregunta trae `status`, `statusLabel` y `statusColor` consultados en lote a lifecycle-service | 200, 400 |
+| GET | `/api/v1/preguntas/{id}` | `/questions/{id}` | Detalle con estado actual y color | 200, 404 |
+| GET | `/api/v1/preguntas/catalog` | `/questions/catalog` | Competencias, niveles y estados con su color | 200 |
+| POST | `/api/v1/preguntas/{id}/submit-review?requestedBy=` | `/questions/{id}/submit-review` | Enviar a revisión (asíncrono, solo el autor) | 202, 403, 404, 503 |
 | GET | `/api/v1/preguntas/operations/{operationId}` | `/questions/operations/{operationId}` | Estado de la operación asíncrona | 200, 404 |
 
 ### 2.3 Identidad — `user-service` (8083)
@@ -80,6 +82,7 @@ Consultas que hace review-service a otros servicios:
 | Servicio | Verbo | Ruta pública | Ruta en el servicio | Códigos |
 |---|---|---|---|---|
 | lifecycle-service (8084) | GET | `/api/v1/ciclo-vida/{questionId}` | `/lifecycle/{questionId}` | 200 |
+| lifecycle-service | GET | `/api/v1/ciclo-vida?ids=1,2,3` | `/lifecycle?ids=` (estados en lote, lo usa question-service al listar) | 200, 400 |
 | lifecycle-service | POST | `/api/v1/ciclo-vida/{questionId}/transition` | `/lifecycle/{questionId}/transition` | 200, 400 |
 | validation-service (8082) | POST | `/api/v1/validaciones` | `/validate` | 200 |
 | notification-service (8086) | GET | `/api/v1/notificaciones` | `/notifications` | 200 |
