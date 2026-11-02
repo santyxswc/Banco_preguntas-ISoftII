@@ -1,0 +1,26 @@
+flowchart LR
+    subgraph IMPL["Contextos implementados en el Corte 2"]
+        ID["Identidad y acceso<br/><i>user-service</i><br/>usuarios, roles, login"]
+        AU["Autoría de preguntas<br/><i>question-service</i><br/>Pregunta, opciones, metadatos"]
+        VA["Validación estructural<br/><i>validation-service</i><br/>reglas Saber PRO"]
+        CV["Ciclo de vida<br/><i>lifecycle-service</i><br/>estados y transiciones"]
+        RE["Revisión por pares<br/><i>review-service</i><br/>Asignación, Revisión, Observación"]
+        NO["Notificaciones<br/><i>notification-service</i><br/>correos y avisos"]
+    end
+    subgraph FUT["Contextos identificados que no se implementan en este corte"]
+        SI["Simulacros y publicación"]
+        AN["Analítica y reportes"]
+    end
+    GW(["API Gateway"])
+
+    GW --> ID & AU & RE & CV & NO
+    AU -- "REST: validar" --> VA
+    AU -- "SubmitQuestionForReview (cola)" --> CV
+    RE -- "REST: consultar pregunta (autor)" --> AU
+    RE -- "REST: consultar revisor (roles)" --> ID
+    RE -- "REST: transición de estado" --> CV
+    RE -- "RevisorAsignado (evento)" --> NO
+    RE -- "RevisionCompletada (evento)" --> NO
+    CV -. "PreguntaEnviadaARevision (evento)" .-> NO
+    CV -. "preguntas APROBADAS" .-> SI
+    RE -. "resultados de revisión" .-> AN

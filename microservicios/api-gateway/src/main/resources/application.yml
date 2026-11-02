@@ -1,0 +1,90 @@
+server:
+  port: ${GATEWAY_PORT:8080}
+
+gateway:
+  question-uri: ${QUESTION_SERVICE_ROUTE:http://localhost:8081}
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOriginPatterns: ${FRONTEND_ORIGINS:*}
+            allowedMethods: GET,POST,PUT,PATCH,DELETE,OPTIONS
+            allowedHeaders: "*"
+      routes:
+        - id: preguntas
+          uri: ${gateway.question-uri}
+          predicates:
+            - Path=/api/v1/preguntas,/api/v1/preguntas/**
+          filters:
+            - RewritePath=/api/v1/preguntas(?<segment>.*), /questions$\{segment}
+        - id: usuarios
+          uri: ${USER_SERVICE_URL:http://localhost:8083}
+          predicates:
+            - Path=/api/v1/usuarios,/api/v1/usuarios/**
+          filters:
+            - RewritePath=/api/v1/usuarios(?<segment>.*), /users$\{segment}
+        - id: autenticacion
+          uri: ${USER_SERVICE_URL:http://localhost:8083}
+          predicates:
+            - Path=/api/v1/auth/**
+          filters:
+            - RewritePath=/api/v1/auth(?<segment>.*), /auth$\{segment}
+        - id: asignaciones
+          uri: ${REVIEW_SERVICE_URL:http://localhost:8085}
+          predicates:
+            - Path=/api/v1/asignaciones,/api/v1/asignaciones/**
+        - id: revisiones
+          uri: ${REVIEW_SERVICE_URL:http://localhost:8085}
+          predicates:
+            - Path=/api/v1/revisiones/**
+        - id: ciclo-vida
+          uri: ${LIFECYCLE_SERVICE_URL:http://localhost:8084}
+          predicates:
+            - Path=/api/v1/ciclo-vida/**
+          filters:
+            - RewritePath=/api/v1/ciclo-vida(?<segment>.*), /lifecycle$\{segment}
+        - id: validaciones
+          uri: ${VALIDATION_SERVICE_URL:http://localhost:8082}
+          predicates:
+            - Path=/api/v1/validaciones,/api/v1/validaciones/**
+          filters:
+            - RewritePath=/api/v1/validaciones(?<segment>.*), /validate$\{segment}
+        - id: notificaciones
+          uri: ${NOTIFICATION_SERVICE_URL:http://localhost:8086}
+          predicates:
+            - Path=/api/v1/notificaciones,/api/v1/notificaciones/**
+          filters:
+            - RewritePath=/api/v1/notificaciones(?<segment>.*), /notifications$\{segment}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway
+  endpoint:
+    gateway:
+      enabled: true
+
+---
+spring:
+  config:
+    activate:
+      on-profile: escalado
+  cloud:
+    discovery:
+      client:
+        simple:
+          instances:
+            question-service:
+              - uri: ${QUESTION_SERVICE_URL:http://localhost:8081}
+              - uri: ${QUESTION_SERVICE_URL_2:http://localhost:8091}
+
+gateway:
+  question-uri: lb://question-service

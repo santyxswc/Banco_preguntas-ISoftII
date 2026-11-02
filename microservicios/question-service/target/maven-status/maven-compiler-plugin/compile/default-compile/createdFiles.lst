@@ -1,6 +1,0 @@
-co\unicauca\iso2\taller09\questionservice\controller\QuestionController.class
-co\unicauca\iso2\taller09\questionservice\domain\Question.class
-co\unicauca\iso2\taller09\questionservice\client\ValidationClient.class
-co\unicauca\iso2\taller09\questionservice\config\RabbitMQConfig.class
-co\unicauca\iso2\taller09\questionservice\QuestionServiceApplication.class
-co\unicauca\iso2\taller09\questionservice\repository\QuestionRepository.class

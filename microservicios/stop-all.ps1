@@ -4,7 +4,7 @@ Write-Host "==========================================================" -Foregro
 Write-Host " Deteniendo Microservicios del Taller 09..." -ForegroundColor Yellow
 Write-Host "==========================================================" -ForegroundColor Yellow
 
-$ports = @(8081, 8082, 8083, 8084, 8085, 8086)
+$ports = @(8080, 8081, 8082, 8083, 8084, 8085, 8086, 8091)
 
 foreach ($port in $ports) {
     $conns = Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue

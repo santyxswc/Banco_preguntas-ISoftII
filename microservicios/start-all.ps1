@@ -17,7 +17,8 @@ $services = @(
     @{ Name = "Lifecycle Service";    Dir = "lifecycle-service";    Port = 8084 },
     @{ Name = "Question Service";     Dir = "question-service";     Port = 8081 },
     @{ Name = "Review Service";       Dir = "review-service";       Port = 8085 },
-    @{ Name = "Notification Service"; Dir = "notification-service"; Port = 8086 }
+    @{ Name = "Notification Service"; Dir = "notification-service"; Port = 8086 },
+    @{ Name = "API Gateway";          Dir = "api-gateway";          Port = 8080 }
 )
 
 $PSScriptRootCurrent = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -32,6 +33,7 @@ foreach ($s in $services) {
 Write-Host "`n==========================================================" -ForegroundColor Cyan
 Write-Host " Todos los microservicios fueron lanzados." -ForegroundColor Cyan
 Write-Host " Puertos activos:" -ForegroundColor White
+Write-Host "  - API Gateway:         http://localhost:8080/api/v1/..." -ForegroundColor Gray
 Write-Host "  - RabbitMQ Management: http://localhost:15672 (guest/guest)" -ForegroundColor Gray
 Write-Host "  - Question Service:    http://localhost:8081/swagger-ui.html" -ForegroundColor Gray
 Write-Host "  - Validation Service:  http://localhost:8082/swagger-ui.html" -ForegroundColor Gray

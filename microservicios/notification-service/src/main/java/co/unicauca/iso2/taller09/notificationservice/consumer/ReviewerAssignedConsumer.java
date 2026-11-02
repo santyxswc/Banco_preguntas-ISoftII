@@ -5,6 +5,7 @@ import co.unicauca.iso2.taller09.common.enums.NotificationStatus;
 import co.unicauca.iso2.taller09.common.enums.NotificationType;
 import co.unicauca.iso2.taller09.common.messages.ReviewerAssigned;
 import co.unicauca.iso2.taller09.notificationservice.domain.Notification;
+import co.unicauca.iso2.taller09.notificationservice.idempotency.ProcessedEventRegistry;
 import co.unicauca.iso2.taller09.notificationservice.repository.NotificationRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,36 +17,31 @@ public class ReviewerAssignedConsumer {
     private static final Logger log = LoggerFactory.getLogger(ReviewerAssignedConsumer.class);
 
     private final NotificationRepository notificationRepository;
+    private final ProcessedEventRegistry processedEvents;
 
-    public ReviewerAssignedConsumer(NotificationRepository notificationRepository) {
+    public ReviewerAssignedConsumer(NotificationRepository notificationRepository,
+                                    ProcessedEventRegistry processedEvents) {
         this.notificationRepository = notificationRepository;
+        this.processedEvents = processedEvents;
     }
 
-    /**
-     * Paso 8 del Taller: Consumo asíncrono del evento ReviewerAssigned publicado en RabbitMQ.
-     * Procesa la notificación sin bloquear la operación principal de asignación.
-     */
     @RabbitListener(queues = RabbitMQConstants.QUEUE_REVIEWER_ASSIGNED)
     public void handleReviewerAssigned(ReviewerAssigned event) {
-        log.info(">>> [NOTIFICATION-SERVICE] Evento ReviewerAssigned recibido desde RabbitMQ: questionId={}, reviewerId={}, assignedBy={}",
+        if (processedEvents.alreadyProcessed("ReviewerAssigned", event.getOperationId())) {
+            log.info("Evento RevisorAsignado duplicado ignorado: operationId={}", event.getOperationId());
+            return;
+        }
+        log.info("Evento RevisorAsignado recibido: questionId={}, reviewerId={}, assignedBy={}",
                 event.getQuestionId(), event.getReviewerId(), event.getAssignedBy());
 
         String subject = String.format("Nueva pregunta Saber Pro asignada para evaluación (Pregunta #%d)", event.getQuestionId());
         String body = String.format("Estimado docente revisor (ID: %d), se le ha asignado la pregunta #%d para su dictamen por parte del Administrador %d. Operación: %s",
                 event.getReviewerId(), event.getQuestionId(), event.getAssignedBy(), event.getOperationId());
 
-        Notification notification = new Notification(
-                null,
-                event.getReviewerId(),
-                NotificationType.REVIEWER_ASSIGNED,
-                subject,
-                body,
-                NotificationStatus.SENT
-        );
+        Notification saved = notificationRepository.save(new Notification(null, event.getReviewerId(),
+                NotificationType.REVIEWER_ASSIGNED, subject, body, NotificationStatus.SENT));
 
-        Notification saved = notificationRepository.save(notification);
-
-        log.info("<<< [NOTIFICATION-SERVICE] Notificación #{} enviada con éxito al revisor #{} (DESACOPLADA Y ASÍNCRONA).",
-                saved.getId(), event.getReviewerId());
+        processedEvents.markProcessed("ReviewerAssigned", event.getOperationId());
+        log.info("Notificación #{} registrada para el revisor #{}", saved.getId(), event.getReviewerId());
     }
 }

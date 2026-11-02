@@ -1,7 +1,0 @@
-co\unicauca\iso2\taller09\lifecycleservice\consumer\QuestionSubmitConsumer.class
-co\unicauca\iso2\taller09\lifecycleservice\domain\OperationResult.class
-co\unicauca\iso2\taller09\lifecycleservice\repository\LifecycleRepository.class
-co\unicauca\iso2\taller09\lifecycleservice\config\RabbitMQConfig.class
-co\unicauca\iso2\taller09\lifecycleservice\domain\QuestionState.class
-co\unicauca\iso2\taller09\lifecycleservice\LifecycleServiceApplication.class
-co\unicauca\iso2\taller09\lifecycleservice\controller\LifecycleController.class

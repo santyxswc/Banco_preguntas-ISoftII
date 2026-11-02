@@ -20,3 +20,6 @@ docs/
 .idea/
 
 
+
+# Bases de datos locales H2 de los microservicios
+**/data/*.db
