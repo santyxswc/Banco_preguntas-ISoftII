@@ -1,6 +1,0 @@
-co\unicauca\iso2\taller09\notificationservice\config\RabbitMQConfig.class
-co\unicauca\iso2\taller09\notificationservice\controller\NotificationController.class
-co\unicauca\iso2\taller09\notificationservice\domain\Notification.class
-co\unicauca\iso2\taller09\notificationservice\repository\NotificationRepository.class
-co\unicauca\iso2\taller09\notificationservice\consumer\ReviewerAssignedConsumer.class
-co\unicauca\iso2\taller09\notificationservice\NotificationServiceApplication.class
