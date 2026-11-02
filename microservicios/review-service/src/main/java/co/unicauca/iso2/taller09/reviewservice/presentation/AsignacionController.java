@@ -1,5 +1,6 @@
 package co.unicauca.iso2.taller09.reviewservice.presentation;
 
+import co.unicauca.iso2.taller09.common.constants.IdentityHeaders;
 import co.unicauca.iso2.taller09.reviewservice.application.ReviewService;
 import co.unicauca.iso2.taller09.reviewservice.presentation.dto.AssignReviewersRequest;
 import co.unicauca.iso2.taller09.reviewservice.presentation.dto.AssignmentResponse;
@@ -11,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -35,9 +37,11 @@ public class AsignacionController {
     @ApiResponse(responseCode = "404", description = "La pregunta o el revisor no existen")
     @ApiResponse(responseCode = "409", description = "La pregunta no está en PENDING_REVIEW o ya tiene revisores")
     @ApiResponse(responseCode = "503", description = "Un servicio dependiente no responde")
-    public ResponseEntity<List<AssignmentResponse>> assign(@RequestBody AssignReviewersRequest request) {
+    public ResponseEntity<List<AssignmentResponse>> assign(@RequestBody AssignReviewersRequest request,
+                                                           @RequestHeader(value = IdentityHeaders.USER_ID, required = false) Long userId) {
+        Long assignedBy = userId != null ? userId : request.assignedBy();
         List<AssignmentResponse> body = reviewService
-                .assignReviewers(request.questionId(), request.reviewerIds(), request.assignedBy())
+                .assignReviewers(request.questionId(), request.reviewerIds(), assignedBy)
                 .stream().map(AssignmentResponse::from).toList();
         return ResponseEntity.status(HttpStatus.CREATED).body(body);
     }

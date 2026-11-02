@@ -1,7 +1,12 @@
 package co.unicauca.iso2.taller09.userservice.domain;
 
 import co.unicauca.iso2.taller09.common.dto.UserDTO;
+import co.unicauca.iso2.taller09.common.enums.Role;
+
+import java.util.Collection;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 public class User {
     private Long id;
@@ -9,30 +14,38 @@ public class User {
     private String passwordHash;
     private String fullName;
     private String email;
-    private List<String> roles;
+    private EnumSet<Role> roles = EnumSet.noneOf(Role.class);
 
-    public User() {}
+    public User() {
+    }
 
-    public User(Long id, String username, String passwordHash, String fullName, String email, List<String> roles) {
+    public User(Long id, String username, String passwordHash, String fullName, String email, Collection<Role> roles) {
         this.id = id;
         this.username = username;
         this.passwordHash = passwordHash;
         this.fullName = fullName;
         this.email = email;
-        this.roles = roles;
+        setRoles(roles);
     }
 
     public boolean validatePassword(String plainPassword) {
-        if (plainPassword == null || passwordHash == null) return false;
-        return passwordHash.equals(plainPassword);
+        return PasswordHasher.matches(plainPassword, passwordHash);
     }
 
-    public boolean hasRole(String role) {
-        return roles != null && roles.contains(role);
+    public boolean hasRole(Role role) {
+        return role != null && roles.contains(role);
+    }
+
+    public boolean canReview(Long authorId) {
+        return hasRole(Role.REVISOR) && (authorId == null || !authorId.equals(id));
+    }
+
+    public List<String> roleNames() {
+        return roles.stream().map(Role::name).toList();
     }
 
     public UserDTO toDTO() {
-        return new UserDTO(id, username, fullName, email, roles);
+        return new UserDTO(id, username, fullName, email, roleNames());
     }
 
     public Long getId() { return id; }
@@ -50,6 +63,13 @@ public class User {
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
 
-    public List<String> getRoles() { return roles; }
-    public void setRoles(List<String> roles) { this.roles = roles; }
+    public Set<Role> getRoles() { return EnumSet.copyOf(roles); }
+
+    public void setRoles(Collection<Role> roles) {
+        EnumSet<Role> copy = EnumSet.noneOf(Role.class);
+        if (roles != null) {
+            copy.addAll(roles);
+        }
+        this.roles = copy;
+    }
 }

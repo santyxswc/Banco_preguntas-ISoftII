@@ -4,6 +4,10 @@ server:
 gateway:
   question-uri: ${QUESTION_SERVICE_ROUTE:http://localhost:8081}
 
+auth:
+  token:
+    secret: ${AUTH_TOKEN_SECRET:banco-preguntas-secreto-desarrollo}
+
 spring:
   application:
     name: api-gateway

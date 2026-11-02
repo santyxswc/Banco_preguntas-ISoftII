@@ -1,6 +1,11 @@
 // Cliente de la API REST del API Gateway. Toda la comunicación frontend → backend pasa por aquí.
 (function () {
     const BASE = window.APP_CONFIG.API_BASE;
+    const TOKEN_KEY = 'bp-token';
+
+    function token() {
+        try { return sessionStorage.getItem(TOKEN_KEY); } catch { return null; }
+    }
 
     class ApiError extends Error {
         constructor(status, body) {
@@ -15,11 +20,14 @@
         Object.entries(query || {}).forEach(([k, v]) => {
             if (v !== undefined && v !== null && v !== '') url.searchParams.set(k, v);
         });
+        const headers = body ? { 'Content-Type': 'application/json' } : {};
+        const current = path.startsWith('/auth/') ? null : token();
+        if (current) headers.Authorization = 'Bearer ' + current;
         let res;
         try {
             res = await fetch(url, {
                 method,
-                headers: body ? { 'Content-Type': 'application/json' } : {},
+                headers,
                 body: body ? JSON.stringify(body) : undefined,
             });
         } catch {
@@ -28,14 +36,24 @@
         const text = await res.text();
         let data = null;
         try { data = text ? JSON.parse(text) : null; } catch { data = { message: text }; }
+        if (res.status === 401 && current) {
+            try { sessionStorage.removeItem(TOKEN_KEY); } catch { }
+            throw new ApiError(401, { message: 'La sesión venció. Cierre sesión e ingrese de nuevo.' });
+        }
         if (!res.ok) throw new ApiError(res.status, data);
         return data;
     }
 
     window.Api = {
         ApiError,
-        login: (username, password) => request('POST', '/auth/login', { body: { username, password } }),
-        reviewers: () => request('GET', '/usuarios/role/REVISOR'),
+        login: async (username, password) => {
+            const res = await request('POST', '/auth/login', { body: { username, password } });
+            try { if (res && res.token) sessionStorage.setItem(TOKEN_KEY, res.token); } catch { }
+            return res;
+        },
+        clearSession: () => { try { sessionStorage.removeItem(TOKEN_KEY); } catch { } },
+        me: () => request('GET', '/usuarios/me'),
+        reviewers: (authorId) => request('GET', '/usuarios/reviewers/eligible', { query: { authorId } }),
         users: () => request('GET', '/usuarios'),
 
         catalog: () => request('GET', '/preguntas/catalog'),

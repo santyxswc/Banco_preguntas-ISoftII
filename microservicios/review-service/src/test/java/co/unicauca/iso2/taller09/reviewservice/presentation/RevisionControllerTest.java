@@ -104,4 +104,28 @@ class RevisionControllerTest {
         mvc.perform(get("/api/v1/revisiones/pregunta/100"))
                 .andExpect(status().isServiceUnavailable());
     }
+
+    @Test
+    void laIdentidadDelGatewayPrevaleceSobreElRevisorDelCuerpo() throws Exception {
+        Review review = new Review(8L, 100L, 4L, 1, ReviewResult.APPROVED, null, LocalDateTime.now());
+        when(reviewService.evaluate(100L, 4L, ReviewResult.APPROVED, null))
+                .thenReturn(new EvaluationOutcome(review, null));
+
+        mvc.perform(post("/api/v1/revisiones/evaluar").contentType(MediaType.APPLICATION_JSON)
+                        .header("X-User-Id", "4")
+                        .content("{\"questionId\":100,\"reviewerId\":5,\"result\":\"APPROVED\"}"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void listarAsignadasUsaLaIdentidadDelGatewayOExigeElRevisor() throws Exception {
+        when(reviewService.listAssigned(5L, 0, 10)).thenReturn(new PageResult<>(List.of(), 0, 10, 0));
+
+        mvc.perform(get("/api/v1/revisiones/asignadas").header("X-User-Id", "5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(0));
+
+        mvc.perform(get("/api/v1/revisiones/asignadas"))
+                .andExpect(status().isBadRequest());
+    }
 }

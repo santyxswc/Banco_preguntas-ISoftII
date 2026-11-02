@@ -96,6 +96,7 @@
 
     function logout() {
         sessionStorage.removeItem('bp-user');
+        Api.clearSession();
         state.user = null;
         $('#app-view').hidden = true;
         $('#session').hidden = true;

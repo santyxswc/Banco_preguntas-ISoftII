@@ -1,5 +1,6 @@
 package co.unicauca.iso2.taller09.questionservice.controller;
 
+import co.unicauca.iso2.taller09.common.constants.IdentityHeaders;
 import co.unicauca.iso2.taller09.common.dto.CreateQuestionRequest;
 import co.unicauca.iso2.taller09.common.dto.CreateQuestionResponse;
 import co.unicauca.iso2.taller09.common.dto.OperationResultDTO;
@@ -72,8 +73,9 @@ public class QuestionController {
     })
     public ResponseEntity<QuestionDTO> updateQuestion(@PathVariable Long id,
                                                       @RequestParam(required = false) Long requestedBy,
+                                                      @RequestHeader(value = IdentityHeaders.USER_ID, required = false) Long userId,
                                                       @RequestBody CreateQuestionRequest request) {
-        facade.update(id, request, requestedBy);
+        facade.update(id, request, userId != null ? userId : requestedBy);
         return ResponseEntity.ok(facade.findById(id));
     }
 
@@ -87,8 +89,9 @@ public class QuestionController {
             @ApiResponse(responseCode = "503", description = "RabbitMQ no disponible", content = @Content)
     })
     public ResponseEntity<Map<String, Object>> submitForReview(@PathVariable Long id,
-                                                               @RequestParam(required = false) Long requestedBy) {
-        String operationId = facade.submitForReview(id, requestedBy);
+                                                               @RequestParam(required = false) Long requestedBy,
+                                                               @RequestHeader(value = IdentityHeaders.USER_ID, required = false) Long userId) {
+        String operationId = facade.submitForReview(id, userId != null ? userId : requestedBy);
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(Map.of(
                 "operationId", operationId,
                 "questionId", id,
