@@ -187,11 +187,11 @@ kanban
 | **Atributo de Calidad** | **Escalabilidad y Modificabilidad** (ISO/IEC 25010) |
 | **Contexto** | Periodo de convocatoria masiva Saber Pro donde cientos de docentes redactan, envían y revisan preguntas simultáneamente en el sistema. |
 | **Fuente del Estímulo** | Docentes autores, administradores y revisores concurrentes realizando operaciones de creación, consulta paginada, asignación y dictamen de revisión. |
-| **Estímulo** | Incremento súbito de peticiones concurrentes (hasta 500 peticiones/segundo) para consultas de catálogo, filtros de preguntas y envío de evaluaciones. |
+| **Estímulo** | 500 usuarios concurrentes, cada uno con una petición por segundo (90 % creación de preguntas, 10 % consulta de preguntas asignadas). Ver [`arquitectura/04-escenario-escalabilidad.md`](arquitectura/04-escenario-escalabilidad.md). |
 | **Artefacto Afectado** | API REST Gateway, Servicios de Dominio (`QuestionService`, `RevisionService`), Bus de Eventos (`EventBus`) y Capa de Persistencia. |
 | **Entorno** | Sistema en operación normal y picos de carga con base de datos distribuida PostgreSQL. |
 | **Respuesta del Sistema** | 1. Desacoplamiento de operaciones síncronas (lectura/escritura REST) de las operaciones asíncronas pesadas (envío de correos SMTP) mediante EventBus.<br>2. Procesamiento paginado eficiente con índices en base de datos (`idx_preguntas_autor`, `idx_preguntas_estado`, `idx_revisiones_pregunta`).<br>3. Fachada (`BancoPreguntasFacade`) y Decorador (`LoggingQuestionRepositoryDecorator`) que permiten monitoreo sin degradar latencia. |
-| **Medición de Calidad** | - Tiempo de respuesta promedio en endpoints REST < 200 ms.<br>- Cero pérdida de eventos de dominio.<br>- Disponibilidad del 99.9% ante picos de concurrencia. |
+| **Medición de Calidad** | - Latencia p95 < 500 ms con 500 usuarios concurrentes (prueba k6 en `microservicios/pruebas-carga`).<br>- Tasa de errores < 1 %.<br>- La p95 se mantiene o baja al pasar de 1 a 2 instancias de question-service.<br>- Cero pérdida de eventos de dominio (colas durables, consumidores idempotentes y DLQ). |
 | **Resultado Esperado** | El sistema procesa todas las solicitudes sin bloqueos de hilos y las notificaciones se despachan en segundo plano garantizando la escalabilidad horizontal del backend. |
 
 ---

@@ -94,10 +94,13 @@ El detalle de clases, patrones y pruebas está en
 
 Se refactoriza el monolito en servicios independientes que se comunican
 por eventos, para cumplir los requisitos de escalabilidad (RNF-17 y
-RNF-18: 500 usuarios concurrentes y crecimiento añadiendo instancias
+RNF-18: 500 usuarios concurrentes con latencia p95 < 500 ms y crecimiento añadiendo instancias
 sin tocar la lógica de negocio). Los eventos de dominio que ya existen
 en el corte 1 (por ejemplo, la asignación de revisores) son el punto de
 partida para separar los servicios.
+
+El diseño de esta iteración (contextos delimitados, contratos, C4 con API
+Gateway y escenario de escalabilidad) está en [`arquitectura/`](arquitectura/README.md).
 
 ### Corte 3 — Arquitectura hexagonal
 

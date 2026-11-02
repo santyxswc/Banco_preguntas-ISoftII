@@ -1,0 +1,36 @@
+flowchart TB
+    autor(["Autor<br/>docente"])
+    admin(["Administrador"])
+    revisor(["Revisor<br/>docente"])
+    smtp[["Servidor SMTP<br/>(sistema externo)"]]
+
+    subgraph SIS["Sistema Banco de Preguntas Saber PRO"]
+        FE["Frontend web<br/>[SPA]<br/>pantallas de autor, administrador y revisor"]
+        GW["API Gateway<br/>[Spring Cloud Gateway, :8080]<br/>rutas /api/v1/*, CORS, balanceo"]
+        US["user-service<br/>[Spring Boot, :8083]"]
+        QS["question-service<br/>[Spring Boot, :8081, N instancias]"]
+        VS["validation-service<br/>[Spring Boot, :8082]"]
+        LS["lifecycle-service<br/>[Spring Boot, :8084]"]
+        RS["review-service<br/>[Spring Boot, :8085]"]
+        NS["notification-service<br/>[Spring Boot, :8086]"]
+        MQ{{"RabbitMQ<br/>[banco.exchange + banco.dlx]<br/>colas durables"}}
+        RDB[("review_db<br/>[H2 / PostgreSQL]")]
+    end
+
+    autor & admin & revisor -- "HTTPS" --> FE
+    FE -- "JSON/HTTP /api/v1/*" --> GW
+    GW -- "/api/v1/usuarios, /auth" --> US
+    GW -- "/api/v1/preguntas" --> QS
+    GW -- "/api/v1/asignaciones, /revisiones" --> RS
+    GW -- "/api/v1/ciclo-vida" --> LS
+    GW -- "/api/v1/notificaciones" --> NS
+    QS -- "REST" --> VS
+    QS -- "AMQP: SubmitQuestionForReview" --> MQ
+    MQ -- "AMQP" --> LS
+    RS -- "REST" --> QS
+    RS -- "REST" --> US
+    RS -- "REST" --> LS
+    RS -- "JPA" --> RDB
+    RS -- "AMQP: RevisorAsignado, RevisionCompletada" --> MQ
+    MQ -- "AMQP" --> NS
+    NS -- "SMTP" --> smtp
