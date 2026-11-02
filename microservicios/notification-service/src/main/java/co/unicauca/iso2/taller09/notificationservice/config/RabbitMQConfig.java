@@ -70,6 +70,29 @@ public class RabbitMQConfig {
     }
 
     @Bean
+    public Queue questionSubmittedEventQueue() {
+        return durableWithDeadLetter(RabbitMQConstants.QUEUE_QUESTION_SUBMITTED_EVENT);
+    }
+
+    @Bean
+    public Queue questionSubmittedEventDeadLetterQueue() {
+        return QueueBuilder.durable(RabbitMQConstants.QUEUE_QUESTION_SUBMITTED_EVENT + RabbitMQConstants.DEAD_LETTER_SUFFIX).build();
+    }
+
+    @Bean
+    public Binding questionSubmittedEventBinding(Queue questionSubmittedEventQueue, TopicExchange bancoExchange) {
+        return BindingBuilder.bind(questionSubmittedEventQueue).to(bancoExchange)
+                .with(RabbitMQConstants.ROUTING_KEY_QUESTION_SUBMITTED_EVENT);
+    }
+
+    @Bean
+    public Binding questionSubmittedEventDeadLetterBinding(Queue questionSubmittedEventDeadLetterQueue,
+                                                           DirectExchange deadLetterExchange) {
+        return BindingBuilder.bind(questionSubmittedEventDeadLetterQueue).to(deadLetterExchange)
+                .with(RabbitMQConstants.QUEUE_QUESTION_SUBMITTED_EVENT + RabbitMQConstants.DEAD_LETTER_SUFFIX);
+    }
+
+    @Bean
     public MessageConverter jsonMessageConverter() {
         return new Jackson2JsonMessageConverter();
     }
