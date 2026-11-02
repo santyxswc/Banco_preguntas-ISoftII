@@ -10,7 +10,8 @@ spring:
   cloud:
     gateway:
       default-filters:
-        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
+        # Los servicios también responden CORS; se deja una sola cabecera (el navegador rechaza dos valores distintos)
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_FIRST
       globalcors:
         cors-configurations:
           '[/**]':
@@ -62,6 +63,63 @@ spring:
             - Path=/api/v1/notificaciones,/api/v1/notificaciones/**
           filters:
             - RewritePath=/api/v1/notificaciones(?<segment>.*), /notifications$\{segment}
+        # Especificaciones OpenAPI de cada microservicio, para el Swagger UI unificado del gateway
+        - id: docs-preguntas
+          uri: ${gateway.question-uri}
+          predicates:
+            - Path=/docs/preguntas/api-docs
+          filters:
+            - SetPath=/api-docs
+        - id: docs-validaciones
+          uri: ${VALIDATION_SERVICE_URL:http://localhost:8082}
+          predicates:
+            - Path=/docs/validaciones/api-docs
+          filters:
+            - SetPath=/api-docs
+        - id: docs-usuarios
+          uri: ${USER_SERVICE_URL:http://localhost:8083}
+          predicates:
+            - Path=/docs/usuarios/api-docs
+          filters:
+            - SetPath=/api-docs
+        - id: docs-ciclo-vida
+          uri: ${LIFECYCLE_SERVICE_URL:http://localhost:8084}
+          predicates:
+            - Path=/docs/ciclo-vida/api-docs
+          filters:
+            - SetPath=/api-docs
+        - id: docs-revisiones
+          uri: ${REVIEW_SERVICE_URL:http://localhost:8085}
+          predicates:
+            - Path=/docs/revisiones/api-docs
+          filters:
+            - SetPath=/api-docs
+        - id: docs-notificaciones
+          uri: ${NOTIFICATION_SERVICE_URL:http://localhost:8086}
+          predicates:
+            - Path=/docs/notificaciones/api-docs
+          filters:
+            - SetPath=/api-docs
+
+# Swagger UI unificado: http://localhost:8080/swagger-ui.html (selector de servicio arriba a la derecha)
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    urls:
+      - name: "Preguntas (question-service)"
+        url: /docs/preguntas/api-docs
+      - name: "Revisión por pares (review-service)"
+        url: /docs/revisiones/api-docs
+      - name: "Ciclo de vida (lifecycle-service)"
+        url: /docs/ciclo-vida/api-docs
+      - name: "Validación (validation-service)"
+        url: /docs/validaciones/api-docs
+      - name: "Usuarios (user-service)"
+        url: /docs/usuarios/api-docs
+      - name: "Notificaciones (notification-service)"
+        url: /docs/notificaciones/api-docs
 
 management:
   endpoints:
