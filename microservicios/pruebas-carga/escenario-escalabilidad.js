@@ -34,9 +34,16 @@ const OPCIONES = ['Popayán', 'Cali', 'Pasto', 'Neiva'];
 
 function cuerpoPregunta() {
     return JSON.stringify({
+        context: 'El departamento del Cauca se ubica en el suroccidente de Colombia.',
         text: `Pregunta de carga ${__VU}-${__ITER}: ¿cuál es la capital del Cauca?`,
         options: OPCIONES.map((texto, i) => ({ id: 'ABCD'[i], text: `${texto} ${__VU}-${__ITER}` })),
         correctOptionId: 'A',
+        justification: 'Popayán es la capital del departamento del Cauca desde su creación.',
+        bibliography: 'Gobernación del Cauca, 2024',
+        competency: 'Programación',
+        topic: 'Prueba de carga',
+        subtopic: 'Escenario de escalabilidad',
+        difficulty: 'BAJO',
         authorId: 2,
     });
 }

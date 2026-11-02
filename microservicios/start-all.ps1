@@ -1,4 +1,4 @@
-# Script PowerShell para iniciar RabbitMQ y los 6 microservicios del Taller 09
+# Script PowerShell para iniciar RabbitMQ, los microservicios, el API Gateway y el frontend web
 
 Write-Host "==========================================================" -ForegroundColor Cyan
 Write-Host " Iniciando Arquitectura de Microservicios - Taller 09" -ForegroundColor Cyan
@@ -30,10 +30,21 @@ foreach ($s in $services) {
     Start-Sleep -Seconds 3
 }
 
+# Frontend web separado (Node.js, sin dependencias): solo consume el API Gateway
+$frontendDir = Join-Path (Split-Path -Parent $PSScriptRootCurrent) "frontend"
+if (Get-Command node -ErrorAction SilentlyContinue) {
+    Write-Host "`nIniciando Frontend web en puerto 5173..." -ForegroundColor Green
+    Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$frontendDir'; node server.mjs" -WindowStyle Normal
+} else {
+    Write-Host "`nNode.js no está instalado: el frontend no se inició (ver frontend/README.md)." -ForegroundColor Red
+}
+
 Write-Host "`n==========================================================" -ForegroundColor Cyan
 Write-Host " Todos los microservicios fueron lanzados." -ForegroundColor Cyan
 Write-Host " Puertos activos:" -ForegroundColor White
+Write-Host "  - Frontend web:        http://localhost:5173" -ForegroundColor Gray
 Write-Host "  - API Gateway:         http://localhost:8080/api/v1/..." -ForegroundColor Gray
+Write-Host "  - Swagger unificado:   http://localhost:8080/swagger-ui.html" -ForegroundColor Gray
 Write-Host "  - RabbitMQ Management: http://localhost:15672 (guest/guest)" -ForegroundColor Gray
 Write-Host "  - Question Service:    http://localhost:8081/swagger-ui.html" -ForegroundColor Gray
 Write-Host "  - Validation Service:  http://localhost:8082/swagger-ui.html" -ForegroundColor Gray

@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Banco de Preguntas Saber Pro</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+    <div class="brand">
+        <span class="logo" aria-hidden="true">BP</span>
+        <div>
+            <strong>Banco de Preguntas Saber Pro</strong>
+            <small>Universidad del Cauca · Ingeniería de Software II</small>
+        </div>
+    </div>
+    <div id="session" class="session" hidden>
+        <span id="session-name"></span>
+        <span id="session-roles" class="roles"></span>
+        <button id="logout" class="btn ghost" type="button">Salir</button>
+    </div>
+</header>
+
+<main>
+    <!-- Inicio de sesión -->
+    <section id="login-view" class="card narrow">
+        <h1>Iniciar sesión</h1>
+        <p class="muted">El frontend se comunica solo con el API Gateway (<code id="api-base"></code>).</p>
+        <form id="login-form" class="stack">
+            <label>Usuario <input name="username" autocomplete="username" required></label>
+            <label>Contraseña <input name="password" type="password" autocomplete="current-password" required></label>
+            <button class="btn primary" type="submit">Entrar</button>
+        </form>
+        <details class="hint">
+            <summary>Usuarios de prueba</summary>
+            <table>
+                <tr><th>Rol</th><th>Usuario</th><th>Contraseña</th></tr>
+                <tr><td>Administrador</td><td>admin</td><td>admin123</td></tr>
+                <tr><td>Autor</td><td>autor1 / autor2</td><td>autor123</td></tr>
+                <tr><td>Revisor</td><td>revisor1 / revisor2</td><td>revisor123</td></tr>
+            </table>
+        </details>
+    </section>
+
+    <!-- Aplicación -->
+    <section id="app-view" hidden>
+        <nav id="tabs" class="tabs" role="tablist"></nav>
+
+        <!-- AUTOR: mis preguntas (HU-02, HU-03) -->
+        <section id="tab-mine" class="tab card" hidden>
+            <div class="row between">
+                <h2>Mis preguntas</h2>
+                <button class="btn primary" type="button" data-goto="tab-form">+ Nueva pregunta</button>
+            </div>
+            <form id="filters" class="filters">
+                <input name="keyword" placeholder="Buscar en contexto, enunciado o tema">
+                <select name="status"><option value="">Todos los estados</option></select>
+                <select name="competency"><option value="">Todas las competencias</option></select>
+                <select name="difficulty"><option value="">Toda dificultad</option></select>
+                <input name="topic" placeholder="Tema">
+                <button class="btn" type="submit">Filtrar</button>
+                <button class="btn ghost" type="reset">Limpiar</button>
+            </form>
+            <div id="legend" class="legend"></div>
+            <div id="mine-list" class="list"></div>
+            <div id="mine-pager" class="pager"></div>
+        </section>
+
+        <!-- AUTOR: crear / editar (HU-01) -->
+        <section id="tab-form" class="tab card" hidden>
+            <h2 id="form-title">Nueva pregunta</h2>
+            <p class="muted">Diseño Centrado en Evidencia: la validación estructural la aplica validation-service al guardar.</p>
+            <form id="question-form" class="grid">
+                <input type="hidden" name="id">
+                <label class="full">Contexto <textarea name="context" rows="3" required minlength="20"></textarea></label>
+                <label class="full">Pregunta directa (enunciado) <textarea name="text" rows="2" required minlength="15"></textarea></label>
+                <fieldset class="full options">
+                    <legend>Opciones (marque la respuesta correcta)</legend>
+                    <div id="options"></div>
+                </fieldset>
+                <label class="full">Justificación de la respuesta <textarea name="justification" rows="2" required minlength="20"></textarea></label>
+                <label class="full">Bibliografía <input name="bibliography" required></label>
+                <label>Competencia <select name="competency" required></select></label>
+                <label>Tema <input name="topic" required></label>
+                <label>Subtema <input name="subtopic" required></label>
+                <label>Nivel de dificultad
+                    <select name="difficulty" required></select>
+                </label>
+                <div id="form-errors" class="full errors" hidden></div>
+                <div class="full row end">
+                    <button class="btn ghost" type="button" data-goto="tab-mine">Cancelar</button>
+                    <button class="btn primary" type="submit">Guardar en borrador</button>
+                </div>
+            </form>
+        </section>
+
+        <!-- ADMINISTRADOR: asignar revisores (HU-04) -->
+        <section id="tab-assign" class="tab card" hidden>
+            <h2>Preguntas pendientes de revisión</h2>
+            <p class="muted">Asigne entre 1 y 3 revisores. Cada revisor recibe un correo (notification-service vía RabbitMQ).</p>
+            <div id="pending-list" class="list"></div>
+            <div id="pending-pager" class="pager"></div>
+        </section>
+
+        <!-- ADMINISTRADOR: todas las preguntas -->
+        <section id="tab-all" class="tab card" hidden>
+            <h2>Todas las preguntas</h2>
+            <div id="all-list" class="list"></div>
+            <div id="all-pager" class="pager"></div>
+        </section>
+
+        <!-- REVISOR: preguntas asignadas (HU-05) -->
+        <section id="tab-review" class="tab card" hidden>
+            <h2>Preguntas asignadas para evaluar</h2>
+            <div id="review-list" class="list"></div>
+            <div id="review-pager" class="pager"></div>
+        </section>
+
+        <!-- Todos: notificaciones -->
+        <section id="tab-notifications" class="tab card" hidden>
+            <div class="row between">
+                <h2>Mis notificaciones</h2>
+                <button class="btn ghost" type="button" id="refresh-notifications">Actualizar</button>
+            </div>
+            <div id="notifications-list" class="list"></div>
+        </section>
+    </section>
+</main>
+
+<dialog id="dialog">
+    <form method="dialog" class="dialog-body">
+        <div id="dialog-content"></div>
+        <div class="row end"><button class="btn" value="close">Cerrar</button></div>
+    </form>
+</dialog>
+
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+<footer class="muted">
+    Frontend separado del backend · API REST: <a id="swagger-link" target="_blank" rel="noopener">Swagger del API Gateway</a>
+</footer>
+
+<script src="config.js"></script>
+<script src="api.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
