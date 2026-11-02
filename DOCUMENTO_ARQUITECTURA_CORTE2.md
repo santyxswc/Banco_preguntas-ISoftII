@@ -426,7 +426,7 @@ sequenceDiagram
 
 | Contexto | Microservicio | Almacenamiento | Se integra con |
 |---|---|---|---|
-| Identidad y acceso | user-service | user_db (en memoria) | — |
+| Identidad y acceso | user-service | **user_db (JPA + Flyway: H2 / PostgreSQL)** | emite el token que el gateway valida para propagar la identidad |
 | Autoría de preguntas | question-service | question_db (JPA + Flyway; H2 o PostgreSQL) | Validación (REST), Ciclo de vida (REST + comando AMQP) |
 | Validación estructural | validation-service | sin estado | — |
 | Ciclo de vida | lifecycle-service | lifecycle_db (en memoria) | recibe comandos por RabbitMQ |
@@ -471,7 +471,8 @@ El monolito del corte 1 (`banco-preguntas/`) conserva sus propios patrones (Buil
 | Preguntas | GET | `/api/v1/preguntas/catalog` (estados con color) | HU-02 |
 | Preguntas | POST | `/api/v1/preguntas/{id}/submit-review?requestedBy=` | HU-02 |
 | Preguntas | GET | `/api/v1/preguntas/operations/{operationId}` | HU-02 |
-| Usuarios | GET | `/api/v1/usuarios/role/REVISOR` | HU-04 |
+| Usuarios | GET | `/api/v1/usuarios/reviewers/eligible?authorId=` y `/api/v1/usuarios/role/{rol}` | HU-04 |
+| Usuarios | GET | `/api/v1/usuarios/me` (identidad propagada por el gateway) | Soporte |
 | Asignaciones | POST / GET | `/api/v1/asignaciones` | HU-04 |
 | Revisiones | GET | `/api/v1/revisiones/asignadas?revisorId&page&size` | HU-05 |
 | Revisiones | POST | `/api/v1/revisiones/evaluar` | HU-05 |
@@ -492,11 +493,11 @@ Se ejecutan con `mvn test` (JUnit 5, Java 21) y en GitHub Actions en cada push (
 | lifecycle-service | `LifecycleControllerTest`, `QuestionSubmitConsumerTest`, `QuestionSubmittedEventTest` | Transiciones válidas e inválidas, consulta en lote, consumo del comando y publicación de PreguntaEnviadaARevision |
 | review-service | `ReviewDomainTest`, `ReviewServiceTest`, `RevisionControllerTest`, `JpaReviewRepositoryAdapterTest` | Reglas de asignación 1–3, autor no revisa, rechazo con observación, veredicto unánime, códigos HTTP |
 | notification-service | `EmailNotificationTest`, `NotificationIdempotencyTest`, `NotificationServiceConsumerTest`, `QuestionSubmittedConsumerTest` | Factory Method, Decorator, correo SENT/FAILED, idempotencia de eventos, aviso al administrador |
-| user-service | `AuthControllerTest` | Login correcto e incorrecto |
-| api-gateway | `GatewayRoutesTest` | Rutas `/api/v1`, rutas de documentación y configuración por variables de entorno |
+| user-service | `AuthControllerTest`, `UserControllerTest`, `JpaUserRepositoryTest`, `UserDomainTest` | Login y token firmado, roles, revisores elegibles, `/users/me`, persistencia JPA con Flyway, hash de contraseñas |
+| api-gateway | `GatewayRoutesTest`, `IdentityPropagationFilterTest` | Rutas `/api/v1`, rutas de documentación, configuración por variables de entorno y propagación de la identidad |
 | banco-preguntas (corte 1) | 23 clases | Dominio, patrones GoF, JDBC/H2, JPA, DDD y REST del monolito |
 
-Resultado de la última ejecución: **microservicios 89 pruebas** y **monolito 140 pruebas**, todas exitosas.
+Resultado de la última ejecución: **microservicios 106 pruebas** y **monolito 140 pruebas**, todas exitosas.
 
 ---
 

@@ -6,6 +6,7 @@ public class LoginResponse implements Serializable {
     private boolean authenticated;
     private UserDTO user;
     private String message;
+    private String token;
 
     public LoginResponse() {}
 
@@ -17,6 +18,12 @@ public class LoginResponse implements Serializable {
 
     public static LoginResponse success(UserDTO user) {
         return new LoginResponse(true, user, "Autenticación exitosa");
+    }
+
+    public static LoginResponse success(UserDTO user, String token) {
+        LoginResponse response = success(user);
+        response.setToken(token);
+        return response;
     }
 
     public static LoginResponse failure(String message) {
@@ -31,4 +38,7 @@ public class LoginResponse implements Serializable {
 
     public String getMessage() { return message; }
     public void setMessage(String message) { this.message = message; }
+
+    public String getToken() { return token; }
+    public void setToken(String token) { this.token = token; }
 }

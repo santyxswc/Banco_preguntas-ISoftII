@@ -1,6 +1,6 @@
 # Banco de Preguntas Saber Pro — Iteración 1
 
-Aplicación de escritorio en Java (Swing) para gestionar un banco de
+Aplicación en Java para gestionar un banco de
 preguntas de selección múltiple con única respuesta para la preparación
 de las pruebas Saber Pro. Proyecto del curso Ingeniería de Software II,
 Universidad del Cauca (2026.2).
@@ -8,14 +8,19 @@ Universidad del Cauca (2026.2).
 Primera iteración: arquitectura **monolítica en 3 capas** con el
 micro patrón **MVC**, principios **SOLID** y patrones **GoF**.
 
+En el corte 2 se retiró la interfaz de escritorio Swing (HU-T7.4): sus
+pantallas se migraron al frontend web (`frontend/`), que consume la API
+REST. Este módulo queda como backend con los controladores de
+`presentation/rest`.
+
 ## Historias de usuario implementadas
 
 | HU | Descripción | Dónde |
 |----|-------------|-------|
-| HU1 | El autor crea preguntas con contexto, pregunta directa, 4 opciones, respuesta correcta, justificación, bibliografía, competencia, tema, subtema y nivel. Al guardar se aplica la validación estructural (HU03). | `GUICrearPregunta`, `PreguntaController`, `QuestionBuilder`, `ValidadorEstructuralPregunta` |
-| HU2 | El autor pasa sus preguntas de *Borrador* a *Pendiente de revisión*. Los estados se ven con colores. | `GUIListarPreguntas`, `QuestionService.enviarARevision`, `EstadoPregunta` |
-| HU3 | El autor lista sus preguntas con filtros, orden y paginación, y edita las que siguen en borrador. | `GUIListarPreguntas`, `PreguntaTableModel`, `QuestionFilter`, `GUIEditarPregunta` |
-| HU4 | El administrador asigna uno o más revisores a preguntas pendientes y el sistema les envía un correo. | `GUIAsignarRevisores`, `AsignacionController`, `AsignacionService`, `EmailNotificacionService` |
+| HU1 | El autor crea preguntas con contexto, pregunta directa, 4 opciones, respuesta correcta, justificación, bibliografía, competencia, tema, subtema y nivel. Al guardar se aplica la validación estructural (HU03). | `PreguntaRestController`, `QuestionBuilder`, `ValidadorEstructuralPregunta` |
+| HU2 | El autor pasa sus preguntas de *Borrador* a *Pendiente de revisión*. Los estados se ven con colores. | `PreguntaRestController`, `QuestionService.enviarARevision`, `EstadoPregunta` |
+| HU3 | El autor lista sus preguntas con filtros, orden y paginación, y edita las que siguen en borrador. | `PreguntaRestController`, `QuestionFilter`, `PaginaResultado` |
+| HU4 | El administrador asigna uno o más revisores a preguntas pendientes y el sistema les envía un correo. | `AsignacionRestController`, `AsignacionService`, `EmailNotificacionService` |
 
 Validación estructural (HU03): contexto, única pregunta directa,
 exactamente 4 opciones, una sola respuesta correcta, opciones no vacías
@@ -25,7 +30,7 @@ similar entre opciones.
 ## Arquitectura
 
 ```
-presentation   Vistas Swing (GUI*), controladores MVC, modelo de tabla
+presentation   Controladores REST (presentation/rest) y DTO
      │
      ▼
 domain         Entidades, servicios, interfaces de repositorio, validación
@@ -33,21 +38,20 @@ domain         Entidades, servicios, interfaces de repositorio, validación
      │ implementa
 access         Repositorios en memoria y JDBC (PostgreSQL / H2 + Flyway)
 
-infra          Observer/Subject, eventos de dominio y envío de correo
-app            ClientMain: arma las dependencias y abre el login
+infra          Observer/Subject, eventos de dominio, configuración y envío de correo
 ```
 
 - `domain` no depende de `access`: los servicios usan interfaces
   (`QuestionRepository`, `UsuarioRepository`, `AsignacionRepository`) y
-  `ClientMain` inyecta las implementaciones (DIP).
-- Las vistas no tienen lógica de negocio: delegan en
-  `PreguntaController` y `AsignacionController`.
+  la configuración de Spring inyecta las implementaciones (DIP).
+- Los controladores REST no tienen lógica de negocio: delegan en los
+  servicios del dominio.
 
 ### Patrones de diseño
 
 | Patrón | Clases | Uso |
 |--------|--------|-----|
-| Observer | `Subject`, `Observer`, `QuestionService`, `GUIObserver1/2`, `GUIListarPreguntas`, `GUIAsignarRevisores` | Las vistas se refrescan solas cuando cambia una pregunta. |
+| Observer | `Subject`, `Observer`, `QuestionService` | Avisa a los suscriptores cuando cambia una pregunta (en el corte 1 refrescaba las vistas Swing). |
 | Strategy | `ReglaValidacion`, `ValidadorEstructuralPregunta` | Reglas de validación intercambiables sin tocar el servicio. |
 | Builder | `QuestionBuilder` | Construcción de preguntas con muchos campos y valores por defecto. |
 | State (simplificado) | `EstadoPregunta` | Cada estado conoce su color, si permite edición y sus transiciones válidas. |
@@ -56,7 +60,7 @@ app            ClientMain: arma las dependencias y abre el login
 
 ## Tecnologías
 
-- Java 21, Maven, Swing
+- Java 21, Maven, Spring Boot
 - JUnit 5
 - PostgreSQL + Flyway (H2 en memoria para pruebas)
 - Jakarta Mail
@@ -65,8 +69,11 @@ app            ClientMain: arma las dependencias y abre el login
 
 ```
 mvn clean install
-mvn exec:java
+mvn spring-boot:run
 ```
+
+La API queda en `http://localhost:8080` y la interfaz es el frontend web
+de la carpeta `frontend/`.
 
 Usuarios de prueba:
 

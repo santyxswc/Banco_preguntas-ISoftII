@@ -30,7 +30,7 @@ flowchart LR
 
 | Contexto | Microservicio | Puerto | Responsabilidad | Base de datos propia | Estado en el repositorio |
 |---|---|---|---|---|---|
-| Identidad y acceso | `user-service` | 8083 | Usuarios, roles (AUTOR, ADMINISTRADOR, REVISOR, DOCENTE, ESTUDIANTE) y login | `user_db` | En memoria; la BD propia llega con HU-T4 |
+| Identidad y acceso | `user-service` | 8083 | Usuarios, roles (AUTOR, ADMINISTRADOR, REVISOR, DOCENTE, ESTUDIANTE) y login | `user_db` | Implementada: Spring Data JPA + Flyway (H2 por defecto, PostgreSQL con `USER_DB_URL`) |
 | Autoría de preguntas | `question-service` | 8081 | Crear y editar preguntas, listar con paginación y filtros, solicitar envío a revisión | `question_db` | **Implementada con JPA y migraciones Flyway** (H2 en archivo por defecto, PostgreSQL con `QUESTION_DB_URL`) |
 | Validación estructural | `validation-service` | 8082 | Reglas estructurales de la pregunta (Strategy) | Sin estado | No necesita BD |
 | Ciclo de vida | `lifecycle-service` | 8084 | Estado de cada pregunta y transiciones permitidas | `lifecycle_db` | En memoria |
