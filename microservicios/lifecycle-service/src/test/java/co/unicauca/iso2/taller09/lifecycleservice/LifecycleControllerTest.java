@@ -62,4 +62,18 @@ class LifecycleControllerTest {
         assertNotNull(response.getBody());
         assertEquals(QuestionStatus.IN_REVIEW, response.getBody().getState());
     }
+
+    @Test
+    void testConsultaDeEstadosEnLote() {
+        lifecycleRepository.saveState(new QuestionState(null, 997L, QuestionStatus.APPROVED, "SYSTEM", "Aprobada"));
+
+        ResponseEntity<QuestionStateDTO[]> response = restTemplate.getForEntity(
+                "/lifecycle?ids=997,996,997", QuestionStateDTO[].class);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(2, response.getBody().length);
+        assertEquals(QuestionStatus.APPROVED, response.getBody()[0].getState());
+        assertEquals(QuestionStatus.DRAFT, response.getBody()[1].getState());
+    }
 }
