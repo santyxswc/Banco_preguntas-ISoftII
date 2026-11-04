@@ -439,8 +439,6 @@ Resultado de la última ejecución (4 de noviembre de 2026): **microservicios 10
 - **Frontend local:** http://localhost:5173
 - **Swagger unificado:** http://localhost:8080/swagger-ui.html
 
--- Fin del documento.
-
 ---
 
 ## Referencias
