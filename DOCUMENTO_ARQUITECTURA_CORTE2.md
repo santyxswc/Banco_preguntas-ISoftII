@@ -1,44 +1,94 @@
-# Banco de Preguntas Saber Pro — Documento de Arquitectura de Software
-## Segundo entregable (Corte 2): microservicios, arquitectura orientada a eventos y API REST
+<div align="center">
+
+# Documento de Arquitectura de Software — Banco de Preguntas Saber Pro
+
+**Ingeniería de Software II (teoría y laboratorio)**
+
+Segundo entregable del proyecto de curso (Corte 2): refactorización de la iteración 1 a una arquitectura de microservicios orientada a eventos, con frontend web separado del backend por una API REST.
+
+**Presentado por:**<br>
+Yeferson Santiago Caicedo Orozco<br>
+Iván Alexander López Lasso<br>
+Adrián Camilo Araujo Urbano<br>
+Carlos Arturo Bambague
+
+**Profesores:**<br>
+Paola Andrea Bedoya Toro<br>
+Libardo Pantoja
+
+Universidad del Cauca<br>
+Facultad de Ingeniería Electrónica y Telecomunicaciones<br>
+Programa de Ingeniería de Sistemas
+
+Popayán, noviembre de 2026
+
+</div>
+
+> Versión en Word con el formato de la plantilla institucional: [`DOCUMENTO_ARQUITECTURA_CORTE2.docx`](DOCUMENTO_ARQUITECTURA_CORTE2.docx).
 
 ---
 
-### Portada
+## Contenido
 
-- **Institución:** Universidad del Cauca
-- **Facultad:** Facultad de Ingeniería Electrónica y Telecomunicaciones (FIET)
-- **Programa:** Ingeniería de Sistemas
-- **Asignatura:** Ingeniería de Software II (teoría y laboratorio)
-- **Docentes:** Paola Andrea Bedoya Toro, Libardo Pantoja
-- **Periodo académico:** 2026.2
-- **Integrantes del equipo:**
-  - Yeferson Santiago Caicedo Orozco
-  - Ivan Alexander Lopez
-  - Adrian Araujo Urbano
-  - Carlos Bambague
-- **Repositorio:** https://github.com/santyxswc/Banco_preguntas-ISoftII
-- **Fecha de entrega:** noviembre de 2026
+- [Introducción](#introducción)
+- [Capítulo 1 — Requisitos y planificación](#capítulo-1--requisitos-y-planificación)
+  - [1. Historias de usuario de la segunda iteración](#1-historias-de-usuario-de-la-segunda-iteración)
+  - [2. Planificación del Sprint 2](#2-planificación-del-sprint-2)
+- [Capítulo 2 — Atributo de calidad](#capítulo-2--atributo-de-calidad)
+  - [3. Escenario de calidad: escalabilidad](#3-escenario-de-calidad-escalabilidad)
+- [Capítulo 3 — Arquitectura y diseño de software](#capítulo-3--arquitectura-y-diseño-de-software)
+  - [4. Modelo C4 y diagramas UML](#4-modelo-c4-y-diagramas-uml)
+  - [5. Diagrama de contextos delimitados](#5-diagrama-de-contextos-delimitados-bounded-contexts)
+  - [6. Patrones de diseño GoF implementados](#6-patrones-de-diseño-gof-implementados)
+  - [7. API REST documentada con Swagger](#7-api-rest-documentada-con-swagger)
+  - [8. Pruebas unitarias automatizadas](#8-pruebas-unitarias-automatizadas)
+- [Capítulo 4 — Entrega](#capítulo-4--entrega)
+  - [9. Enlaces de entrega](#9-enlaces-de-entrega)
+- [Referencias](#referencias)
+- [Anexos](#anexos)
+
+**Tabla de ilustraciones**
+
+- Ilustración 1. Tablero del Sprint 2 en Jira.
+- Ilustración 2. C4 nivel 1: contexto del sistema.
+- Ilustración 3. C4 nivel 2: contenedores.
+- Ilustración 4. C4 nivel 3: componentes de question-service y notification-service.
+- Ilustración 5. Diagrama de clases UML del contexto de Autoría y los patrones.
+- Ilustración 6. Diagrama de secuencia UML del flujo HU-01 a HU-05.
+- Ilustración 7. Diagrama de contextos delimitados.
+
+**Índice de tablas**
+
+- Tabla 1. Historias del Sprint 2 en Jira.
+- Tabla 2. Escenario de calidad de escalabilidad.
+- Tabla 3. Contenedores del sistema.
+- Tabla 4. Contextos delimitados y almacenamiento.
+- Tabla 5. Patrones de diseño GoF implementados.
+- Tabla 6. Endpoints públicos de la API REST.
+- Tabla 7. Pruebas unitarias por módulo.
 
 ---
 
-## 1. Introducción
+## Introducción
 
 Este documento describe la arquitectura de la segunda iteración del **Banco de Preguntas Saber Pro**. En el corte 1 el sistema era un monolito en capas con interfaz Swing (carpeta `banco-preguntas/`). En este corte se refactorizó a una **arquitectura de microservicios orientada a eventos** (carpeta `microservicios/`) para cumplir el atributo de calidad de **escalabilidad**:
 
 - Cada contexto delimitado es un microservicio Spring Boot independiente, con su propio almacenamiento.
-- Los servicios se comunican de forma **síncrona** por REST cuando necesitan una respuesta inmediata (validar, consultar un estado) y de forma **asíncrona** por **RabbitMQ** para todo lo que puede ocurrir después (enviar a revisión, notificar por correo).
+- Los servicios se comunican de forma **síncrona** por REST cuando necesitan una respuesta inmediata (validar, consultar un estado) y de forma **asíncrona** por **RabbitMQ** para lo que puede ocurrir después (enviar a revisión, notificar por correo).
 - Un **API Gateway** (Spring Cloud Gateway) es el único punto de entrada y puede balancear varias instancias de un servicio.
 - El **frontend web** (carpeta `frontend/`) es una aplicación separada que solo habla con el backend mediante la **API REST** del gateway, documentada con **Swagger / OpenAPI 3**.
 
-El documento cubre las historias de usuario de la iteración, la planificación del Sprint 2, el escenario de calidad de escalabilidad, el modelo C4 con diagramas UML, el diagrama de contextos, los patrones GoF aplicados, la API REST y las pruebas.
+El documento se organiza en cuatro capítulos. El capítulo 1 presenta las historias de usuario con sus criterios de aceptación y la planificación del Sprint 2. El capítulo 2 define el escenario de calidad de escalabilidad. El capítulo 3 describe la arquitectura con el modelo C4 y diagramas UML, los contextos delimitados, los patrones GoF, la API REST y las pruebas. El capítulo 4 reúne los enlaces del video de sustentación y del repositorio.
 
 ---
 
-## 2. Historias de usuario de la segunda iteración
+## Capítulo 1 — Requisitos y planificación
+
+## 1. Historias de usuario de la segunda iteración
 
 Todas las rutas son las públicas del API Gateway (`http://localhost:8080`). Entre paréntesis está el microservicio que atiende la petición.
 
-### HU-01 · Crear preguntas con validación estructural (autor)
+### 1.1. HU-01 · Crear preguntas con validación estructural (autor)
 
 **Como** autor de preguntas **necesito** crear preguntas de selección múltiple con única respuesta acordes al Diseño Centrado en Evidencia **para** alimentar el banco de preguntas Saber Pro.
 
@@ -59,7 +109,7 @@ Escenario: rechazo por validación estructural
   Y la pregunta no se guarda
 ```
 
-### HU-02 · Enviar a revisión (autor)
+### 1.2. HU-02 · Enviar a revisión (autor)
 
 **Como** autor **necesito** cambiar el estado de mis preguntas de "Borrador" a "Pendiente de revisión" **para** que el administrador les asigne al menos un revisor. *Los estados se visualizan con colores.*
 
@@ -81,7 +131,7 @@ Escenario: transición no permitida
   Entonces lifecycle-service rechaza la transición y la operación queda FAILED con el motivo
 ```
 
-### HU-03 · Listar, filtrar y editar mis preguntas (autor)
+### 1.3. HU-03 · Listar, filtrar y editar mis preguntas (autor)
 
 **Como** autor **necesito** listar las preguntas que he creado **para** verlas y editarlas más adelante. *Con paginación y filtros.*
 
@@ -102,7 +152,7 @@ Escenario: edición no permitida
   Entonces el sistema responde 409 Conflict ("solo se puede editar en Borrador o Rechazada")
 ```
 
-### HU-04 · Asignar entre 1 y 3 revisores (administrador)
+### 1.4. HU-04 · Asignar entre 1 y 3 revisores (administrador)
 
 **Como** administrador **necesito** asignar revisores (entre 1 y 3) a las preguntas en "Pendiente de revisión" **para** que sean revisadas por otros docentes. *Una vez asignados, el sistema envía un email.*
 
@@ -119,7 +169,7 @@ Escenario: reglas de la asignación
   Entonces el sistema responde 400 Bad Request y no se envía ningún correo
 ```
 
-### HU-05 · Evaluar las preguntas asignadas (revisor) — nueva en el corte 2
+### 1.5. HU-05 · Evaluar las preguntas asignadas (revisor) — nueva en el corte 2
 
 **Como** revisor **necesito** listar las preguntas que me han sido asignadas **para** leerlas, dejar la evaluación y cambiar el estado a Aprobada/Rechazada. *El revisor puede dejar observaciones para el autor; el sistema notifica a los implicados.*
 
@@ -143,31 +193,47 @@ Escenario: el autor lee las observaciones
   Entonces ve la decisión y las observaciones de cada revisor, y puede editar la pregunta rechazada y reenviarla
 ```
 
+## 2. Planificación del Sprint 2
+
+El Sprint 2 se gestionó en **Jira** (proyecto SCRUM, tablero *SCRUM board*). Duró del 8 al 30 de octubre de 2026 y se cerró el 3 de noviembre con las 19 incidencias finalizadas. Su objetivo fue *refactorizar la iteración 1 a microservicios orientados a eventos, implementar la HU-05 (revisión por pares) y completar documentación, pruebas y sustentación del segundo corte*. Los commits referencian las tareas, por ejemplo `[SCRUM-110]` y `[SCRUM-111]`. La Ilustración 1 muestra el tablero y la Tabla 1 las incidencias con su responsable.
+
+![Ilustración 1. Tablero del Sprint 2 en Jira](arquitectura/diagramas/sprint2-jira.png)
+
+*Ilustración 1. Tablero del Sprint 2 en Jira (SCRUM board). Elaboración propia a partir de los datos de Jira.*
+
+*Tabla 1. Historias del Sprint 2 en Jira. Elaboración propia.*
+
+| Clave | Historia | Responsable | Estado |
+|---|---|---|---|
+| SCRUM-41 | HU-T1: Bounded contexts y diseño de la arquitectura distribuida | Adrián Camilo Araujo Urbano | Finalizado |
+| SCRUM-42 | HU-T2: Infraestructura con Docker, bases de datos independientes y broker de eventos | Carlos Arturo Bambague | Finalizado |
+| SCRUM-43 | HU-T3: Refactorizar HU-01, HU-02 y HU-03 a un microservicio de preguntas | Yeferson Santiago Caicedo Orozco | Finalizado |
+| SCRUM-44 | HU-T4: Microservicio de usuarios y roles | Iván Alexander López Lasso | Finalizado |
+| SCRUM-45 | HU-T5: Microservicio de revisión (asignaciones y evaluaciones) | Adrián Camilo Araujo Urbano | Finalizado |
+| SCRUM-46 | HU-T6: Microservicio de notificaciones orientado a eventos | Carlos Arturo Bambague | Finalizado |
+| SCRUM-47 | HU-T7: Frontend web independiente que consume la API REST | Iván Alexander López Lasso | Finalizado |
+| SCRUM-48 | HU-T8: API Gateway y configuración centralizada | Adrián Camilo Araujo Urbano | Finalizado |
+| SCRUM-49 | HU-T9: Eventos de dominio con entrega garantizada | Adrián Camilo Araujo Urbano | Finalizado |
+| SCRUM-50 | HU-05: Listar preguntas asignadas, evaluarlas y aprobarlas o rechazarlas | Adrián Camilo Araujo Urbano | Finalizado |
+| SCRUM-51 | HU-04 (refactor): Asignar de 1 a 3 revisores | Carlos Arturo Bambague | Finalizado |
+| SCRUM-52 | HU-T10: Al menos 6 patrones GoF | Yeferson Santiago Caicedo Orozco | Finalizado |
+| SCRUM-53 | HU-T11: Pruebas unitarias de las clases del dominio | Carlos Arturo Bambague | Finalizado |
+| SCRUM-54 | HU-T12: Documento de arquitectura | Iván Alexander López Lasso | Finalizado |
+| SCRUM-55 | HU-T13: Escenario de escalabilidad y pruebas de carga | Adrián Camilo Araujo Urbano | Finalizado |
+| SCRUM-56 | HU-T14: Documentación Swagger/OpenAPI | Iván Alexander López Lasso | Finalizado |
+| SCRUM-57 | HU-T15: Repositorio Git con commits de todos, ramas y CI | Yeferson Santiago Caicedo Orozco | Finalizado |
+| SCRUM-58 | HU-T16: Guion y grabación del video de sustentación | Yeferson Santiago Caicedo Orozco | Finalizado |
+| SCRUM-59 | HU-T17: Capturas del Sprint 2 y revisión final contra la rúbrica | Yeferson Santiago Caicedo Orozco | Finalizado |
+
 ---
 
-## 3. Planificación del Sprint 2
+## Capítulo 2 — Atributo de calidad
 
-El tablero del Sprint 2 se gestionó en **Jira** (proyecto SCRUM; los commits referencian las tareas, por ejemplo `[SCRUM-110]`, `[SCRUM-111]`).
+## 3. Escenario de calidad: escalabilidad
 
-> **Pantallazo del tablero:** insertar aquí la captura del tablero del Sprint 2 de Jira (guardarla como `arquitectura/diagramas/sprint2-jira.png`).
->
-> ![Tablero del Sprint 2 en Jira](arquitectura/diagramas/sprint2-jira.png)
+**Contexto.** Durante la convocatoria Saber Pro muchos docentes crean y revisan preguntas al mismo tiempo. El monolito del corte 1 solo podía crecer con una máquina más grande; la arquitectura de este corte debe crecer agregando instancias de los servicios más cargados, sin cambiar el código. La Tabla 2 especifica el escenario.
 
-| Historia técnica | Contenido | Estado |
-|---|---|---|
-| HU-T1 | Contextos delimitados y contratos entre servicios | Hecho |
-| HU-T3 / HU-T4 | question-service y user-service | Hecho |
-| HU-T5 | review-service con BD propia (JPA), asignación 1–3 revisores y evaluación | Hecho |
-| HU-T6 | notification-service con correo (simulado o SMTP) | Hecho |
-| HU-T7 | Frontend web separado que consume la API REST | Hecho |
-| HU-T8 | API Gateway con rutas `/api/v1` y Swagger unificado | Hecho |
-| HU-T9 | Eventos con colas durables, DLQ y consumidores idempotentes | Hecho |
-| HU-T13 | Escenario de escalabilidad y prueba de carga k6 | Script listo; falta registrar la medición |
-| HU-T14 | Documentación OpenAPI de los endpoints | Hecho |
-
----
-
-## 4. Escenario de calidad: escalabilidad
+*Tabla 2. Escenario de calidad de escalabilidad. Elaboración propia.*
 
 | Elemento | Especificación |
 |---|---|
@@ -187,260 +253,99 @@ Decisiones de arquitectura que sostienen el escenario:
 3. **Consulta de estados en lote** (`GET /lifecycle?ids=`): listar N preguntas cuesta una sola llamada a lifecycle-service y no N.
 4. **Entrega garantizada**: colas durables, reintentos con espera exponencial, DLQ y consumidores idempotentes; no se pierden eventos si un consumidor se cae.
 
-La prueba está en `microservicios/pruebas-carga/` y el procedimiento en [`arquitectura/04-escenario-escalabilidad.md`](arquitectura/04-escenario-escalabilidad.md).
+La prueba de carga está en `microservicios/pruebas-carga/` y el procedimiento en [`arquitectura/04-escenario-escalabilidad.md`](arquitectura/04-escenario-escalabilidad.md).
 
 ---
 
-## 5. Arquitectura y diseño de software (modelo C4 + UML)
+## Capítulo 3 — Arquitectura y diseño de software
 
-### 5.1 C4 nivel 1 — Contexto del sistema
+## 4. Modelo C4 y diagramas UML
 
-```mermaid
-C4Context
-    title Contexto del sistema — Banco de Preguntas Saber Pro
-    Person(autor, "Docente autor", "Crea, edita y envía preguntas a revisión")
-    Person(admin, "Administrador", "Asigna revisores a preguntas pendientes")
-    Person(revisor, "Docente revisor", "Aprueba o rechaza preguntas con observaciones")
-    System(banco, "Banco de Preguntas Saber Pro", "Gestiona el ciclo de vida de las preguntas: autoría, validación, revisión por pares y notificaciones")
-    System_Ext(smtp, "Servidor de correo SMTP", "Entrega los emails a revisores, autores y administrador")
-    Rel(autor, banco, "Usa", "Navegador web")
-    Rel(admin, banco, "Usa", "Navegador web")
-    Rel(revisor, banco, "Usa", "Navegador web")
-    Rel(banco, smtp, "Envía correos", "SMTP")
-```
+### 4.1. C4 nivel 1 — Contexto del sistema
 
-### 5.2 C4 nivel 2 — Contenedores (frontend y backend separados por la API REST)
+Autores, administradores y revisores usan el sistema desde el navegador; el sistema se apoya en un servidor de correo externo (Ilustración 2).
 
-![Diagrama de contenedores C4](arquitectura/diagramas/c4-contenedores.png)
+![Ilustración 2. C4 nivel 1](arquitectura/diagramas/c4-contexto.png)
 
-```mermaid
-flowchart TB
-    usuario(["Autor / Administrador / Revisor"])
-    smtp[["Servidor SMTP (externo)"]]
-    subgraph SIS["Sistema Banco de Preguntas Saber Pro"]
-        FE["Frontend web<br/>[HTML + JS, Node :5173]"]
-        GW["API Gateway<br/>[Spring Cloud Gateway :8080]<br/>/api/v1/*, CORS, balanceo, Swagger unificado"]
-        US["user-service :8083"]
-        QS["question-service :8081<br/>(N instancias)"]
-        VS["validation-service :8082"]
-        LS["lifecycle-service :8084"]
-        RS["review-service :8085"]
-        NS["notification-service :8086"]
-        MQ{{"RabbitMQ<br/>banco.exchange + banco.dlx"}}
-        RDB[("review_db<br/>H2 / PostgreSQL")]
-    end
-    usuario -- HTTPS --> FE
-    FE -- "API REST JSON /api/v1/*" --> GW
-    GW --> US & QS & RS & LS & NS
-    QS -- "REST validar" --> VS
-    QS -- "REST estados en lote" --> LS
-    QS -- "AMQP SubmitQuestionForReview" --> MQ
-    MQ --> LS
-    RS -- REST --> QS & US & LS
-    RS -- JPA --> RDB
-    RS -- "AMQP RevisorAsignado / RevisionCompletada" --> MQ
-    MQ --> NS
-    NS -- "REST correo del usuario" --> US
-    NS -- SMTP --> smtp
-```
+*Ilustración 2. C4 nivel 1: contexto del sistema. Elaboración propia.*
+
+### 4.2. C4 nivel 2 — Contenedores
+
+La Ilustración 3 muestra el frontend y el backend separados y comunicados por la API REST del gateway. La Tabla 3 resume cada contenedor.
+
+![Ilustración 3. C4 nivel 2](arquitectura/diagramas/c4-contenedores.png)
+
+*Ilustración 3. C4 nivel 2: contenedores. Elaboración propia.*
+
+*Tabla 3. Contenedores del sistema. Elaboración propia.*
 
 | Contenedor | Tecnología | Responsabilidad |
 |---|---|---|
 | Frontend web | HTML5, CSS, JavaScript sin framework; servidor estático Node | Pantallas de autor, administrador y revisor. Solo conoce la URL del gateway (`frontend/public/config.js`) |
-| API Gateway | Spring Cloud Gateway 2023.0 | Único punto de entrada, reescritura de rutas, CORS, balanceo (`perfil escalado`) y Swagger UI unificado |
-| question-service | Spring Boot 3.3 | Autoría: crear, editar, listar y enviar a revisión |
+| API Gateway | Spring Cloud Gateway 2023.0 | Único punto de entrada, reescritura de rutas, CORS, balanceo (perfil `escalado`), propagación de identidad y Swagger UI unificado |
+| question-service | Spring Boot 3.3 + Spring Data JPA + Flyway | Autoría: crear, editar, listar y enviar a revisión |
 | validation-service | Spring Boot 3.3 | Reglas estructurales DCE (sin estado) |
 | lifecycle-service | Spring Boot 3.3 | Autoridad única del estado y de las transiciones |
 | review-service | Spring Boot 3.3 + Spring Data JPA | Asignaciones y evaluaciones (HU-04, HU-05) |
 | notification-service | Spring Boot 3.3 + Spring Mail | Consume eventos y envía correos |
-| user-service | Spring Boot 3.3 | Usuarios, roles y login |
+| user-service | Spring Boot 3.3 + Spring Data JPA + Flyway | Usuarios, roles, login y revisores elegibles |
 | RabbitMQ | RabbitMQ 3.13 | Comandos y eventos de dominio con DLQ |
 
-### 5.3 C4 nivel 3 — Componentes de question-service y notification-service
+### 4.3. C4 nivel 3 — Componentes de question-service y notification-service
 
-```mermaid
-flowchart LR
-    subgraph QS["question-service"]
-        QC["QuestionController<br/>(REST /questions)"] --> F["QuestionAuthoringFacade<br/>«Facade»"]
-        F --> QB["QuestionBuilder<br/>«Builder»"]
-        F --> QR[("QuestionRepository")]
-        F --> P1(["StructuralValidator «puerto»"])
-        F --> P2(["QuestionLifecycle «puerto»"])
-        F --> P3(["ReviewRequestPublisher «puerto»"])
-        P1 -.implementa.- VC["ValidationClient «Adapter»"]
-        P2 -.implementa.- LC["LifecycleClient «Adapter»"]
-        P3 -.implementa.- RP["RabbitReviewRequestPublisher"]
-    end
-    subgraph NS["notification-service"]
-        C1["ReviewerAssignedConsumer «Observer»"] --> D["NotificationDispatcher"]
-        C2["ReviewCompletedConsumer «Observer»"] --> D
-        D --> NR[("NotificationRepository")]
-        D --> UD(["UserDirectory «puerto»"])
-        UD -.implementa.- UC["UserRestClient «Adapter»"]
-        D --> ES(["EmailSender"])
-        EF["EmailSenderFactory «Factory Method»"] -- crea --> ES
-        ES -.- DEC["LoggingEmailSenderDecorator «Decorator»"]
-    end
-    VC -- REST --> VS["validation-service<br/>QuestionValidator + ValidationRule «Strategy»"]
-```
+Dentro de question-service el controlador solo conoce la fachada, que coordina validación, ciclo de vida, repositorio y mensajería a través de puertos. En notification-service los consumidores de eventos delegan en un despachador que obtiene el emisor de correo de una fábrica (Ilustración 4).
+
+![Ilustración 4. C4 nivel 3](arquitectura/diagramas/c4-componentes.png)
+
+*Ilustración 4. C4 nivel 3: componentes de question-service y notification-service. Elaboración propia.*
 
 En **review-service** (organizado en dominio, aplicación, infraestructura y presentación) la decisión final se delega en `VerdictPolicy` (Strategy, implementada por `UnanimousApprovalPolicy`) y la persistencia en `JpaReviewRepositoryAdapter` (Adapter entre el puerto `ReviewRepository` y Spring Data JPA).
 
-### 5.4 UML — Diagrama de clases (contexto de Autoría y patrones)
+### 4.4. UML — Diagrama de clases
 
-```mermaid
-classDiagram
-    class Question {
-        -Long id
-        -String context
-        -String text
-        -List~OptionDTO~ options
-        -String correctOptionId
-        -String justification
-        -String bibliography
-        -String competency
-        -String topic
-        -String subtopic
-        -String difficulty
-        -Long authorId
-        -QuestionStatus status
-        +updateContentFrom(Question)
-        +isAuthoredBy(Long) boolean
-        +mentions(String) boolean
-        +toDTO() QuestionDTO
-    }
-    class QuestionBuilder {
-        +aQuestion()$ QuestionBuilder
-        +from(CreateQuestionRequest)$ QuestionBuilder
-        +statement(String) QuestionBuilder
-        +option(String, String) QuestionBuilder
-        +difficulty(String) QuestionBuilder
-        +build() Question
-    }
-    class QuestionAuthoringFacade {
-        +create(CreateQuestionRequest) Question
-        +update(Long, CreateQuestionRequest, Long) Question
-        +submitForReview(Long, Long) String
-        +search(QuestionFilter, int, int) PageResult
-    }
-    class QuestionStatus {
-        <<enumeration>>
-        DRAFT
-        PENDING_REVIEW
-        IN_REVIEW
-        APPROVED
-        REJECTED
-        PUBLISHED
-        +label() String
-        +color() String
-        +isEditable() boolean
-        +canTransitionTo(QuestionStatus) boolean
-    }
-    class StructuralValidator { <<interface>> +validate(CreateQuestionRequest) ValidationResult }
-    class QuestionLifecycle { <<interface>> +stateOf(Long) QuestionStatus +statesOf(Collection) Map }
-    class ReviewRequestPublisher { <<interface>> +publish(SubmitQuestionForReview) }
-    class ValidationClient
-    class LifecycleClient
-    class ValidationRule { <<interface>> +name() String +check(CreateQuestionRequest) List }
-    class QuestionValidator { +validate(CreateQuestionRequest) ValidationResult }
-    class EmailSenderFactory { <<abstract>> #createSender()* EmailSender +sender() EmailSender }
-    class EmailSender { <<interface>> +send(EmailMessage) }
-    class LoggingEmailSenderDecorator
+La Ilustración 5 muestra las clases del contexto de Autoría y las de los patrones de validación y correo.
 
-    QuestionBuilder ..> Question : crea
-    Question --> QuestionStatus
-    QuestionAuthoringFacade --> QuestionBuilder
-    QuestionAuthoringFacade --> StructuralValidator
-    QuestionAuthoringFacade --> QuestionLifecycle
-    QuestionAuthoringFacade --> ReviewRequestPublisher
-    StructuralValidator <|.. ValidationClient
-    QuestionLifecycle <|.. LifecycleClient
-    QuestionValidator o-- "5" ValidationRule
-    ValidationRule <|.. StatementRule
-    ValidationRule <|.. OptionsRule
-    ValidationRule <|.. CorrectAnswerRule
-    ValidationRule <|.. EvidenceRule
-    ValidationRule <|.. TaxonomyRule
-    EmailSenderFactory <|-- ConsoleEmailSenderFactory
-    EmailSenderFactory <|-- SmtpEmailSenderFactory
-    EmailSenderFactory ..> EmailSender : crea
-    EmailSender <|.. ConsoleEmailSender
-    EmailSender <|.. SmtpEmailSender
-    EmailSender <|.. LoggingEmailSenderDecorator
-    LoggingEmailSenderDecorator o-- EmailSender : envuelve
-```
+![Ilustración 5. Diagrama de clases](arquitectura/diagramas/uml-clases.png)
 
-### 5.5 UML — Diagrama de secuencia del flujo completo (HU-01 a HU-05)
+*Ilustración 5. Diagrama de clases UML del contexto de Autoría y los patrones. Elaboración propia.*
 
-```mermaid
-sequenceDiagram
-    autonumber
-    actor A as Autor
-    actor AD as Administrador
-    actor R as Revisor
-    participant FE as Frontend
-    participant GW as API Gateway
-    participant QS as question-service
-    participant VS as validation-service
-    participant LS as lifecycle-service
-    participant RS as review-service
-    participant MQ as RabbitMQ
-    participant NS as notification-service
+### 4.5. UML — Diagrama de secuencia del flujo completo (HU-01 a HU-05)
 
-    A->>FE: Llena el formulario
-    FE->>GW: POST /api/v1/preguntas
-    GW->>QS: POST /questions
-    QS->>VS: POST /validate (REST síncrono)
-    VS-->>QS: ValidationResult
-    QS-->>FE: 201 Created (DRAFT)
-    A->>FE: Enviar a revisión
-    FE->>GW: POST /api/v1/preguntas/{id}/submit-review
-    GW->>QS: POST /questions/{id}/submit-review
-    QS-)MQ: SubmitQuestionForReview
-    QS-->>FE: 202 Accepted + operationId
-    MQ-)LS: SubmitQuestionForReview
-    LS->>LS: DRAFT → PENDING_REVIEW
-    AD->>FE: Elige 1 a 3 revisores
-    FE->>GW: POST /api/v1/asignaciones
-    GW->>RS: POST /api/v1/asignaciones
-    RS->>LS: POST /lifecycle/{id}/transition (IN_REVIEW)
-    RS-)MQ: RevisorAsignado (uno por revisor)
-    RS-->>FE: 201 Created
-    MQ-)NS: RevisorAsignado
-    NS->>NS: Email al revisor
-    R->>FE: Aprueba o rechaza con observaciones
-    FE->>GW: POST /api/v1/revisiones/evaluar
-    GW->>RS: POST /api/v1/revisiones/evaluar
-    RS->>LS: transición final (APPROVED / REJECTED)
-    RS-)MQ: RevisionCompletada
-    RS-->>FE: 200 OK + estado final y color
-    MQ-)NS: RevisionCompletada
-    NS->>NS: Email al autor y al administrador
-```
+La Ilustración 6 recorre el flujo crear → enviar a revisión → asignar → evaluar → notificar, distinguiendo las llamadas REST síncronas de los mensajes asíncronos por RabbitMQ.
 
----
+![Ilustración 6. Diagrama de secuencia](arquitectura/diagramas/uml-secuencia.png)
 
-## 6. Diagrama de contextos delimitados (bounded contexts)
+*Ilustración 6. Diagrama de secuencia UML del flujo HU-01 a HU-05. Elaboración propia.*
 
-![Diagrama de contextos delimitados](arquitectura/diagramas/contextos.png)
+Las fuentes editables (Mermaid) de todos los diagramas están en `arquitectura/diagramas/*.mmd`.
+
+## 5. Diagrama de contextos delimitados (bounded contexts)
+
+La Ilustración 7 muestra los contextos y sus relaciones; la Tabla 4 indica el microservicio y el almacenamiento de cada uno.
+
+![Ilustración 7. Contextos delimitados](arquitectura/diagramas/contextos.png)
+
+*Ilustración 7. Diagrama de contextos delimitados. Elaboración propia.*
+
+*Tabla 4. Contextos delimitados y almacenamiento. Elaboración propia.*
 
 | Contexto | Microservicio | Almacenamiento | Se integra con |
 |---|---|---|---|
-| Identidad y acceso | user-service | **user_db (JPA + Flyway: H2 / PostgreSQL)** | emite el token que el gateway valida para propagar la identidad |
-| Autoría de preguntas | question-service | question_db (JPA + Flyway; H2 o PostgreSQL) | Validación (REST), Ciclo de vida (REST + comando AMQP) |
-| Validación estructural | validation-service | sin estado | — |
-| Ciclo de vida | lifecycle-service | lifecycle_db (en memoria) | recibe comandos por RabbitMQ |
-| Revisión por pares | review-service | **review_db (JPA: H2 / PostgreSQL)** | Autoría, Identidad y Ciclo de vida (REST); publica eventos |
-| Notificaciones | notification-service | notification_db (en memoria) | consume eventos; Identidad (REST) |
-| Simulacros y Analítica | — | — | identificados en la Figura 1, no implementados en este corte |
+| Identidad y acceso | user-service | user_db (JPA + Flyway: H2 / PostgreSQL) | Emite el token que el gateway valida para propagar la identidad |
+| Autoría de preguntas | question-service | question_db (JPA + Flyway: H2 / PostgreSQL) | Validación (REST), Ciclo de vida (REST + comando AMQP) |
+| Validación estructural | validation-service | Sin estado | — |
+| Ciclo de vida | lifecycle-service | lifecycle_db (en memoria) | Recibe comandos por RabbitMQ |
+| Revisión por pares | review-service | review_db (JPA: H2 / PostgreSQL) | Autoría, Identidad y Ciclo de vida (REST); publica eventos |
+| Notificaciones | notification-service | notification_db (en memoria) | Consume eventos; Identidad (REST) |
+| Simulacros y Analítica | — | — | Identificados en la Figura 1 del enunciado, no implementados en este corte |
 
 Regla común: ningún servicio lee la base de datos de otro. El detalle y las diferencias con la Figura 1 del enunciado están en [`arquitectura/01-bounded-contexts.md`](arquitectura/01-bounded-contexts.md); los contratos de eventos y endpoints en [`arquitectura/02-contratos.md`](arquitectura/02-contratos.md).
 
----
+## 6. Patrones de diseño GoF implementados
 
-## 7. Patrones de diseño GoF implementados en los microservicios
+Se cumplen los 6 patrones exigidos (2 creacionales, 2 estructurales y 2 de comportamiento) **dentro de la arquitectura de microservicios**, más un patrón estructural adicional (Adapter). La Tabla 5 los describe.
 
-Se cumplen los 6 patrones exigidos (2 creacionales, 2 estructurales y 2 de comportamiento) **dentro de la arquitectura de microservicios**, más uno adicional de comportamiento.
+*Tabla 5. Patrones de diseño GoF implementados. Elaboración propia.*
 
 | # | Patrón | Tipo | Dónde | Cómo y para qué se aplicó |
 |---|---|---|---|---|
@@ -448,18 +353,18 @@ Se cumplen los 6 patrones exigidos (2 creacionales, 2 estructurales y 2 de compo
 | 2 | **Factory Method** | Creacional | `notification-service` · `email/EmailSenderFactory` | El creador abstracto define `sender()` y delega en el método fábrica `createSender()`. `ConsoleEmailSenderFactory` crea el correo simulado y `SmtpEmailSenderFactory` el SMTP real. Se cambia con la propiedad `notifications.email.mode`, sin tocar el código que notifica. |
 | 3 | **Facade** | Estructural | `question-service` · `application/QuestionAuthoringFacade` | Crear, editar, listar o enviar a revisión exige coordinar validation-service, lifecycle-service, el repositorio y RabbitMQ. El controlador REST solo conoce la fachada, que oculta ese orden y las reglas de autoría. |
 | 4 | **Decorator** | Estructural | `notification-service` · `email/LoggingEmailSenderDecorator` | Envuelve cualquier `EmailSender` y agrega trazabilidad (canal, destinatario, duración, fallos) sin modificar las clases que envían. La fábrica entrega siempre el emisor decorado. |
-| 5 | **Adapter** | Estructural | `ValidationClient`, `LifecycleClient` (question-service); `UserRestClient` (notification-service); `JpaReviewRepositoryAdapter`, `QuestionRestClient` (review-service) | Adaptan APIs REST de otros servicios y Spring Data JPA a las interfaces (puertos) que espera cada dominio, para que el dominio no dependa de HTTP ni de JPA. |
+| 5 | **Adapter** | Estructural | `ValidationClient`, `LifecycleClient` (question-service); `UserRestClient` (notification-service); `JpaReviewRepositoryAdapter`, `QuestionRestClient` (review-service) | Adaptan las API REST de otros servicios y Spring Data JPA a las interfaces (puertos) que espera cada dominio, para que el dominio no dependa de HTTP ni de JPA. |
 | 6 | **Strategy** | Comportamiento | `validation-service` · `ValidationRule` (`StatementRule`, `OptionsRule`, `CorrectAnswerRule`, `EvidenceRule`, `TaxonomyRule`); `review-service` · `VerdictPolicy` / `UnanimousApprovalPolicy` | Cada regla estructural es una estrategia; `QuestionValidator` las recibe inyectadas y las ejecuta todas. Agregar una regla es crear una clase (abierto/cerrado). En review-service la política de veredicto decide APPROVED/REJECTED y puede cambiarse por otra (por ejemplo, mayoría). |
 | 7 | **Observer** | Comportamiento | RabbitMQ: `ReviewerAssignedConsumer`, `ReviewCompletedConsumer` (notification-service), `QuestionSubmitConsumer` (lifecycle-service) | review-service publica eventos sin conocer a sus suscriptores; cada consumidor es un observador suscrito a una cola y reacciona enviando correos o cambiando el estado. Es la base de la arquitectura orientada a eventos. |
 
 El monolito del corte 1 (`banco-preguntas/`) conserva sus propios patrones (Builder, Factory Method, Singleton, Facade, Decorator, Strategy, Observer y State), que fueron la base de esta refactorización.
 
----
-
-## 8. API REST documentada con Swagger
+## 7. API REST documentada con Swagger
 
 - **Swagger UI unificado (gateway):** http://localhost:8080/swagger-ui.html, con un selector arriba a la derecha para cada microservicio.
 - Swagger individual: `http://localhost:{8081..8086}/swagger-ui.html`.
+
+*Tabla 6. Endpoints públicos de la API REST. Elaboración propia.*
 
 | Módulo | Método | Ruta pública | HU |
 |---|---|---|---|
@@ -480,11 +385,11 @@ El monolito del corte 1 (`banco-preguntas/`) conserva sus propios patrones (Buil
 | Ciclo de vida | GET | `/api/v1/ciclo-vida/{id}` y `/api/v1/ciclo-vida?ids=` | HU-02 |
 | Notificaciones | GET | `/api/v1/notificaciones/recipient/{id}` | HU-04, HU-05 |
 
----
+## 8. Pruebas unitarias automatizadas
 
-## 9. Pruebas unitarias automatizadas
+Se ejecutan con `mvn test` (JUnit 5, Java 21) y en GitHub Actions en cada push (`.github/workflows/pruebas.yml`: monolito, microservicios y verificación del frontend). La Tabla 7 resume las pruebas por módulo.
 
-Se ejecutan con `mvn test` (JUnit 5, Java 21) y en GitHub Actions en cada push (`.github/workflows/pruebas.yml`: monolito, microservicios y verificación del frontend).
+*Tabla 7. Pruebas unitarias por módulo. Elaboración propia.*
 
 | Módulo | Clases de prueba | Qué cubren |
 |---|---|---|
@@ -497,33 +402,64 @@ Se ejecutan con `mvn test` (JUnit 5, Java 21) y en GitHub Actions en cada push (
 | api-gateway | `GatewayRoutesTest`, `IdentityPropagationFilterTest` | Rutas `/api/v1`, rutas de documentación, configuración por variables de entorno y propagación de la identidad |
 | banco-preguntas (corte 1) | 23 clases | Dominio, patrones GoF, JDBC/H2, JPA, DDD y REST del monolito |
 
-Resultado de la última ejecución: **microservicios 106 pruebas** y **monolito 140 pruebas**, todas exitosas.
+Resultado de la última ejecución (4 de noviembre de 2026): **microservicios 106 pruebas** y **monolito 140 pruebas**, todas exitosas.
 
 ---
 
-## 10. Guía de la sustentación en video
+## Capítulo 4 — Entrega
 
-Tiempos según el protocolo (no acelerar el video ni pasarse del tiempo: −1 punto). **Todos los integrantes deben participar.**
+## 9. Enlaces de entrega
+
+- **Video de sustentación (YouTube):** https://youtu.be/B-chmKrIsbY
+- **Repositorio Git:** https://github.com/santyxswc/Banco_preguntas-ISoftII
+- **Tablero Scrum (Jira):** https://ingsoft2bancodepreguntas.atlassian.net (proyecto SCRUM, Sprint 2)
+- **Frontend local:** http://localhost:5173
+- **Swagger unificado:** http://localhost:8080/swagger-ui.html
+
+-- Fin del documento.
+
+---
+
+## Referencias
+
+- Bass, L., Clements, P. y Kazman, R. (2021). *Software Architecture in Practice* (4.ª ed.). Addison-Wesley.
+- Brown, S. (2018). *The C4 model for visualising software architecture*. https://c4model.com
+- Evans, E. (2003). *Domain-Driven Design: Tackling Complexity in the Heart of Software*. Addison-Wesley.
+- Gamma, E., Helm, R., Johnson, R. y Vlissides, J. (1994). *Design Patterns: Elements of Reusable Object-Oriented Software*. Addison-Wesley.
+- International Organization for Standardization. (2023). *ISO/IEC 25010:2023. Systems and software engineering — Systems and software Quality Requirements and Evaluation (SQuaRE) — Product quality model*. ISO.
+- Newman, S. (2021). *Building Microservices* (2.ª ed.). O'Reilly Media.
+- OpenAPI Initiative. (2021). *OpenAPI Specification v3.1.0*. https://spec.openapis.org/oas/v3.1.0
+- Universidad del Cauca. (2026). *Entregables Proyecto de Curso — Segundo Corte 2026.2. Ingeniería de Software II*. Facultad de Ingeniería Electrónica y Telecomunicaciones.
+
+---
+
+## Anexos
+
+### Anexo A. Guía de la sustentación en video
+
+Tiempos según el protocolo (no acelerar el video ni pasarse del tiempo: −1 punto). Todos los integrantes deben participar. El guion detallado, con lo que dice cada uno, está en [`arquitectura/06-guion-video.md`](arquitectura/06-guion-video.md).
 
 | Tiempo | Punto del protocolo | Qué mostrar | Responsable |
 |---|---|---|---|
-| 0:00–1:00 | 1. Historias de usuario | Sección 2 (HU-01 a HU-05, la HU-05 es la nueva) | Yeferson Santiago Caicedo Orozco |
-| 1:00–2:00 | 2. Escenario de escalabilidad | Sección 4 y el script k6 | Adrián Camilo Araujo Urbano |
-| 2:00–4:00 | 3. Arquitectura C4 y UML | C4 nivel 1, 2 (frontend y backend separados por la API REST) y 3; diagrama de clases y de secuencia | Iván Alexander López Lasso |
-| 4:00–6:00 | 4. Seis patrones GoF | Sección 7, abriendo cada clase en el IDE | Yeferson Santiago Caicedo Orozco |
-| 6:00–7:00 | 5. Bounded contexts | Sección 6 | Adrián Camilo Araujo Urbano |
+| 0:00–1:00 | 1. Historias de usuario | Sección 1 (HU-01 a HU-05; la HU-05 es la nueva) | Yeferson Santiago Caicedo Orozco |
+| 1:00–2:00 | 2. Escenario de escalabilidad | Sección 3 y el script k6 | Adrián Camilo Araujo Urbano |
+| 2:00–4:00 | 3. Arquitectura C4 y UML | C4 niveles 1, 2 (frontend y backend separados por la API REST) y 3; diagramas de clases y de secuencia | Iván Alexander López Lasso |
+| 4:00–6:00 | 4. Seis patrones GoF | Sección 6, abriendo cada clase en el IDE | Yeferson Santiago Caicedo Orozco |
+| 6:00–7:00 | 5. Bounded contexts | Sección 5 | Adrián Camilo Araujo Urbano |
 | 7:00–8:00 | 6. Pruebas unitarias | `mvn test` en `microservicios/` y la ejecución de GitHub Actions | Adrián Camilo Araujo Urbano |
 | 8:00–9:00 | 7. Git y Scrum | Commits de cada integrante en GitHub y tablero del Sprint 2 en Jira | Yeferson Santiago Caicedo Orozco |
 | 9:00–10:00 | 8. Swagger | http://localhost:8080/swagger-ui.html cambiando de servicio | Iván Alexander López Lasso |
-| 10:00–15:00 | 9. Software funcional | En http://localhost:5173: autor crea (mostrar un error de validación), envía a revisión → admin asigna 2 revisores → correos en la consola de notification-service → revisor 1 aprueba y revisor 2 rechaza con observación → el autor ve "Rechazada" en rojo, lee las observaciones, edita y reenvía. Mostrar en el código la fachada, el gateway y un consumidor de RabbitMQ | Los tres: Santiago (autor), Iván (administrador) y Adrián (revisor y eventos) |
+| 10:00–15:00 | 9. Software funcional | En http://localhost:5173: el autor crea (con un error de validación), envía a revisión → el administrador asigna 2 revisores → correos en la consola de notification-service → el revisor 1 aprueba y el revisor 2 rechaza con observación → el autor ve "Rechazada" en rojo, lee las observaciones, edita y reenvía. En el código: la fachada, el gateway y un consumidor de RabbitMQ | Santiago (autor), Iván (administrador) y Adrián (revisor y eventos) |
 
-Cómo levantar todo para la demostración: `cd microservicios` y `.\start-all.ps1` (RabbitMQ, 7 servicios y el frontend). El guion detallado, con lo que dice cada integrante, está en [`arquitectura/06-guion-video.md`](arquitectura/06-guion-video.md).
+Cómo levantar todo para la demostración: `cd microservicios` y `.\start-all.ps1` (RabbitMQ, 7 servicios y el frontend).
 
----
+### Anexo B. Documentos complementarios del repositorio
 
-## 11. Enlaces de entrega
-
-- **Repositorio Git:** https://github.com/santyxswc/Banco_preguntas-ISoftII
-- **Video de YouTube:** *(pendiente: agregar el enlace)*
-- **Frontend local:** http://localhost:5173
-- **Swagger unificado:** http://localhost:8080/swagger-ui.html
+| Documento | Contenido |
+|---|---|
+| [`arquitectura/01-bounded-contexts.md`](arquitectura/01-bounded-contexts.md) | Contextos delimitados, servicio y base de datos de cada uno |
+| [`arquitectura/02-contratos.md`](arquitectura/02-contratos.md) | Eventos de dominio y endpoints REST por servicio |
+| [`arquitectura/03-c4-contenedores.md`](arquitectura/03-c4-contenedores.md) | Diagrama C4 nivel 2 |
+| [`arquitectura/04-escenario-escalabilidad.md`](arquitectura/04-escenario-escalabilidad.md) | Escenario de calidad y prueba de carga k6 |
+| [`arquitectura/05-entrega-garantizada.md`](arquitectura/05-entrega-garantizada.md) | Prueba de eventos pendientes al reiniciar el consumidor |
+| [`arquitectura/06-guion-video.md`](arquitectura/06-guion-video.md) | Guion del video con tiempos y responsables |
