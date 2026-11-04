@@ -29,9 +29,11 @@ Cauca, Facultad de Ingeniería Electrónica y Telecomunicaciones, periodo
 | Entregable | Enlace |
 |---|---|
 | Video de sustentación (YouTube) | https://youtu.be/B-chmKrIsbY |
-| Documento de arquitectura (Word, formato de la plantilla institucional) | [`DOCUMENTO_ARQUITECTURA_CORTE2.docx`](DOCUMENTO_ARQUITECTURA_CORTE2.docx) |
+| **Documento de arquitectura (PDF para entregar, formato de la plantilla institucional)** | [`DOCUMENTO_ARQUITECTURA_CORTE2.pdf`](DOCUMENTO_ARQUITECTURA_CORTE2.pdf) |
+| Documento de arquitectura (Word editable, fuente del PDF) | [`DOCUMENTO_ARQUITECTURA_CORTE2.docx`](DOCUMENTO_ARQUITECTURA_CORTE2.docx) |
 | Documento de arquitectura (Markdown) | [`DOCUMENTO_ARQUITECTURA_CORTE2.md`](DOCUMENTO_ARQUITECTURA_CORTE2.md) |
 | Repositorio Git | https://github.com/santyxswc/Banco_preguntas-ISoftII |
+| Resultados de la prueba de carga (k6, 1 y 2 instancias) | [`microservicios/pruebas-carga/resultados/comparacion.md`](microservicios/pruebas-carga/resultados/comparacion.md) |
 | Tablero del Sprint 2 (Jira, proyecto SCRUM) | https://ingsoft2bancodepreguntas.atlassian.net · captura en [`arquitectura/diagramas/sprint2-jira.png`](arquitectura/diagramas/sprint2-jira.png) |
 
 ## El problema
@@ -133,7 +135,7 @@ Documentación de esta iteración:
 
 | Documento | Contenido |
 |---|---|
-| [`DOCUMENTO_ARQUITECTURA_CORTE2.md`](DOCUMENTO_ARQUITECTURA_CORTE2.md) / [`.docx`](DOCUMENTO_ARQUITECTURA_CORTE2.docx) | Documento de entrega con la estructura de la plantilla institucional: HU con criterios de aceptación, Sprint 2 en Jira, escalabilidad, C4 + UML, contextos, patrones, API, pruebas, enlaces del video y del repositorio |
+| [`DOCUMENTO_ARQUITECTURA_CORTE2.md`](DOCUMENTO_ARQUITECTURA_CORTE2.md) / [`.pdf`](DOCUMENTO_ARQUITECTURA_CORTE2.pdf) / [`.docx`](DOCUMENTO_ARQUITECTURA_CORTE2.docx) | Documento de entrega con la estructura de la plantilla institucional: HU con criterios de aceptación, Sprint 2 en Jira, escalabilidad, C4 + UML, contextos, patrones, API, pruebas, enlaces del video y del repositorio |
 | [`arquitectura/`](arquitectura/README.md) | Contextos delimitados, contratos REST/eventos, C4 de contenedores, escenario de escalabilidad y entrega garantizada |
 | [`frontend/README.md`](frontend/README.md) | Pantallas por rol y cómo ejecutar el frontend |
 | [`TALLER09_DOCUMENTACION.md`](TALLER09_DOCUMENTACION.md) | Taller 09: comunicación síncrona y asíncrona, colección de Postman |
@@ -152,7 +154,8 @@ autenticación y autorización por rol (RNF-06 a RNF-09).
 .
 ├── README.md                         Este archivo: visión general del proyecto
 ├── DOCUMENTO_ARQUITECTURA_CORTE2.md  Documento de arquitectura del corte 2 (entrega)
-├── DOCUMENTO_ARQUITECTURA_CORTE2.docx  El mismo documento en Word con la plantilla institucional
+├── DOCUMENTO_ARQUITECTURA_CORTE2.pdf   El mismo documento en PDF con la plantilla institucional (entrega)
+├── DOCUMENTO_ARQUITECTURA_CORTE2.docx  Fuente editable en Word del PDF
 ├── TALLER09/10/11_*.md               Documentación de los talleres de laboratorio
 ├── .github/workflows/                CI: pruebas del monolito, de los microservicios y del frontend
 ├── arquitectura/                     Contextos, contratos, C4, escalabilidad, guion del video y diagramas (.mmd/.png)
@@ -170,7 +173,7 @@ autenticación y autorización por rol (RNF-06 a RNF-09).
     ├── review-service/               Asignación y evaluación de revisores, JPA (:8085)
     ├── notification-service/         Notificaciones por eventos y correo (:8086)
     ├── pruebas/                      Script de prueba de entrega garantizada de eventos
-    ├── pruebas-carga/                Prueba de carga k6 del escenario de escalabilidad
+    ├── pruebas-carga/                Prueba de carga k6 del escenario de escalabilidad y resultados medidos
     ├── lisw2_taller09_postman_collection.json  Colección de Postman
     ├── start-all.ps1                 Inicia RabbitMQ, los servicios, el gateway y el frontend
     └── stop-all.ps1                  Detiene todo

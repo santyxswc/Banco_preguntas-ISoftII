@@ -1,0 +1,19 @@
+{
+  "etiqueta": "2-instancias",
+  "fecha": "2026-11-04T18:59:18.155Z",
+  "baseUrl": "http://localhost:8090",
+  "usuariosConcurrentes": 500,
+  "peticiones": 71278,
+  "peticionesPorSegundo": 429.7616921952399,
+  "tasaErrores": 0,
+  "latenciaMs": {
+    "promedio": 2.5302987300709914,
+    "mediana": 2.4964009999999996,
+    "p95": 3.776837849999999,
+    "p99": 5.866890029999999,
+    "maxima": 15.624921
+  },
+  "p95CrearPreguntaMs": 3.8474255,
+  "p95ListarAsignadasMs": 1.5048914499999995,
+  "umbralesCumplidos": true
+}
