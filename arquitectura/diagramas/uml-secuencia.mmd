@@ -1,0 +1,43 @@
+sequenceDiagram
+    autonumber
+    actor A as Autor
+    actor AD as Administrador
+    actor R as Revisor
+    participant FE as Frontend
+    participant GW as API Gateway
+    participant QS as question-service
+    participant VS as validation-service
+    participant LS as lifecycle-service
+    participant RS as review-service
+    participant MQ as RabbitMQ
+    participant NS as notification-service
+
+    A->>FE: Llena el formulario
+    FE->>GW: POST /api/v1/preguntas
+    GW->>QS: POST /questions
+    QS->>VS: POST /validate (REST síncrono)
+    VS-->>QS: ValidationResult
+    QS-->>FE: 201 Created (DRAFT)
+    A->>FE: Enviar a revisión
+    FE->>GW: POST /api/v1/preguntas/{id}/submit-review
+    GW->>QS: POST /questions/{id}/submit-review
+    QS-)MQ: SubmitQuestionForReview
+    QS-->>FE: 202 Accepted + operationId
+    MQ-)LS: SubmitQuestionForReview
+    LS->>LS: DRAFT → PENDING_REVIEW
+    AD->>FE: Elige 1 a 3 revisores
+    FE->>GW: POST /api/v1/asignaciones
+    GW->>RS: POST /api/v1/asignaciones
+    RS->>LS: POST /lifecycle/{id}/transition (IN_REVIEW)
+    RS-)MQ: RevisorAsignado (uno por revisor)
+    RS-->>FE: 201 Created
+    MQ-)NS: RevisorAsignado
+    NS->>NS: Email al revisor
+    R->>FE: Aprueba o rechaza con observaciones
+    FE->>GW: POST /api/v1/revisiones/evaluar
+    GW->>RS: POST /api/v1/revisiones/evaluar
+    RS->>LS: transición final (APPROVED / REJECTED)
+    RS-)MQ: RevisionCompletada
+    RS-->>FE: 200 OK + estado final y color
+    MQ-)NS: RevisionCompletada
+    NS->>NS: Email al autor y al administrador

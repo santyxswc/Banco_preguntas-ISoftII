@@ -11,6 +11,8 @@ docs/
 *.docx
 *.doc
 *.Docs
+# Excepción: el documento de arquitectura del corte 2 es un entregable del repositorio
+!DOCUMENTO_ARQUITECTURA_CORTE2.docx
 
 # Archivos de bloqueo de LibreOffice mientras un documento está abierto
 .~lock.*

@@ -13,6 +13,7 @@ Cauca, Facultad de Ingeniería Electrónica y Telecomunicaciones, periodo
 
 ## Contenido
 
+- [Entrega del corte 2](#entrega-del-corte-2)
 - [El problema](#el-problema)
 - [Estado del proyecto](#estado-del-proyecto)
 - [Historias de usuario](#historias-de-usuario)
@@ -22,6 +23,16 @@ Cauca, Facultad de Ingeniería Electrónica y Telecomunicaciones, periodo
 - [Tecnologías](#tecnologías)
 - [Forma de trabajo](#forma-de-trabajo)
 - [Integrantes](#integrantes)
+
+## Entrega del corte 2
+
+| Entregable | Enlace |
+|---|---|
+| Video de sustentación (YouTube) | https://youtu.be/B-chmKrIsbY |
+| Documento de arquitectura (Word, formato de la plantilla institucional) | [`DOCUMENTO_ARQUITECTURA_CORTE2.docx`](DOCUMENTO_ARQUITECTURA_CORTE2.docx) |
+| Documento de arquitectura (Markdown) | [`DOCUMENTO_ARQUITECTURA_CORTE2.md`](DOCUMENTO_ARQUITECTURA_CORTE2.md) |
+| Repositorio Git | https://github.com/santyxswc/Banco_preguntas-ISoftII |
+| Tablero del Sprint 2 (Jira, proyecto SCRUM) | https://ingsoft2bancodepreguntas.atlassian.net · captura en [`arquitectura/diagramas/sprint2-jira.png`](arquitectura/diagramas/sprint2-jira.png) |
 
 ## El problema
 
@@ -50,7 +61,7 @@ El proyecto se desarrolla en tres iteraciones, una por corte:
 
 Historias de la iteración 2 (corte 2), implementadas en los microservicios
 y el frontend web. Los criterios de aceptación están en el
-[documento de arquitectura](DOCUMENTO_ARQUITECTURA_CORTE2.md#2-historias-de-usuario-de-la-segunda-iteración).
+[documento de arquitectura](DOCUMENTO_ARQUITECTURA_CORTE2.md#1-historias-de-usuario-de-la-segunda-iteración).
 
 | HU | Rol | Historia | Corte 1 (monolito) | Corte 2 (microservicios) |
 |----|-----|----------|--------------------|--------------------------|
@@ -122,7 +133,7 @@ Documentación de esta iteración:
 
 | Documento | Contenido |
 |---|---|
-| [`DOCUMENTO_ARQUITECTURA_CORTE2.md`](DOCUMENTO_ARQUITECTURA_CORTE2.md) | Documento de entrega: HU, Sprint 2, escalabilidad, C4 + UML, contextos, patrones, API, pruebas y guía del video |
+| [`DOCUMENTO_ARQUITECTURA_CORTE2.md`](DOCUMENTO_ARQUITECTURA_CORTE2.md) / [`.docx`](DOCUMENTO_ARQUITECTURA_CORTE2.docx) | Documento de entrega con la estructura de la plantilla institucional: HU con criterios de aceptación, Sprint 2 en Jira, escalabilidad, C4 + UML, contextos, patrones, API, pruebas, enlaces del video y del repositorio |
 | [`arquitectura/`](arquitectura/README.md) | Contextos delimitados, contratos REST/eventos, C4 de contenedores, escenario de escalabilidad y entrega garantizada |
 | [`frontend/README.md`](frontend/README.md) | Pantallas por rol y cómo ejecutar el frontend |
 | [`TALLER09_DOCUMENTACION.md`](TALLER09_DOCUMENTACION.md) | Taller 09: comunicación síncrona y asíncrona, colección de Postman |
@@ -141,9 +152,10 @@ autenticación y autorización por rol (RNF-06 a RNF-09).
 .
 ├── README.md                         Este archivo: visión general del proyecto
 ├── DOCUMENTO_ARQUITECTURA_CORTE2.md  Documento de arquitectura del corte 2 (entrega)
+├── DOCUMENTO_ARQUITECTURA_CORTE2.docx  El mismo documento en Word con la plantilla institucional
 ├── TALLER09/10/11_*.md               Documentación de los talleres de laboratorio
 ├── .github/workflows/                CI: pruebas del monolito, de los microservicios y del frontend
-├── arquitectura/                     Contextos, contratos, C4, escalabilidad y diagramas (.mmd/.png)
+├── arquitectura/                     Contextos, contratos, C4, escalabilidad, guion del video y diagramas (.mmd/.png)
 ├── frontend/                         Frontend web (HTML + JS) que consume la API del gateway (:5173)
 ├── banco-preguntas/                  Corte 1: monolito en capas (API REST; la GUI Swing se retiró)
 └── microservicios/                   Corte 2: microservicios (Maven multi-módulo)
@@ -241,9 +253,9 @@ ver [`banco-preguntas/README.md`](banco-preguntas/README.md#ejecución).
 ## Integrantes
 
 - Yeferson Santiago Caicedo Orozco
-- Ivan Alexander Lopez
-- Adrian Araujo Urbano
-- Carlos Bambague
+- Iván Alexander López Lasso
+- Adrián Camilo Araujo Urbano
+- Carlos Arturo Bambague
 
 **Docentes:** Paola Andrea Bedoya Toro, Libardo Pantoja
 
