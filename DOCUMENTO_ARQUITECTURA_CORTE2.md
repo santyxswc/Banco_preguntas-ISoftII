@@ -45,17 +45,17 @@ Popayán, noviembre de 2026
 - [Capítulo 4 — Entrega](#capítulo-4--entrega)
   - [9. Enlaces de entrega](#9-enlaces-de-entrega)
 - [Referencias](#referencias)
-- [Anexos](#anexos)
 
 **Tabla de ilustraciones**
 
-- Ilustración 1. Tablero del Sprint 2 en Jira.
-- Ilustración 2. C4 nivel 1: contexto del sistema.
-- Ilustración 3. C4 nivel 2: contenedores.
-- Ilustración 4. C4 nivel 3: componentes de question-service y notification-service.
-- Ilustración 5. Diagrama de clases UML del contexto de Autoría y los patrones.
-- Ilustración 6. Diagrama de secuencia UML del flujo HU-01 a HU-05.
-- Ilustración 7. Diagrama de contextos delimitados.
+- Ilustración 1. Actividades del Sprint 2 en Jira (vista Lista).
+- Ilustración 2. Resumen del espacio en Jira: estado de las actividades y progreso de las épicas.
+- Ilustración 3. C4 nivel 1: contexto del sistema.
+- Ilustración 4. C4 nivel 2: contenedores.
+- Ilustración 5. C4 nivel 3: componentes de question-service y notification-service.
+- Ilustración 6. Diagrama de clases UML del contexto de Autoría y los patrones.
+- Ilustración 7. Diagrama de secuencia UML del flujo HU-01 a HU-05.
+- Ilustración 8. Diagrama de contextos delimitados.
 
 **Índice de tablas**
 
@@ -196,11 +196,15 @@ Escenario: el autor lee las observaciones
 
 ## 2. Planificación del Sprint 2
 
-El Sprint 2 se gestionó en **Jira** (proyecto SCRUM, tablero *SCRUM board*). Duró del 8 al 30 de octubre de 2026 y se cerró el 3 de noviembre con las 19 incidencias finalizadas. Su objetivo fue *refactorizar la iteración 1 a microservicios orientados a eventos, implementar la HU-05 (revisión por pares) y completar documentación, pruebas y sustentación del segundo corte*. Los commits referencian las tareas, por ejemplo `[SCRUM-110]` y `[SCRUM-111]`. La Ilustración 1 muestra el tablero y la Tabla 1 las incidencias con su responsable.
+El Sprint 2 se gestionó en **Jira** (proyecto SCRUM, tablero *SCRUM board*). Duró del 8 al 30 de octubre de 2026 y se cerró el 3 de noviembre con las 19 incidencias finalizadas. Su objetivo fue *refactorizar la iteración 1 a microservicios orientados a eventos, implementar la HU-05 (revisión por pares) y completar documentación, pruebas y sustentación del segundo corte*. Los commits referencian las tareas, por ejemplo `[SCRUM-110]` y `[SCRUM-111]`. La Ilustración 1 muestra las actividades del sprint con su responsable y estado, y la Ilustración 2 el resumen del espacio: 72 de 75 actividades finalizadas y las épicas del corte al 100 %. La Tabla 1 lista las historias del Sprint 2 con su responsable.
 
-![Ilustración 1. Tablero del Sprint 2 en Jira](arquitectura/diagramas/sprint2-jira.png)
+![Ilustración 1. Actividades del Sprint 2 en Jira](arquitectura/diagramas/sprint2-jira-lista.png)
 
-*Ilustración 1. Tablero del Sprint 2 en Jira (SCRUM board). Elaboración propia a partir de los datos de Jira.*
+*Ilustración 1. Actividades del Sprint 2 en Jira (vista Lista). Captura del espacio Banco De Preguntas Saber Pro.*
+
+![Ilustración 2. Resumen del espacio en Jira](arquitectura/diagramas/sprint2-jira-resumen.png)
+
+*Ilustración 2. Resumen del espacio en Jira: estado de las actividades y progreso de las épicas. Captura del espacio Banco De Preguntas Saber Pro.*
 
 *Tabla 1. Historias del Sprint 2 en Jira. Elaboración propia.*
 
@@ -282,19 +286,19 @@ El script de la prueba está en `microservicios/pruebas-carga/`; el procedimient
 
 ### 4.1. C4 nivel 1 — Contexto del sistema
 
-Autores, administradores y revisores usan el sistema desde el navegador; el sistema se apoya en un servidor de correo externo (Ilustración 2).
+Autores, administradores y revisores usan el sistema desde el navegador; el sistema se apoya en un servidor de correo externo (Ilustración 3).
 
-![Ilustración 2. C4 nivel 1](arquitectura/diagramas/c4-contexto.png)
+![Ilustración 3. C4 nivel 1](arquitectura/diagramas/c4-contexto.png)
 
-*Ilustración 2. C4 nivel 1: contexto del sistema. Elaboración propia.*
+*Ilustración 3. C4 nivel 1: contexto del sistema. Elaboración propia.*
 
 ### 4.2. C4 nivel 2 — Contenedores
 
-La Ilustración 3 muestra el frontend y el backend separados y comunicados por la API REST del gateway. La Tabla 4 resume cada contenedor.
+La Ilustración 4 muestra el frontend y el backend separados y comunicados por la API REST del gateway. La Tabla 4 resume cada contenedor.
 
-![Ilustración 3. C4 nivel 2](arquitectura/diagramas/c4-contenedores.png)
+![Ilustración 4. C4 nivel 2](arquitectura/diagramas/c4-contenedores.png)
 
-*Ilustración 3. C4 nivel 2: contenedores. Elaboración propia.*
+*Ilustración 4. C4 nivel 2: contenedores. Elaboración propia.*
 
 *Tabla 4. Contenedores del sistema. Elaboración propia.*
 
@@ -312,39 +316,39 @@ La Ilustración 3 muestra el frontend y el backend separados y comunicados por l
 
 ### 4.3. C4 nivel 3 — Componentes de question-service y notification-service
 
-Dentro de question-service el controlador solo conoce la fachada, que coordina validación, ciclo de vida, repositorio y mensajería a través de puertos. En notification-service los consumidores de eventos delegan en un despachador que obtiene el emisor de correo de una fábrica (Ilustración 4).
+Dentro de question-service el controlador solo conoce la fachada, que coordina validación, ciclo de vida, repositorio y mensajería a través de puertos. En notification-service los consumidores de eventos delegan en un despachador que obtiene el emisor de correo de una fábrica (Ilustración 5).
 
-![Ilustración 4. C4 nivel 3](arquitectura/diagramas/c4-componentes.png)
+![Ilustración 5. C4 nivel 3](arquitectura/diagramas/c4-componentes.png)
 
-*Ilustración 4. C4 nivel 3: componentes de question-service y notification-service. Elaboración propia.*
+*Ilustración 5. C4 nivel 3: componentes de question-service y notification-service. Elaboración propia.*
 
 En **review-service** (organizado en dominio, aplicación, infraestructura y presentación) la decisión final se delega en `VerdictPolicy` (Strategy, implementada por `UnanimousApprovalPolicy`) y la persistencia en `JpaReviewRepositoryAdapter` (Adapter entre el puerto `ReviewRepository` y Spring Data JPA).
 
 ### 4.4. UML — Diagrama de clases
 
-La Ilustración 5 muestra las clases del contexto de Autoría y las de los patrones de validación y correo.
+La Ilustración 6 muestra las clases del contexto de Autoría y las de los patrones de validación y correo.
 
-![Ilustración 5. Diagrama de clases](arquitectura/diagramas/uml-clases.png)
+![Ilustración 6. Diagrama de clases](arquitectura/diagramas/uml-clases.png)
 
-*Ilustración 5. Diagrama de clases UML del contexto de Autoría y los patrones. Elaboración propia.*
+*Ilustración 6. Diagrama de clases UML del contexto de Autoría y los patrones. Elaboración propia.*
 
 ### 4.5. UML — Diagrama de secuencia del flujo completo (HU-01 a HU-05)
 
-La Ilustración 6 recorre el flujo crear → enviar a revisión → asignar → evaluar → notificar, distinguiendo las llamadas REST síncronas de los mensajes asíncronos por RabbitMQ.
+La Ilustración 7 recorre el flujo crear → enviar a revisión → asignar → evaluar → notificar, distinguiendo las llamadas REST síncronas de los mensajes asíncronos por RabbitMQ.
 
-![Ilustración 6. Diagrama de secuencia](arquitectura/diagramas/uml-secuencia.png)
+![Ilustración 7. Diagrama de secuencia](arquitectura/diagramas/uml-secuencia.png)
 
-*Ilustración 6. Diagrama de secuencia UML del flujo HU-01 a HU-05. Elaboración propia.*
+*Ilustración 7. Diagrama de secuencia UML del flujo HU-01 a HU-05. Elaboración propia.*
 
 Las fuentes editables (Mermaid) de todos los diagramas están en `arquitectura/diagramas/*.mmd`.
 
 ## 5. Diagrama de contextos delimitados (bounded contexts)
 
-La Ilustración 7 muestra los contextos y sus relaciones; la Tabla 5 indica el microservicio y el almacenamiento de cada uno.
+La Ilustración 8 muestra los contextos y sus relaciones; la Tabla 5 indica el microservicio y el almacenamiento de cada uno.
 
-![Ilustración 7. Contextos delimitados](arquitectura/diagramas/contextos.png)
+![Ilustración 8. Contextos delimitados](arquitectura/diagramas/contextos.png)
 
-*Ilustración 7. Diagrama de contextos delimitados. Elaboración propia.*
+*Ilustración 8. Diagrama de contextos delimitados. Elaboración propia.*
 
 *Tabla 5. Contextos delimitados y almacenamiento. Elaboración propia.*
 
@@ -449,36 +453,3 @@ Resultado de la última ejecución (4 de noviembre de 2026): **microservicios 10
 - Newman, S. (2021). *Building Microservices* (2.ª ed.). O'Reilly Media.
 - OpenAPI Initiative. (2021). *OpenAPI Specification v3.1.0*. https://spec.openapis.org/oas/v3.1.0
 - Universidad del Cauca. (2026). *Entregables Proyecto de Curso — Segundo Corte 2026.2. Ingeniería de Software II*. Facultad de Ingeniería Electrónica y Telecomunicaciones.
-
----
-
-## Anexos
-
-### Anexo A. Guía de la sustentación en video
-
-Tiempos según el protocolo (no acelerar el video ni pasarse del tiempo: −1 punto). Todos los integrantes deben participar. El guion detallado, con lo que dice cada uno, está en [`arquitectura/06-guion-video.md`](arquitectura/06-guion-video.md).
-
-| Tiempo | Punto del protocolo | Qué mostrar | Responsable |
-|---|---|---|---|
-| 0:00–1:00 | 1. Historias de usuario | Sección 1 (HU-01 a HU-05; la HU-05 es la nueva) | Yeferson Santiago Caicedo Orozco |
-| 1:00–2:00 | 2. Escenario de escalabilidad | Sección 3 y el script k6 | Adrián Camilo Araujo Urbano |
-| 2:00–4:00 | 3. Arquitectura C4 y UML | C4 niveles 1, 2 (frontend y backend separados por la API REST) y 3; diagramas de clases y de secuencia | Iván Alexander López Lasso |
-| 4:00–6:00 | 4. Seis patrones GoF | Sección 6, abriendo cada clase en el IDE | Yeferson Santiago Caicedo Orozco |
-| 6:00–7:00 | 5. Bounded contexts | Sección 5 | Adrián Camilo Araujo Urbano |
-| 7:00–8:00 | 6. Pruebas unitarias | `mvn test` en `microservicios/` y la ejecución de GitHub Actions | Adrián Camilo Araujo Urbano |
-| 8:00–9:00 | 7. Git y Scrum | Commits de cada integrante en GitHub y tablero del Sprint 2 en Jira | Yeferson Santiago Caicedo Orozco |
-| 9:00–10:00 | 8. Swagger | http://localhost:8080/swagger-ui.html cambiando de servicio | Iván Alexander López Lasso |
-| 10:00–15:00 | 9. Software funcional | En http://localhost:5173: el autor crea (con un error de validación), envía a revisión → el administrador asigna 2 revisores → correos en la consola de notification-service → el revisor 1 aprueba y el revisor 2 rechaza con observación → el autor ve "Rechazada" en rojo, lee las observaciones, edita y reenvía. En el código: la fachada, el gateway y un consumidor de RabbitMQ | Santiago (autor), Iván (administrador) y Adrián (revisor y eventos) |
-
-Cómo levantar todo para la demostración: `cd microservicios` y `.\start-all.ps1` (RabbitMQ, 7 servicios y el frontend).
-
-### Anexo B. Documentos complementarios del repositorio
-
-| Documento | Contenido |
-|---|---|
-| [`arquitectura/01-bounded-contexts.md`](arquitectura/01-bounded-contexts.md) | Contextos delimitados, servicio y base de datos de cada uno |
-| [`arquitectura/02-contratos.md`](arquitectura/02-contratos.md) | Eventos de dominio y endpoints REST por servicio |
-| [`arquitectura/03-c4-contenedores.md`](arquitectura/03-c4-contenedores.md) | Diagrama C4 nivel 2 |
-| [`arquitectura/04-escenario-escalabilidad.md`](arquitectura/04-escenario-escalabilidad.md) | Escenario de calidad y prueba de carga k6 |
-| [`arquitectura/05-entrega-garantizada.md`](arquitectura/05-entrega-garantizada.md) | Prueba de eventos pendientes al reiniciar el consumidor |
-| [`arquitectura/06-guion-video.md`](arquitectura/06-guion-video.md) | Guion del video con tiempos y responsables |

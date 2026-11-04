@@ -34,7 +34,7 @@ Cauca, Facultad de Ingeniería Electrónica y Telecomunicaciones, periodo
 | Documento de arquitectura (Markdown) | [`DOCUMENTO_ARQUITECTURA_CORTE2.md`](DOCUMENTO_ARQUITECTURA_CORTE2.md) |
 | Repositorio Git | https://github.com/santyxswc/Banco_preguntas-ISoftII |
 | Resultados de la prueba de carga (k6, 1 y 2 instancias) | [`microservicios/pruebas-carga/resultados/comparacion.md`](microservicios/pruebas-carga/resultados/comparacion.md) |
-| Tablero del Sprint 2 (Jira, proyecto SCRUM) | https://ingsoft2bancodepreguntas.atlassian.net · captura en [`arquitectura/diagramas/sprint2-jira.png`](arquitectura/diagramas/sprint2-jira.png) |
+| Tablero del Sprint 2 (Jira, proyecto SCRUM) | https://ingsoft2bancodepreguntas.atlassian.net · capturas en [`arquitectura/diagramas/sprint2-jira-lista.png`](arquitectura/diagramas/sprint2-jira-lista.png) y [`sprint2-jira-resumen.png`](arquitectura/diagramas/sprint2-jira-resumen.png) |
 
 ## El problema
 
