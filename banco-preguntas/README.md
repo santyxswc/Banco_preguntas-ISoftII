@@ -124,9 +124,9 @@ Actions las corre en cada push y pull request a `main`.
 ## Integrantes
 
 - Yeferson Santiago Caicedo Orozco
-- Ivan Alexander Lopez
-- Adrian Araujo Urbano
-- Carlos Bambague
+- Iván Alexander López Lasso
+- Adrián Camilo Araujo Urbano
+- Carlos Arturo Bambague
 
 ## Docentes
 

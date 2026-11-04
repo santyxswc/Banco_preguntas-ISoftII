@@ -9,9 +9,9 @@
 - **Periodo Académico:** 2026.2  
 - **Autores / Equipo:**  
   - Yeferson Santiago Caicedo Orozco  
-  - Ivan Alexander Lopez  
-  - Adrian Araujo Urbano  
-  - Carlos Bambague  
+  - Iván Alexander López Lasso  
+  - Adrián Camilo Araujo Urbano  
+  - Carlos Arturo Bambague  
 
 ---
 

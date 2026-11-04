@@ -6,7 +6,7 @@
 - **Programa:** Ingeniería de Sistemas  
 - **Docentes:** Paola Andrea Bedoya Toro, Libardo Pantoja  
 - **Periodo Académico:** 2026.2  
-- **Estudiante / Equipo:** Yeferson Santiago Caicedo Orozco, Ivan Alexander Lopez, Adrian Araujo Urbano, Carlos Bambague  
+- **Estudiante / Equipo:** Yeferson Santiago Caicedo Orozco, Iván Alexander López Lasso, Adrián Camilo Araujo Urbano, Carlos Arturo Bambague  
 
 ---
 
