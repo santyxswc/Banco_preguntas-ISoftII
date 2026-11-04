@@ -1,0 +1,23 @@
+flowchart LR
+    subgraph QS["question-service"]
+        QC["QuestionController<br/>(REST /questions)"] --> F["QuestionAuthoringFacade<br/>«Facade»"]
+        F --> QB["QuestionBuilder<br/>«Builder»"]
+        F --> QR[("QuestionRepository")]
+        F --> P1(["StructuralValidator «puerto»"])
+        F --> P2(["QuestionLifecycle «puerto»"])
+        F --> P3(["ReviewRequestPublisher «puerto»"])
+        P1 -.implementa.- VC["ValidationClient «Adapter»"]
+        P2 -.implementa.- LC["LifecycleClient «Adapter»"]
+        P3 -.implementa.- RP["RabbitReviewRequestPublisher"]
+    end
+    subgraph NS["notification-service"]
+        C1["ReviewerAssignedConsumer «Observer»"] --> D["NotificationDispatcher"]
+        C2["ReviewCompletedConsumer «Observer»"] --> D
+        D --> NR[("NotificationRepository")]
+        D --> UD(["UserDirectory «puerto»"])
+        UD -.implementa.- UC["UserRestClient «Adapter»"]
+        D --> ES(["EmailSender"])
+        EF["EmailSenderFactory «Factory Method»"] -- crea --> ES
+        ES -.- DEC["LoggingEmailSenderDecorator «Decorator»"]
+    end
+    VC -- REST --> VS["validation-service<br/>QuestionValidator + ValidationRule «Strategy»"]

@@ -1,0 +1,102 @@
+classDiagram
+    class Question {
+        -Long id
+        -String context
+        -String text
+        -List~OptionDTO~ options
+        -String correctOptionId
+        -String justification
+        -String bibliography
+        -String competency
+        -String topic
+        -String subtopic
+        -String difficulty
+        -Long authorId
+        -QuestionStatus status
+        +updateContentFrom(Question)
+        +isAuthoredBy(Long) boolean
+        +mentions(String) boolean
+        +toDTO() QuestionDTO
+    }
+    class QuestionBuilder {
+        +aQuestion()$ QuestionBuilder
+        +from(CreateQuestionRequest)$ QuestionBuilder
+        +statement(String) QuestionBuilder
+        +option(String, String) QuestionBuilder
+        +difficulty(String) QuestionBuilder
+        +build() Question
+    }
+    class QuestionAuthoringFacade {
+        +create(CreateQuestionRequest) Question
+        +update(Long, CreateQuestionRequest, Long) Question
+        +submitForReview(Long, Long) String
+        +search(QuestionFilter, int, int) PageResult
+    }
+    class QuestionStatus {
+        <<enumeration>>
+        DRAFT
+        PENDING_REVIEW
+        IN_REVIEW
+        APPROVED
+        REJECTED
+        PUBLISHED
+        +label() String
+        +color() String
+        +isEditable() boolean
+        +canTransitionTo(QuestionStatus) boolean
+    }
+    class StructuralValidator {
+        <<interface>>
+        +validate(CreateQuestionRequest) ValidationResult
+    }
+    class QuestionLifecycle {
+        <<interface>>
+        +stateOf(Long) QuestionStatus
+        +statesOf(Collection) Map
+    }
+    class ReviewRequestPublisher {
+        <<interface>>
+        +publish(SubmitQuestionForReview)
+    }
+    class ValidationClient
+    class LifecycleClient
+    class ValidationRule {
+        <<interface>>
+        +name() String
+        +check(CreateQuestionRequest) List
+    }
+    class QuestionValidator {
+        +validate(CreateQuestionRequest) ValidationResult
+    }
+    class EmailSenderFactory {
+        <<abstract>>
+        #createSender()* EmailSender
+        +sender() EmailSender
+    }
+    class EmailSender {
+        <<interface>>
+        +send(EmailMessage)
+    }
+    class LoggingEmailSenderDecorator
+
+    QuestionBuilder ..> Question : crea
+    Question --> QuestionStatus
+    QuestionAuthoringFacade --> QuestionBuilder
+    QuestionAuthoringFacade --> StructuralValidator
+    QuestionAuthoringFacade --> QuestionLifecycle
+    QuestionAuthoringFacade --> ReviewRequestPublisher
+    StructuralValidator <|.. ValidationClient
+    QuestionLifecycle <|.. LifecycleClient
+    QuestionValidator o-- "5" ValidationRule
+    ValidationRule <|.. StatementRule
+    ValidationRule <|.. OptionsRule
+    ValidationRule <|.. CorrectAnswerRule
+    ValidationRule <|.. EvidenceRule
+    ValidationRule <|.. TaxonomyRule
+    EmailSenderFactory <|-- ConsoleEmailSenderFactory
+    EmailSenderFactory <|-- SmtpEmailSenderFactory
+    EmailSenderFactory ..> EmailSender : crea
+    EmailSender <|.. ConsoleEmailSender
+    EmailSender <|.. SmtpEmailSender
+    EmailSender <|.. LoggingEmailSenderDecorator
+    LoggingEmailSenderDecorator o-- EmailSender : envuelve

@@ -1,0 +1,11 @@
+C4Context
+    title Contexto del sistema — Banco de Preguntas Saber Pro
+    Person(autor, "Docente autor", "Crea, edita y envía preguntas a revisión")
+    Person(admin, "Administrador", "Asigna revisores a preguntas pendientes")
+    Person(revisor, "Docente revisor", "Aprueba o rechaza preguntas con observaciones")
+    System(banco, "Banco de Preguntas Saber Pro", "Gestiona el ciclo de vida de las preguntas: autoría, validación, revisión por pares y notificaciones")
+    System_Ext(smtp, "Servidor de correo SMTP", "Entrega los emails a revisores, autores y administrador")
+    Rel(autor, banco, "Usa", "Navegador web")
+    Rel(admin, banco, "Usa", "Navegador web")
+    Rel(revisor, banco, "Usa", "Navegador web")
+    Rel(banco, smtp, "Envía correos", "SMTP")
