@@ -24,7 +24,7 @@ Popayán, noviembre de 2026
 
 </div>
 
-> Versión en Word con el formato de la plantilla institucional: [`DOCUMENTO_ARQUITECTURA_CORTE2.docx`](DOCUMENTO_ARQUITECTURA_CORTE2.docx).
+> Versión para entregar, con el formato de la plantilla institucional: [`DOCUMENTO_ARQUITECTURA_CORTE2.pdf`](DOCUMENTO_ARQUITECTURA_CORTE2.pdf) (fuente editable en Word: [`DOCUMENTO_ARQUITECTURA_CORTE2.docx`](DOCUMENTO_ARQUITECTURA_CORTE2.docx)).
 
 ---
 
@@ -61,11 +61,12 @@ Popayán, noviembre de 2026
 
 - Tabla 1. Historias del Sprint 2 en Jira.
 - Tabla 2. Escenario de calidad de escalabilidad.
-- Tabla 3. Contenedores del sistema.
-- Tabla 4. Contextos delimitados y almacenamiento.
-- Tabla 5. Patrones de diseño GoF implementados.
-- Tabla 6. Endpoints públicos de la API REST.
-- Tabla 7. Pruebas unitarias por módulo.
+- Tabla 3. Resultados de la prueba de carga con k6.
+- Tabla 4. Contenedores del sistema.
+- Tabla 5. Contextos delimitados y almacenamiento.
+- Tabla 6. Patrones de diseño GoF implementados.
+- Tabla 7. Endpoints públicos de la API REST.
+- Tabla 8. Pruebas unitarias por módulo.
 
 ---
 
@@ -253,7 +254,25 @@ Decisiones de arquitectura que sostienen el escenario:
 3. **Consulta de estados en lote** (`GET /lifecycle?ids=`): listar N preguntas cuesta una sola llamada a lifecycle-service y no N.
 4. **Entrega garantizada**: colas durables, reintentos con espera exponencial, DLQ y consumidores idempotentes; no se pierden eventos si un consumidor se cae.
 
-La prueba de carga está en `microservicios/pruebas-carga/` y el procedimiento en [`arquitectura/04-escenario-escalabilidad.md`](arquitectura/04-escenario-escalabilidad.md).
+### 3.1. Resultados medidos
+
+El escenario se ejecutó el 4 de noviembre de 2026 con k6 0.54.0: 500 usuarios concurrentes, 30 s de rampa, 2 minutos sostenidos y 15 s de bajada. Primero se usó 1 instancia de question-service y luego 2 instancias detrás del gateway con el perfil `escalado`. Equipo de la medición: AMD Ryzen 7 5700G (16 hilos), 40 GB de RAM, Linux, Java 21 y RabbitMQ 3.13 en Docker. La Tabla 3 resume los resultados.
+
+*Tabla 3. Resultados de la prueba de carga con k6. Elaboración propia.*
+
+| Métrica | 1 instancia | 2 instancias |
+|---|---|---|
+| Peticiones totales | 71 287 | 71 278 |
+| Peticiones por segundo | 429,9 | 429,8 |
+| Tasa de errores | 0,0 % | 0,0 % |
+| Latencia p95 | 3,9 ms | 3,8 ms |
+| Latencia p99 | 5,8 ms | 5,9 ms |
+| p95 crear pregunta / listar asignadas | 4,0 ms / 3,3 ms | 3,8 ms / 1,5 ms |
+| Cumple p95 < 500 ms y errores < 1 % | Sí | Sí |
+
+Con 500 usuarios se cumplen los dos umbrales con amplio margen: la p95 queda unas 125 veces por debajo de 500 ms y no hubo errores. Al agregar la segunda instancia, sin cambiar código (solo configuración), la p95 se mantuvo y bajó un 4,1 %, que es el resultado esperado. Durante la prueba, las conexiones del gateway hacia las dos instancias estuvieron repartidas por igual, lo que confirma el balanceo. El rendimiento es el mismo en ambos casos porque cada usuario virtual hace una petición por segundo: la carga la fija el escenario. Como las dos instancias comparten el mismo equipo y 500 usuarios no lo saturan, esta prueba demuestra el cumplimiento del escenario, pero no mide la capacidad máxima del sistema.
+
+El script de la prueba está en `microservicios/pruebas-carga/`; el procedimiento y la evidencia (`resultados/*.json` y `resultados/comparacion.md`) se describen en [`arquitectura/04-escenario-escalabilidad.md`](arquitectura/04-escenario-escalabilidad.md).
 
 ---
 
@@ -271,13 +290,13 @@ Autores, administradores y revisores usan el sistema desde el navegador; el sist
 
 ### 4.2. C4 nivel 2 — Contenedores
 
-La Ilustración 3 muestra el frontend y el backend separados y comunicados por la API REST del gateway. La Tabla 3 resume cada contenedor.
+La Ilustración 3 muestra el frontend y el backend separados y comunicados por la API REST del gateway. La Tabla 4 resume cada contenedor.
 
 ![Ilustración 3. C4 nivel 2](arquitectura/diagramas/c4-contenedores.png)
 
 *Ilustración 3. C4 nivel 2: contenedores. Elaboración propia.*
 
-*Tabla 3. Contenedores del sistema. Elaboración propia.*
+*Tabla 4. Contenedores del sistema. Elaboración propia.*
 
 | Contenedor | Tecnología | Responsabilidad |
 |---|---|---|
@@ -321,13 +340,13 @@ Las fuentes editables (Mermaid) de todos los diagramas están en `arquitectura/d
 
 ## 5. Diagrama de contextos delimitados (bounded contexts)
 
-La Ilustración 7 muestra los contextos y sus relaciones; la Tabla 4 indica el microservicio y el almacenamiento de cada uno.
+La Ilustración 7 muestra los contextos y sus relaciones; la Tabla 5 indica el microservicio y el almacenamiento de cada uno.
 
 ![Ilustración 7. Contextos delimitados](arquitectura/diagramas/contextos.png)
 
 *Ilustración 7. Diagrama de contextos delimitados. Elaboración propia.*
 
-*Tabla 4. Contextos delimitados y almacenamiento. Elaboración propia.*
+*Tabla 5. Contextos delimitados y almacenamiento. Elaboración propia.*
 
 | Contexto | Microservicio | Almacenamiento | Se integra con |
 |---|---|---|---|
@@ -343,9 +362,9 @@ Regla común: ningún servicio lee la base de datos de otro. El detalle y las di
 
 ## 6. Patrones de diseño GoF implementados
 
-Se cumplen los 6 patrones exigidos (2 creacionales, 2 estructurales y 2 de comportamiento) **dentro de la arquitectura de microservicios**, más un patrón estructural adicional (Adapter). La Tabla 5 los describe.
+Se cumplen los 6 patrones exigidos (2 creacionales, 2 estructurales y 2 de comportamiento) **dentro de la arquitectura de microservicios**, más un patrón estructural adicional (Adapter). La Tabla 6 los describe.
 
-*Tabla 5. Patrones de diseño GoF implementados. Elaboración propia.*
+*Tabla 6. Patrones de diseño GoF implementados. Elaboración propia.*
 
 | # | Patrón | Tipo | Dónde | Cómo y para qué se aplicó |
 |---|---|---|---|---|
@@ -364,7 +383,7 @@ El monolito del corte 1 (`banco-preguntas/`) conserva sus propios patrones (Buil
 - **Swagger UI unificado (gateway):** http://localhost:8080/swagger-ui.html, con un selector arriba a la derecha para cada microservicio.
 - Swagger individual: `http://localhost:{8081..8086}/swagger-ui.html`.
 
-*Tabla 6. Endpoints públicos de la API REST. Elaboración propia.*
+*Tabla 7. Endpoints públicos de la API REST. Elaboración propia.*
 
 | Módulo | Método | Ruta pública | HU |
 |---|---|---|---|
@@ -387,9 +406,9 @@ El monolito del corte 1 (`banco-preguntas/`) conserva sus propios patrones (Buil
 
 ## 8. Pruebas unitarias automatizadas
 
-Se ejecutan con `mvn test` (JUnit 5, Java 21) y en GitHub Actions en cada push (`.github/workflows/pruebas.yml`: monolito, microservicios y verificación del frontend). La Tabla 7 resume las pruebas por módulo.
+Se ejecutan con `mvn test` (JUnit 5, Java 21) y en GitHub Actions en cada push (`.github/workflows/pruebas.yml`: monolito, microservicios y verificación del frontend). La Tabla 8 resume las pruebas por módulo.
 
-*Tabla 7. Pruebas unitarias por módulo. Elaboración propia.*
+*Tabla 8. Pruebas unitarias por módulo. Elaboración propia.*
 
 | Módulo | Clases de prueba | Qué cubren |
 |---|---|---|
