@@ -157,6 +157,7 @@ autenticación y autorización por rol (RNF-06 a RNF-09).
 ├── DOCUMENTO_ARQUITECTURA_CORTE2.pdf   El mismo documento en PDF con la plantilla institucional (entrega)
 ├── DOCUMENTO_ARQUITECTURA_CORTE2.docx  Fuente editable en Word del PDF
 ├── TALLER09/10/11_*.md               Documentación de los talleres de laboratorio
+├── lisw2_taller11_gX.docx / .pdf     Informe técnico del taller 11 (DDD), formato institucional
 ├── .github/workflows/                CI: pruebas del monolito, de los microservicios y del frontend
 ├── arquitectura/                     Contextos, contratos, C4, escalabilidad, guion del video y diagramas (.mmd/.png)
 ├── frontend/                         Frontend web (HTML + JS) que consume la API del gateway (:5173)
