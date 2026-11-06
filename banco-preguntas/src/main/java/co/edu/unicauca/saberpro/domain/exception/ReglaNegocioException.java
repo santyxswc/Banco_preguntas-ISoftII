@@ -4,7 +4,6 @@
  * @author Santiago Caicedo
  * @author Ivan Alexander Lopez
  * @author Adrian Araujo Urbano
- * @author Carlos Bambague
  */
 package co.edu.unicauca.saberpro.domain.exception;
 

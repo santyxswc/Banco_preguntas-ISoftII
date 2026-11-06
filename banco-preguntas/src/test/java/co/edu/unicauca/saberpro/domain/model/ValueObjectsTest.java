@@ -4,7 +4,6 @@
  * @author Santiago Caicedo
  * @author Ivan Alexander Lopez
  * @author Adrian Araujo Urbano
- * @author Carlos Bambague
  */
 package co.edu.unicauca.saberpro.domain.model;
 
@@ -31,6 +30,21 @@ class ValueObjectsTest {
 
         Justificacion justificacion = new Justificacion("Esta justificación cumple con los 15 caracteres mínimos requeridos.");
         assertEquals("Esta justificación cumple con los 15 caracteres mínimos requeridos.", justificacion.getTexto());
+    }
+
+    @Test
+    @DisplayName("Justificación: rechaza palabras prohibidas sin importar mayúsculas ni tildes")
+    void justificacionRechazaPalabrasProhibidas() {
+        assertThrows(ReglaNegocioException.class,
+                () -> new Justificacion("Obviamente la opción B es la respuesta correcta."));
+        assertThrows(ReglaNegocioException.class,
+                () -> new Justificacion("Es la clave porque SÍ cumple lo que pide el enunciado."));
+        assertThrows(ReglaNegocioException.class,
+                () -> new Justificacion("La respuesta es todas las anteriores sin más detalle."));
+
+        // "claramente" prohibida, pero "aclaramos" no debe confundirse con ella (límite de palabra).
+        Justificacion valida = new Justificacion("Aclaramos que la opción B aplica el patrón Observer al evento.");
+        assertTrue(valida.getTexto().startsWith("Aclaramos"));
     }
 
     @Test

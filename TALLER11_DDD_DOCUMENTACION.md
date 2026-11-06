@@ -11,7 +11,6 @@
   - Yeferson Santiago Caicedo Orozco  
   - Iván Alexander López Lasso  
   - Adrián Camilo Araujo Urbano  
-  - Carlos Arturo Bambague  
 
 ---
 
@@ -77,6 +76,9 @@ co.edu.unicauca.saberpro.domain/
 │   ├── Enunciado.java                    # VALUE OBJECT (Inmutable)
 │   ├── Justificacion.java                # VALUE OBJECT (Inmutable, >= 15 chars)
 │   ├── OpcionRespuesta.java              # VALUE OBJECT (Inmutable)
+│   ├── Revisor.java                      # ENTITY (identidad: ID de docente)
+│   ├── Revision.java                     # ENTITY (identidad: ID de evaluación)
+│   ├── Dictamen.java                     # ENUM (APROBADA, RECHAZADA)
 │   └── EstadoPregunta.java               # ENUM (BORRADOR, PENDIENTE_REVISION...)
 ├── exception/                            # EXCEPCIONES DE NEGOCIO
 │   ├── DomainException.java              # Excepción raíz del dominio
@@ -87,7 +89,7 @@ co.edu.unicauca.saberpro.domain/
 ```
 
 ### 3.1 Objetos de Valor (Value Objects)
-- **`Justificacion`:** Inmutable. Garantiza que toda justificación contenga al menos 15 caracteres significativos:
+- **`Justificacion`:** Inmutable. Garantiza que toda justificación contenga al menos 15 caracteres significativos y que no use palabras prohibidas (`obvio`, `obviamente`, `evidentemente`, `claramente`, `porque sí`, `todas las anteriores`, `ninguna de las anteriores`), sin importar mayúsculas ni tildes. Fragmento base del taller:
   ```java
   public final class Justificacion {
       private final String texto;
@@ -102,6 +104,10 @@ co.edu.unicauca.saberpro.domain/
   ```
 - **`Enunciado`:** Inmutable. Valida la no-nulidad y un tamaño pedagógico mínimo (>= 10 caracteres). Igualdad determinada por su valor (`equals` y `hashCode`).
 - **`OpcionRespuesta`:** Inmutable. Encapsula el texto de la opción y la bandera booleana `esCorrecta` (distractor o clave).
+
+### 3.1.1 Entidades (Entities)
+- **`Revisor`:** Entidad identificada por el **ID de docente**. Dos revisores son el mismo aunque cambie su nombre (`equals`/`hashCode` solo usan el ID); por eso es entidad y no objeto de valor.
+- **`Revision`:** Entidad identificada por el **ID de evaluación**. Protege tres reglas del contexto de Revisión por Pares: el autor de la pregunta no puede ser su revisor, el `Dictamen` (`APROBADA`/`RECHAZADA`) se emite una sola vez y un rechazo exige una observación pedagógica.
 
 ### 3.2 Raíz de Agregado (`Pregunta`) e Invariantes de Negocio
 La clase `Pregunta` actúa como guardián de consistencia del agregado, garantizando las siguientes **invariantes inviolables**:
@@ -124,7 +130,7 @@ La clase `Pregunta` actúa como guardián de consistencia del agregado, garantiz
 
 ## 4. Pruebas Unitarias de Invariantes (JUnit 5)
 
-En `src/test/java/co/edu/unicauca/saberpro/domain/` se implementaron 17 pruebas unitarias sin dependencias externas:
+En `src/test/java/co/edu/unicauca/saberpro/domain/` se implementaron 21 pruebas unitarias sin dependencias externas:
 
 ```java
 @Test
@@ -162,9 +168,11 @@ void noDebePermitirEnviarARevisionSinOpcionCorrecta() {
 ### Resultados de Ejecución de Pruebas:
 ```
 [INFO] Running co.edu.unicauca.saberpro.domain.model.ValueObjectsTest
-[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0
 [INFO] Running co.edu.unicauca.saberpro.domain.model.PreguntaAggregateTest
 [INFO] Tests run: 9, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Running co.edu.unicauca.saberpro.domain.model.EntidadesRevisionTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0
 [INFO] Running co.edu.unicauca.saberpro.domain.repository.PreguntaMemoryRepositoryTest
 [INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0
 [INFO] BUILD SUCCESS
@@ -176,6 +184,7 @@ void noDebePermitirEnviarARevisionSinOpcionCorrecta() {
 
 - ✅ **Módulo de Dominio Puro:** Ubicado en `co.edu.unicauca.saberpro.domain` en Java 21/17 sin dependencias de Spring ni JPA.
 - ✅ **Raíz de Agregado con Invariantes:** Clase `Pregunta` con validación estricta de 4 opciones, clave única y transiciones de estado.
-- ✅ **Objetos de Valor Inmutables:** `Justificacion` (>=15 caracteres), `Enunciado` y `OpcionRespuesta`.
+- ✅ **Objetos de Valor Inmutables:** `Justificacion` (>=15 caracteres y sin palabras prohibidas), `Enunciado` y `OpcionRespuesta`.
+- ✅ **Entidades con identidad:** `Revisor` (ID de docente) y `Revision` (ID de evaluación) con sus reglas de dictamen.
 - ✅ **Contrato de Repositorio:** Interfaz `PreguntaRepository` e implementación `PreguntaMemoryRepository`.
-- ✅ **Pruebas Automatizadas JUnit 5:** 17 pruebas unitarias ejecutadas exitosamente.
+- ✅ **Pruebas Automatizadas JUnit 5:** 21 pruebas unitarias ejecutadas exitosamente.
