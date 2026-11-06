@@ -160,6 +160,7 @@ autenticación y autorización por rol (RNF-06 a RNF-09).
 ├── .github/workflows/                CI: pruebas del monolito, de los microservicios y del frontend
 ├── arquitectura/                     Contextos, contratos, C4, escalabilidad, guion del video y diagramas (.mmd/.png)
 ├── frontend/                         Frontend web (HTML + JS) que consume la API del gateway (:5173)
+├── saberpro-domain/                  Taller 11 (DDD): dominio en Java puro, sin Spring ni JPA (solo JUnit 5)
 ├── banco-preguntas/                  Corte 1: monolito en capas (API REST; la GUI Swing se retiró)
 └── microservicios/                   Corte 2: microservicios (Maven multi-módulo)
     ├── pom.xml                       POM padre (Java 21, Spring Boot 3.3.4, Spring Cloud 2023.0)
@@ -211,6 +212,13 @@ Borre la cola y reinicie review-service y notification-service:
 ```bash
 docker exec rabbitmq-taller09 rabbitmqctl delete_queue reviewer.assigned.queue
 # o, para empezar desde cero: docker compose down -v
+```
+
+### Taller 11 — dominio DDD en Java puro
+
+```bash
+cd saberpro-domain
+mvn test     # 22 pruebas JUnit 5; el módulo no depende de Spring ni de JPA
 ```
 
 ### Corte 1 — monolito

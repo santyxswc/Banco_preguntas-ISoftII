@@ -67,7 +67,7 @@ graph TD
 
 ## 3. Parte II: Modelado Táctico (Bloques de Construcción)
 
-El código del dominio puro se estructuró bajo el paquete `co.edu.unicauca.saberpro.domain`:
+El código del dominio puro vive en el módulo Maven independiente [`saberpro-domain/`](saberpro-domain/), cuyo `pom.xml` no hereda de Spring Boot ni declara JPA (solo JUnit 5 en alcance `test`). Se estructuró bajo el paquete `co.edu.unicauca.saberpro.domain`:
 
 ```
 co.edu.unicauca.saberpro.domain/
@@ -130,7 +130,7 @@ La clase `Pregunta` actúa como guardián de consistencia del agregado, garantiz
 
 ## 4. Pruebas Unitarias de Invariantes (JUnit 5)
 
-En `src/test/java/co/edu/unicauca/saberpro/domain/` se implementaron 21 pruebas unitarias sin dependencias externas:
+En `saberpro-domain/src/test/java/co/edu/unicauca/saberpro/domain/` se implementaron 22 pruebas unitarias sin dependencias externas (se ejecutan con `cd saberpro-domain && mvn test`). Una de ellas, `DominioPuroTest`, recorre las fuentes del dominio y falla si alguna importa Spring, JPA, Hibernate o Lombok:
 
 ```java
 @Test
@@ -167,6 +167,8 @@ void noDebePermitirEnviarARevisionSinOpcionCorrecta() {
 
 ### Resultados de Ejecución de Pruebas:
 ```
+[INFO] Running co.edu.unicauca.saberpro.domain.DominioPuroTest
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0
 [INFO] Running co.edu.unicauca.saberpro.domain.model.ValueObjectsTest
 [INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0
 [INFO] Running co.edu.unicauca.saberpro.domain.model.PreguntaAggregateTest
@@ -182,9 +184,9 @@ void noDebePermitirEnviarARevisionSinOpcionCorrecta() {
 
 ## 5. Resumen de Entregables del Taller 11
 
-- ✅ **Módulo de Dominio Puro:** Ubicado en `co.edu.unicauca.saberpro.domain` en Java 21/17 sin dependencias de Spring ni JPA.
+- ✅ **Módulo de Dominio Puro:** Módulo `saberpro-domain` (paquete `co.edu.unicauca.saberpro.domain`) en Java 17+ sin dependencias de Spring ni JPA, verificado por `DominioPuroTest` y por un job propio en GitHub Actions.
 - ✅ **Raíz de Agregado con Invariantes:** Clase `Pregunta` con validación estricta de 4 opciones, clave única y transiciones de estado.
 - ✅ **Objetos de Valor Inmutables:** `Justificacion` (>=15 caracteres y sin palabras prohibidas), `Enunciado` y `OpcionRespuesta`.
 - ✅ **Entidades con identidad:** `Revisor` (ID de docente) y `Revision` (ID de evaluación) con sus reglas de dictamen.
 - ✅ **Contrato de Repositorio:** Interfaz `PreguntaRepository` e implementación `PreguntaMemoryRepository`.
-- ✅ **Pruebas Automatizadas JUnit 5:** 21 pruebas unitarias ejecutadas exitosamente.
+- ✅ **Pruebas Automatizadas JUnit 5:** 22 pruebas unitarias ejecutadas exitosamente.
