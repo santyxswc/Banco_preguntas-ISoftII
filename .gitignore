@@ -14,9 +14,6 @@ docs/
 # Excepción: el documento de arquitectura del corte 2 es un entregable del repositorio
 !DOCUMENTO_ARQUITECTURA_CORTE2.docx
 !DOCUMENTO_ARQUITECTURA_CORTE2.pdf
-# Excepción: informe técnico del taller 11 (DDD)
-!lisw2_taller11_g*.docx
-!lisw2_taller11_g*.pdf
 
 # Archivos de bloqueo de LibreOffice mientras un documento está abierto
 .~lock.*
