@@ -35,6 +35,7 @@ Todas las rutas públicas pasan por el API Gateway (`http://localhost:8080`). La
 | GET | `/api/v1/revisiones/asignadas?revisorId=&page=&size=` | igual | Preguntas asignadas al revisor y pendientes de su decisión, paginadas (máx. 50) | 200, 400 |
 | POST | `/api/v1/revisiones/evaluar` | igual | Registra APPROVED o REJECTED con observaciones. Cuerpo: `{questionId, reviewerId, result, comments}` | 200, 400, 403, 409, 503 |
 | GET | `/api/v1/revisiones/pregunta/{questionId}` | igual | Observaciones de cada revisor, en solo lectura, para el autor | 200 |
+| GET | `/api/v1/revisiones/pregunta/{questionId}/historial` | igual | HU-06: historial por rondas, observaciones por atender y si se permite la versión mejorada (autor, revisor que participó o administrador) | 200, 403, 404 |
 | POST | — | `/reviews/assign`, `/reviews/evaluate` | Rutas del Taller 09, se conservan para la colección de Postman y delegan en la misma lógica | 201 / 200 |
 
 Errores: el cuerpo siempre es `{error, message, timestamp}`.
@@ -72,7 +73,9 @@ Consultas que hace review-service a otros servicios:
 
 | Verbo | Ruta pública | Ruta en el servicio | Descripción | Códigos |
 |---|---|---|---|---|
-| POST | `/api/v1/auth/login` | `/auth/login` | Iniciar sesión; devuelve el usuario y un token firmado | 200, 401 |
+| POST | `/api/v1/auth/token` | Keycloak: `/realms/banco-preguntas/protocol/openid-connect/token` | Iniciar sesión o renovar el token (corte 3). Devuelve el JWT | 200, 400, 401 |
+| POST | `/api/v1/auth/logout` | Keycloak: `.../openid-connect/logout` | Cerrar la sesión (revoca el refresh token) | 204 |
+| POST | — (no publicado) | `/internal/users/sync` | El gateway sincroniza el perfil del usuario del token | 200 |
 | GET | `/api/v1/usuarios` | `/users` | Listar usuarios | 200 |
 | GET | `/api/v1/usuarios/{id}` | `/users/{id}` | Usuario por id | 200, 404 |
 | GET | `/api/v1/usuarios/role/{role}` | `/users/role/{role}` | Usuarios por rol | 200, 400 |
@@ -81,10 +84,12 @@ Consultas que hace review-service a otros servicios:
 
 ### 2.3.1 Propagación de la identidad (HU-T4.3)
 
-1. `POST /api/v1/auth/login` valida la contraseña (hash SHA-256 con sal, guardado en `user_db`) y devuelve un token firmado con HMAC-SHA256 que lleva el id, el usuario, los roles y la fecha de vencimiento (`AuthTokenCodec`, en shared-contracts).
+Desde el corte 3 la identidad la da **Keycloak** (detalle en [`08-seguridad-keycloak-jwt.md`](08-seguridad-keycloak-jwt.md)); el esquema del corte 2 (token HMAC propio emitido por user-service) se retiró.
+
+1. `POST /api/v1/auth/token` llega a Keycloak a través del gateway y devuelve un JWT firmado con RS256 que lleva el usuario, el nombre, el correo, los roles (`realm_access.roles`) y la fecha de vencimiento.
 2. El frontend envía el token en `Authorization: Bearer <token>` en cada petición.
-3. El filtro global `IdentityPropagationFilter` del api-gateway borra cualquier cabecera `X-User-*` que mande el cliente, valida el token con el mismo secreto (`AUTH_TOKEN_SECRET`) y agrega `X-User-Id`, `X-User-Name` y `X-User-Roles` antes de reenviar la petición. Un token alterado o vencido recibe 401 sin llegar al servicio.
-4. Los servicios toman la identidad de `X-User-Id`: question-service para editar y enviar a revisión, review-service para asignar, listar las asignadas y evaluar. Si la cabecera no viene (pruebas de carga o llamadas directas), usan el parámetro de siempre (`requestedBy`, `assignedBy`, `revisorId`, `reviewerId`).
+3. El gateway valida la firma con las llaves públicas de Keycloak, el emisor y la vigencia, y aplica las reglas por rol (401 sin token, 403 sin el rol). El filtro global `IdentityPropagationFilter` borra cualquier cabecera `X-User-*` que mande el cliente, sincroniza el perfil con user-service y agrega `X-User-Id`, `X-User-Name` y `X-User-Roles`.
+4. Los servicios toman la identidad de `X-User-Id`: question-service para listar, editar y enviar a revisión; review-service para asignar, listar las asignadas, evaluar y consultar el historial; notification-service para entregar solo las notificaciones propias.
 
 ### 2.4 Ciclo de vida, validación y notificaciones
 

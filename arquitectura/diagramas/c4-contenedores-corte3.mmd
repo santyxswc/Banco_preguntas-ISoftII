@@ -1,0 +1,54 @@
+flowchart TB
+    autor(["Autor<br/>docente"])
+    admin(["Administrador"])
+    revisor(["Revisor<br/>docente"])
+    postman(["Postman<br/>gestión de usuarios y roles"])
+    smtp[["Servidor SMTP<br/>(sistema externo)"]]
+
+    subgraph DOCKER["Docker Compose — red bp-net"]
+        FE["Frontend web<br/>[HTML + JS, Node :5173]<br/>guarda el JWT de la sesión"]
+        GW["API Gateway<br/>[Spring Cloud Gateway :8080]<br/><b>Resource Server OAuth2</b>: valida el JWT,<br/>autoriza por rol y propaga X-User-*"]
+        KC["Keycloak 26<br/>[:8180] realm banco-preguntas<br/><b>emite los JWT</b> (RS256), usuarios y roles"]
+        KDB[("keycloak-db<br/>[PostgreSQL + volumen]")]
+        US["user-service<br/>[Spring Boot :8083]<br/>perfiles sincronizados"]
+        QS["question-service<br/>[Spring Boot :8081]"]
+        VS["validation-service<br/>[Spring Boot :8082]"]
+        LS["lifecycle-service<br/>[Spring Boot :8084]"]
+        RS["review-service<br/>[Spring Boot :8085]<br/>arquitectura hexagonal"]
+        NS["notification-service<br/>[Spring Boot :8086]"]
+        MQ{{"RabbitMQ<br/>[banco.exchange + banco.dlx]<br/>volumen rabbitmq-data"}}
+        UDB[("user_db<br/>[PostgreSQL + volumen]")]
+        QDB[("question_db<br/>[PostgreSQL + volumen]")]
+        LDB[("lifecycle_db<br/>[PostgreSQL + volumen]")]
+        RDB[("review_db<br/>[PostgreSQL + volumen]")]
+    end
+
+    autor & admin & revisor -- "HTTP" --> FE
+    FE -- "1. usuario y clave<br/>POST /api/v1/auth/token" --> GW
+    GW -- "2. password grant (OIDC)" --> KC
+    FE -- "3. /api/v1/* + Authorization: Bearer JWT" --> GW
+    GW -. "llaves públicas JWKS<br/>(valida firma, emisor y vigencia)" .-> KC
+    postman -- "Admin REST API" --> KC
+    KC -- "JDBC" --> KDB
+    GW -- "sincroniza el perfil<br/>/internal/users/sync" --> US
+    GW -- "/usuarios + X-User-*" --> US
+    GW -- "/preguntas + X-User-*" --> QS
+    GW -- "/asignaciones, /revisiones + X-User-*" --> RS
+    GW -- "/ciclo-vida" --> LS
+    GW -- "/notificaciones + X-User-*" --> NS
+    QS -- "REST" --> VS
+    QS -- "REST" --> LS
+    QS -- "AMQP: SubmitQuestionForReview" --> MQ
+    MQ -- "AMQP" --> LS
+    RS -- "REST" --> QS & US & LS
+    RS -- "AMQP: RevisorAsignado,<br/>RevisionCompletada" --> MQ
+    MQ -- "AMQP" --> NS
+    NS -- "REST: correo" --> US
+    NS -- "SMTP" --> smtp
+    US -- "JPA" --> UDB
+    QS -- "JPA" --> QDB
+    LS -- "JPA" --> LDB
+    RS -- "JPA" --> RDB
+
+    classDef seg fill:#fde68a,stroke:#b45309,color:#111;
+    class KC,GW seg;

@@ -1,12 +1,21 @@
 param(
     [string]$Gateway = "http://localhost:8080",
-    [string]$RabbitContainer = "rabbitmq-taller09",
+    [string]$RabbitContainer = "bp-rabbitmq",
     [long]$AutorId = 2,
     [long]$AdminId = 1,
     [long]$RevisorId = 4
 )
 
 $ErrorActionPreference = "Stop"
+
+# Corte 3: el gateway exige un JWT de Keycloak. Se pide un token por rol.
+function Get-Token([string]$usuario, [string]$clave) {
+    $cuerpo = @{ grant_type = "password"; client_id = "banco-preguntas-frontend"; username = $usuario; password = $clave }
+    return (Invoke-RestMethod -Method Post -Uri "$Gateway/api/v1/auth/token" -Body $cuerpo).access_token
+}
+$autor = @{ Authorization = "Bearer $(Get-Token 'autor1' 'autor123')" }
+$admin = @{ Authorization = "Bearer $(Get-Token 'admin' 'admin123')" }
+$revisor = @{ Authorization = "Bearer $(Get-Token 'revisor1' 'revisor123')" }
 
 function Get-QueueDepth([string]$queue) {
     $line = docker exec $RabbitContainer rabbitmqctl -q list_queues name messages | Where-Object { $_ -match "^$([regex]::Escape($queue))\s" }
@@ -34,15 +43,15 @@ $pregunta = @{
     correctOptionId = "A"
     authorId = $AutorId
 } | ConvertTo-Json -Depth 4
-$creada = Invoke-RestMethod -Method Post -Uri "$Gateway/api/v1/preguntas" -ContentType "application/json; charset=utf-8" -Body ([System.Text.Encoding]::UTF8.GetBytes($pregunta))
+$creada = Invoke-RestMethod -Method Post -Headers $autor -Uri "$Gateway/api/v1/preguntas" -ContentType "application/json; charset=utf-8" -Body ([System.Text.Encoding]::UTF8.GetBytes($pregunta))
 $id = $creada.id
 Write-Host "   Pregunta creada con id $id"
-Invoke-RestMethod -Method Post -Uri "$Gateway/api/v1/preguntas/$id/submit-review?requestedBy=$AutorId" | Out-Null
+Invoke-RestMethod -Method Post -Headers $autor -Uri "$Gateway/api/v1/preguntas/$id/submit-review" | Out-Null
 Start-Sleep -Seconds 2
 
 Write-Host "3. Asignando el revisor $RevisorId con notification-service caido..." -ForegroundColor Cyan
 $asignacion = @{ questionId = $id; reviewerIds = @($RevisorId); assignedBy = $AdminId } | ConvertTo-Json
-Invoke-RestMethod -Method Post -Uri "$Gateway/api/v1/asignaciones" -ContentType "application/json" -Body $asignacion | Out-Null
+Invoke-RestMethod -Method Post -Headers $admin -Uri "$Gateway/api/v1/asignaciones" -ContentType "application/json" -Body $asignacion | Out-Null
 Start-Sleep -Seconds 1
 
 $durante = Get-QueueDepth "reviewer.assigned.queue"
@@ -54,7 +63,7 @@ Read-Host | Out-Null
 Start-Sleep -Seconds 3
 
 $despues = Get-QueueDepth "reviewer.assigned.queue"
-$notificaciones = Invoke-RestMethod -Uri "$Gateway/api/v1/notificaciones/recipient/$RevisorId"
+$notificaciones = Invoke-RestMethod -Headers $revisor -Uri "$Gateway/api/v1/notificaciones/recipient/$RevisorId"
 $deEstaPregunta = @($notificaciones | Where-Object { $_.subject -match "#$id\)" })
 Write-Host "   Mensajes en la cola despues del reinicio: $despues"
 Write-Host "   Notificaciones del revisor $RevisorId para la pregunta ${id}: $($deEstaPregunta.Count)"

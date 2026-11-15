@@ -1,0 +1,27 @@
+flowchart TB
+    autor(["<b>Docente autor</b><br/>[Persona]<br/>Crea preguntas, consulta el historial de<br/>revisiones y genera versiones mejoradas"])
+    admin(["<b>Administrador</b><br/>[Persona]<br/>Asigna revisores y gestiona<br/>usuarios y roles"])
+    revisor(["<b>Docente revisor</b><br/>[Persona]<br/>Aprueba o rechaza preguntas<br/>con observaciones"])
+
+    banco["<b>Banco de Preguntas Saber Pro</b><br/>[Sistema de software]<br/>Autoría, validación, revisión por pares, historial<br/>y notificaciones. Solo acepta peticiones con un JWT válido"]
+
+    keycloak[["<b>Keycloak</b><br/>[Sistema externo: proveedor de identidad]<br/>Autentica a los usuarios, administra usuarios<br/>y roles y emite los tokens JWT (OpenID Connect)"]]
+    postman[["<b>Postman</b><br/>[Herramienta externa]<br/>Gestión de usuarios y roles<br/>sin interfaz propia"]]
+    smtp[["<b>Servidor de correo SMTP</b><br/>[Sistema externo]<br/>Entrega los correos a revisores,<br/>autores y administrador"]]
+
+    autor -- "Usa [navegador web + JWT]" --> banco
+    admin -- "Usa [navegador web + JWT]" --> banco
+    revisor -- "Usa [navegador web + JWT]" --> banco
+    admin -- "Usa" --> postman
+    postman -- "Crea usuarios y asigna roles<br/>[Admin REST API]" --> keycloak
+    banco -- "Solicita tokens y obtiene las<br/>llaves públicas JWKS [OIDC]" --> keycloak
+    banco -- "Envía correos [SMTP]" --> smtp
+
+    classDef persona fill:#08427b,stroke:#052e56,color:#fff;
+    classDef sistema fill:#1168bd,stroke:#0b4884,color:#fff;
+    classDef externo fill:#999999,stroke:#6b6b6b,color:#fff;
+    classDef idp fill:#fde68a,stroke:#b45309,color:#111;
+    class autor,admin,revisor persona;
+    class banco sistema;
+    class smtp,postman externo;
+    class keycloak idp;
