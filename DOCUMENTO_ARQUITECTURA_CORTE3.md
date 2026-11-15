@@ -24,7 +24,7 @@ Popayán, noviembre de 2026
 
 </div>
 
-> Este documento es un **borrador de trabajo** del Corte 3. Reutiliza la arquitectura descrita en [`DOCUMENTO_ARQUITECTURA_CORTE2.md`](DOCUMENTO_ARQUITECTURA_CORTE2.md) y añade los entregables del tercer corte. Las partes que dependen de evidencia aún no capturada o de funcionalidad aún no implementada están marcadas como **[PENDIENTE]** y se listan en el [Anexo A](#anexo-a--pendientes-y-evidencia-por-completar).
+> Documento final del Corte 3. Parte de la arquitectura descrita en [`DOCUMENTO_ARQUITECTURA_CORTE2.md`](DOCUMENTO_ARQUITECTURA_CORTE2.md) y añade lo construido en la tercera iteración. Las cifras y las salidas de consola son de la ejecución del 15 de noviembre de 2026. Lo que aún debe completar el equipo está en el [Anexo A](#anexo-a--pendientes-del-equipo).
 
 ---
 
@@ -51,7 +51,7 @@ Popayán, noviembre de 2026
   - [14. RNF #4 — Documento de arquitectura y README](#14-rnf-4--documento-de-arquitectura-y-readme)
 - [Capítulo 5 — Entrega](#capítulo-5--entrega)
 - [Referencias](#referencias)
-- [Anexo A — Pendientes y evidencia por completar](#anexo-a--pendientes-y-evidencia-por-completar)
+- [Anexo A — Pendientes del equipo](#anexo-a--pendientes-del-equipo)
 
 ---
 
@@ -61,10 +61,12 @@ Este documento describe la arquitectura del **Banco de Preguntas Saber Pro** en 
 
 El Corte 3 profundiza la calidad interna de la arquitectura con cuatro requisitos no funcionales:
 
-1. **Autenticación y autorización con JWT y Keycloak** (gestión de usuarios y roles sin interfaz propia). **[PENDIENTE de implementación]**
+1. **Autenticación y autorización con JWT y Keycloak** (gestión de usuarios y roles por Postman, sin interfaz propia). **Implementada** en el API Gateway.
 2. **Arquitectura limpia (DDD y/o hexagonal) en un microservicio con lógica de dominio.** Aplicada a `review-service`. **Implementada.**
-3. **Dockerización del sistema con Docker Compose**, incluyendo volúmenes para la persistencia. **Parcial.**
+3. **Dockerización del sistema con Docker Compose**, con un volumen por base de datos. **Implementada**: 15 contenedores con un solo comando.
 4. **Documento final de arquitectura (este documento) y README del repositorio.**
+
+Además se implementó el requisito funcional nuevo del corte, la **HU-06**: el autor consulta el historial de revisiones y genera una versión mejorada de la pregunta, con notificación a los implicados.
 
 El documento se organiza en cinco capítulos: requisitos y planificación (capítulo 1), atributos de calidad (capítulo 2), arquitectura y diseño (capítulo 3), requisitos no funcionales del corte (capítulo 4) y enlaces de entrega (capítulo 5).
 
@@ -168,18 +170,34 @@ Escenario: rechazo sin observaciones
 
 ```gherkin
 Escenario: consulta del historial de revisiones
-  Dado una pregunta con al menos una ronda de revisión
-  Cuando el autor consulta GET /api/v1/revisiones/pregunta/{questionId}
-  Entonces ve, por ronda, la decisión y las observaciones de cada revisor
+  Dado una pregunta del autor con al menos una ronda de revisión
+  Cuando el autor consulta GET /api/v1/revisiones/pregunta/{questionId}/historial
+  Entonces ve cada ronda con su resultado (En curso, Aprobada o Rechazada), los revisores,
+    la decisión y las observaciones de cada uno
+  Y si la última ronda fue rechazada ve la lista de observaciones por atender
+
+Escenario: el historial es privado
+  Cuando otro autor o un revisor que no participó consulta el historial
+  Entonces el sistema responde 403 Forbidden
 
 Escenario: nueva versión mejorada
   Dado una pregunta en estado REJECTED con observaciones
-  Cuando el autor edita la pregunta (PUT /api/v1/preguntas/{id}) y la reenvía a revisión
-  Entonces se abre una nueva ronda de revisión (round + 1)
-  Y se notifica por correo al autor y a los revisores implicados
+  Cuando el autor la edita (PUT /api/v1/preguntas/{id})
+  Entonces la pregunta pasa a la versión siguiente (version + 1) y vuelve al estado DRAFT
+
+Escenario: no se puede reenviar sin corregir
+  Dado una pregunta en estado REJECTED que no ha sido editada
+  Cuando el autor intenta enviarla a revisión
+  Entonces el sistema responde 409 Conflict y pide crear la versión mejorada
+
+Escenario: nueva ronda con notificación a los implicados
+  Dado una versión mejorada en DRAFT
+  Cuando el autor la envía a revisión y el administrador asigna revisores
+  Entonces se abre la ronda siguiente (round + 1)
+  Y se notifica al autor, al administrador y a los revisores indicando la versión y la ronda
 ```
 
-> **[PENDIENTE]** Verificar el alineamiento exacto de la HU-06 con el código actual (existe el concepto de ronda — `round` — y el endpoint de observaciones; falta confirmar el "generar versión mejorada" como funcionalidad de primera clase) y completar los casos de aceptación definitivos.
+**Cómo se implementó.** En `review-service` el dominio agrupa asignaciones y evaluaciones en `ReviewRound` y `ReviewHistory` (objetos de valor), que deciden el resultado de cada ronda y si se permite una versión mejorada. En `question-service` la entidad `Question` lleva el número de `version`; `QuestionAuthoringFacade.update` abre la versión siguiente cuando la pregunta está rechazada y `submitForReview` rechaza el reenvío sin cambios. En el frontend el autor tiene el botón **Historial** (rondas y observaciones) y **Crear versión mejorada**.
 
 ## 2. Planificación de los sprints
 
@@ -187,9 +205,9 @@ El proyecto se gestiona en **Jira** (proyecto SCRUM). El trabajo se organizó en
 
 | Iteración | Alcance | Estado de la evidencia |
 |---|---|---|
-| Sprint 1 | Monolito en capas (Corte 1) y su línea base de historias HU-01 a HU-03 | **[PENDIENTE]** captura de Jira |
+| Sprint 1 | Monolito en capas (Corte 1) y su línea base de historias HU-01 a HU-04 | Captura por agregar (ver Anexo A) |
 | Sprint 2 | Refactorización a microservicios orientados a eventos, HU-04 y HU-05, documentación y pruebas | Capturas disponibles (Ilustraciones 1 y 2) |
-| Sprint 3 | HU-06 y los cuatro requisitos no funcionales del Corte 3 | **[PENDIENTE]** captura de Jira |
+| Sprint 3 | HU-06 y los cuatro requisitos no funcionales del Corte 3 | Tabla 2 (trabajo realizado y Pull Requests); captura de Jira por agregar (ver Anexo A) |
 
 *Tabla 1. Historias del Sprint 2 en Jira. Elaboración propia (fuente: Corte 2).*
 
@@ -225,7 +243,19 @@ El proyecto se gestiona en **Jira** (proyecto SCRUM). El trabajo se organizó en
 
 *Ilustración 2. Resumen del espacio en Jira: estado de las actividades y progreso de las épicas.*
 
-> **[PENDIENTE]** Añadir las capturas de Jira de los Sprints 1 y 3 (guardar como `arquitectura/diagramas/sprint1-jira-*.png` y `sprint3-jira-*.png`) y la tabla de historias del Sprint 3.
+### 2.2. Trabajo del Sprint 3
+
+*Tabla 2. Historias del Sprint 3 y Pull Request con el que entró cada una a `main`. Elaboración propia.*
+
+| Historia | Alcance | Pull Request |
+|---|---|---|
+| RNF #2 · Arquitectura hexagonal en review-service | Capas dominio, aplicación, infraestructura y presentación; puertos y adaptadores; prueba de arquitectura | [#14](https://github.com/santyxswc/Banco_preguntas-ISoftII/pull/14) |
+| HU-06 · Historial de revisiones y versión mejorada | Rondas en el dominio, endpoint de historial, versión de la pregunta, notificaciones y pantallas del autor | [#15](https://github.com/santyxswc/Banco_preguntas-ISoftII/pull/15) |
+| RNF #1 · JWT con Keycloak | Realm, gateway como Resource Server, propagación de identidad, autorización por rol y por dato, colección de Postman | [#16](https://github.com/santyxswc/Banco_preguntas-ISoftII/pull/16) |
+| RNF #3 · Docker Compose | Dockerfile multi-etapa, 15 contenedores, PostgreSQL por contexto con volúmenes, persistencia del ciclo de vida | [#17](https://github.com/santyxswc/Banco_preguntas-ISoftII/pull/17) |
+| RNF #4 · Documento y README | Este documento, diagramas C4 de la iteración 3 y README del repositorio | Este Pull Request |
+
+> Las capturas del tablero de Jira de los Sprints 1 y 3 las debe tomar el equipo desde https://ingsoft2bancodepreguntas.atlassian.net y guardarlas como `arquitectura/diagramas/sprint1-jira-*.png` y `sprint3-jira-*.png` (Anexo A).
 
 ---
 
@@ -233,9 +263,9 @@ El proyecto se gestiona en **Jira** (proyecto SCRUM). El trabajo se organizó en
 
 ## 3. Escenario de calidad: escalabilidad
 
-**Contexto.** Durante la convocatoria Saber Pro muchos docentes crean y revisan preguntas al mismo tiempo. La arquitectura debe crecer agregando instancias de los servicios más cargados, sin cambiar el código. La Tabla 2 especifica el escenario.
+**Contexto.** Durante la convocatoria Saber Pro muchos docentes crean y revisan preguntas al mismo tiempo. La arquitectura debe crecer agregando instancias de los servicios más cargados, sin cambiar el código. La Tabla 3 especifica el escenario.
 
-*Tabla 2. Escenario de calidad de escalabilidad. Elaboración propia.*
+*Tabla 3. Escenario de calidad de escalabilidad. Elaboración propia.*
 
 | Elemento | Especificación |
 |---|---|
@@ -250,7 +280,7 @@ El proyecto se gestiona en **Jira** (proyecto SCRUM). El trabajo se organizó en
 
 Resultado de la medición (4 de noviembre de 2026, k6 0.54.0, perfil `escalado`):
 
-*Tabla 3. Resultados de la prueba de carga con k6. Elaboración propia (fuente: Corte 2).*
+*Tabla 4. Resultados de la prueba de carga con k6. Elaboración propia (fuente: Corte 2).*
 
 | Métrica | 1 instancia | 2 instancias |
 |---|---|---|
@@ -267,7 +297,7 @@ El detalle y las limitaciones están en [`arquitectura/04-escenario-escalabilida
 
 **Contexto.** El sistema debe admitir cambios frecuentes en las reglas de negocio sin reescribir la arquitectura: nuevas reglas de validación estructural, otra política de veredicto de revisión o un cambio del proveedor de identidad. La arquitectura debe aislar el núcleo de dominio y usar puntos de extensión (patrón Strategy) para que estos cambios se localicen.
 
-*Tabla 4. Escenario de calidad de modificabilidad. Elaboración propia.*
+*Tabla 5. Escenario de calidad de modificabilidad. Elaboración propia.*
 
 | Elemento | Especificación |
 |---|---|
@@ -286,7 +316,22 @@ Evidencia de diseño (real, verificable en el código):
 - `review-service`: la decisión final se delega en `VerdictPolicy` (implementada por `UnanimousApprovalPolicy`). Cambiar a "mayoría" es crear otra implementación y configurarla, sin tocar el caso de uso.
 - La prueba [`ArquitecturaHexagonalTest`](microservicios/review-service/src/test/java/co/unicauca/iso2/taller09/reviewservice/ArquitecturaHexagonalTest.java) protege estos puntos de extensión: falla si el dominio vuelve a depender de frameworks o de capas externas.
 
-> **[PENDIENTE]** Registrar la medición cuantitativa del escenario (fecha, número de líneas/clases antes y después de cada cambio) para la evidencia de la sustentación.
+**Medición del caso (c), cambio del proveedor de identidad.** En este corte el cambio ocurrió de verdad: se pasó del token propio del Corte 2 (HMAC emitido por `user-service`) a JWT de Keycloak. La medición sale del commit `63e62e5` (Pull Request #16, 15 de noviembre de 2026):
+
+*Tabla 6. Clases de producción tocadas por el cambio de proveedor de identidad. Elaboración propia (fuente: `git diff --name-status`).*
+
+| Módulo | Nuevas | Eliminadas | Modificadas | Comentario |
+|---|---|---|---|---|
+| api-gateway | 5 | 1 | 1 | Toda la validación del token vive en el paquete `security` |
+| user-service | 2 | 3 | 5 | Sale el login propio y la contraseña; entra la sincronización del perfil |
+| shared-contracts | 1 | 4 | 0 | Sale el códec del token propio |
+| question-service | 0 | 0 | 1 | Solo el controlador (autorización por dato) |
+| notification-service | 0 | 0 | 1 | Solo el controlador (autorización por dato) |
+| review-service, lifecycle-service, validation-service | 0 | 0 | 0 | **Sin cambios** |
+
+Resultado: el dominio y los casos de uso de los seis microservicios de negocio no cambiaron; el cambio quedó en el gateway, en el servicio de identidad y en dos controladores. Las 160 pruebas siguen en verde.
+
+Para los casos (a) y (b) la evidencia es de diseño: agregar una regla o una política es crear una clase que implementa `ValidationRule` o `VerdictPolicy`; no se midió con un cambio real en este corte.
 
 ---
 
@@ -294,60 +339,70 @@ Evidencia de diseño (real, verificable en el código):
 
 ## 5. Modelo C4 de las iteraciones 2 y 3
 
+Se presentan los diagramas de las dos iteraciones distribuidas. La diferencia principal es la seguridad: en la iteración 2 el sistema emitía su propio token; en la iteración 3 **Keycloak** autentica a los usuarios y emite los **JWT**, y el gateway los valida.
+
 ### 5.1. C4 nivel 1 — Contexto del sistema
 
-Autores, administradores y revisores usan el sistema desde el navegador; el sistema se apoya en un servidor de correo externo y, en el Corte 3, en el servidor de identidad **Keycloak (JWT)**.
-
-![Ilustración 3. C4 nivel 1](arquitectura/diagramas/c4-contexto.png)
+![Ilustración 3. C4 nivel 1, iteración 2](arquitectura/diagramas/c4-contexto.png)
 
 *Ilustración 3. C4 nivel 1: contexto del sistema (iteración 2).*
 
-> **[PENDIENTE]** Regenerar el C4 de contexto de la iteración 3 incorporando **Keycloak** como sistema externo de identidad.
+![Ilustración 4. C4 nivel 1, iteración 3](arquitectura/diagramas/c4-contexto-corte3.png)
+
+*Ilustración 4. C4 nivel 1: contexto del sistema (iteración 3). Keycloak aparece como sistema externo de identidad y Postman como la herramienta con la que se gestionan usuarios y roles.*
 
 ### 5.2. C4 nivel 2 — Contenedores
 
-![Ilustración 4. C4 nivel 2](arquitectura/diagramas/c4-contenedores.png)
+![Ilustración 5. C4 nivel 2, iteración 2](arquitectura/diagramas/c4-contenedores.png)
 
-*Ilustración 4. C4 nivel 2: contenedores (iteración 2).*
+*Ilustración 5. C4 nivel 2: contenedores (iteración 2).*
 
-*Tabla 5. Contenedores del sistema. Elaboración propia (fuente: Corte 2).*
+![Ilustración 6. C4 nivel 2, iteración 3](arquitectura/diagramas/c4-contenedores-corte3.png)
+
+*Ilustración 6. C4 nivel 2: contenedores (iteración 3). En amarillo, los dos contenedores que resuelven la seguridad: Keycloak emite el JWT y el API Gateway lo valida, autoriza por rol y propaga la identidad. Cada base de datos tiene su volumen.*
+
+![Ilustración 7. Flujo del JWT](arquitectura/diagramas/secuencia-jwt.png)
+
+*Ilustración 7. Flujo de autenticación y autorización con JWT (iteración 3).*
+
+*Tabla 7. Contenedores del sistema en la iteración 3. Elaboración propia.*
 
 | Contenedor | Tecnología | Responsabilidad |
 |---|---|---|
-| Frontend web | HTML5, CSS, JavaScript sin framework; servidor estático Node | Pantallas de autor, administrador y revisor. Solo conoce la URL del gateway |
-| API Gateway | Spring Cloud Gateway 2023.0 | Único punto de entrada, reescritura de rutas, CORS, balanceo (perfil `escalado`), validación del token y propagación de identidad y Swagger UI unificado |
-| question-service | Spring Boot 3.3 + Spring Data JPA + Flyway | Autoría: crear, editar, listar y enviar a revisión |
+| Frontend web | HTML5, CSS, JavaScript sin framework; servidor estático Node | Pantallas de autor, administrador y revisor. Solo conoce la URL del gateway y guarda el JWT de la sesión |
+| API Gateway | Spring Cloud Gateway 2023.0 + Spring Security (OAuth2 Resource Server) | Único punto de entrada: **valida el JWT**, autoriza por rol, propaga la identidad, enruta, CORS y Swagger unificado |
+| **Keycloak** | Keycloak 26.8 + PostgreSQL | **Proveedor de identidad**: autentica, administra usuarios y roles y emite los JWT (RS256) |
+| question-service | Spring Boot 3.3 + Spring Data JPA + Flyway | Autoría: crear, editar, listar, versionar y enviar a revisión |
 | validation-service | Spring Boot 3.3 | Reglas estructurales DCE (sin estado) |
-| lifecycle-service | Spring Boot 3.3 | Autoridad única del estado y de las transiciones |
-| review-service | Spring Boot 3.3 + Spring Data JPA | Asignaciones y evaluaciones (HU-04, HU-05, HU-06). **Arquitectura hexagonal** |
+| lifecycle-service | Spring Boot 3.3 + Spring Data JPA + Flyway | Autoridad única del estado y de las transiciones |
+| review-service | Spring Boot 3.3 + Spring Data JPA | Asignaciones, evaluaciones e historial por rondas (HU-04, HU-05, HU-06). **Arquitectura hexagonal** |
 | notification-service | Spring Boot 3.3 + Spring Mail | Consume eventos y envía correos |
-| user-service | Spring Boot 3.3 + Spring Data JPA + Flyway | Usuarios, roles, login y revisores elegibles |
+| user-service | Spring Boot 3.3 + Spring Data JPA + Flyway | Perfiles y roles sincronizados con Keycloak; revisores elegibles |
 | RabbitMQ | RabbitMQ 3.13 | Comandos y eventos de dominio con DLQ |
-
-> **[PENDIENTE]** Añadir el contenedor **Keycloak** al C4 de contenedores de la iteración 3 y regenerar `c4-contenedores.mmd`/`.png`.
+| PostgreSQL (×5) | PostgreSQL 16 | `user_db`, `question_db`, `lifecycle_db`, `review_db` y la base de Keycloak, cada una con su volumen |
 
 ### 5.3. C4 nivel 3 — Componentes de review-service
 
 En **review-service** (organizado en dominio, aplicación, infraestructura y presentación) la decisión final se delega en `VerdictPolicy` (Strategy, implementada por `UnanimousApprovalPolicy`) y la persistencia en `JpaReviewRepositoryAdapter` (Adapter entre el puerto `ReviewRepository` y Spring Data JPA). El detalle está en la [sección 7](#7-arquitectura-limpia-hexagonal-en-review-service-rnf-2).
 
-![Ilustración 5. C4 nivel 3](arquitectura/diagramas/c4-componentes.png)
+![Ilustración 8. C4 nivel 3](arquitectura/diagramas/c4-componentes.png)
 
-*Ilustración 5. C4 nivel 3: componentes (iteración 2).*
+*Ilustración 8. C4 nivel 3: componentes de review-service (iteraciones 2 y 3; la organización en capas se detalla en la Ilustración 10).*
 
 ## 6. Diagrama de contextos delimitados (bounded contexts)
 
-![Ilustración 6. Contextos delimitados](arquitectura/diagramas/contextos.png)
+![Ilustración 9. Contextos delimitados](arquitectura/diagramas/contextos.png)
 
-*Ilustración 6. Diagrama de contextos delimitados.*
+*Ilustración 9. Diagrama de contextos delimitados.*
 
-*Tabla 6. Contextos delimitados y almacenamiento. Elaboración propia (fuente: Corte 2).*
+*Tabla 8. Contextos delimitados y almacenamiento. Elaboración propia.*
 
 | Contexto | Microservicio | Almacenamiento | Se integra con |
 |---|---|---|---|
-| Identidad y acceso | user-service + Keycloak | user_db (JPA + Flyway: H2 / PostgreSQL) | Keycloak emite el token JWT que el gateway valida |
+| Identidad y acceso | user-service + Keycloak | user_db (perfiles) y base de Keycloak (credenciales y roles) | Keycloak emite el JWT que el gateway valida |
 | Autoría de preguntas | question-service | question_db (JPA + Flyway: H2 / PostgreSQL) | Validación (REST), Ciclo de vida (REST + comando AMQP) |
 | Validación estructural | validation-service | Sin estado | — |
-| Ciclo de vida | lifecycle-service | lifecycle_db (en memoria) | Recibe comandos por RabbitMQ |
+| Ciclo de vida | lifecycle-service | lifecycle_db (JPA + Flyway: H2 / PostgreSQL) | Recibe comandos por RabbitMQ |
 | Revisión por pares | review-service | review_db (JPA: H2 / PostgreSQL) | Autoría, Identidad y Ciclo de vida (REST); publica eventos |
 | Notificaciones | notification-service | notification_db (en memoria) | Consume eventos; Identidad (REST) |
 | Simulacros y Analítica | — | — | Identificados en el enunciado, no implementados |
@@ -360,13 +415,13 @@ Regla común: ningún servicio lee la base de datos de otro. Detalle en [`arquit
 
 Se aplica arquitectura limpia hexagonal a **`review-service`** porque es el microservicio con reglas de negocio propias: asignación de 1 a 3 revisores, restricciones de autor/revisor, veredicto de la revisión por pares y ciclo de rondas. Las reglas viven en el **núcleo del dominio**, aislado de frameworks.
 
-![Ilustración 7. Arquitectura hexagonal de review-service](arquitectura/diagramas/hexagonal-review-service.png)
+![Ilustración 10. Arquitectura hexagonal de review-service](arquitectura/diagramas/hexagonal-review-service.png)
 
-*Ilustración 7. Arquitectura hexagonal de review-service. Elaboración propia.*
+*Ilustración 10. Arquitectura hexagonal de review-service. Elaboración propia.*
 
 **Regla de dependencia:** siempre hacia adentro (`infrastructure` → `application` → `domain`; `presentation` → `application`). El dominio no conoce Spring, JPA, Jackson ni RabbitMQ, y no importa las capas externas.
 
-*Tabla 7. Puertos y adaptadores de review-service. Elaboración propia.*
+*Tabla 9. Puertos y adaptadores de review-service. Elaboración propia.*
 
 | Puerto (dominio) | Propósito | Adaptador (infraestructura) | Tecnología / destino |
 |---|---|---|---|
@@ -376,7 +431,7 @@ Se aplica arquitectura limpia hexagonal a **`review-service`** porque es el micr
 | `QuestionLifecycle` | Consultar el estado y ejecutar transiciones | `LifecycleRestClient` | REST → `lifecycle-service` |
 | `ReviewEventPublisher` | Publicar `ReviewerAssigned` y `ReviewCompleted` | `RabbitReviewEventPublisher` | RabbitMQ |
 
-*Tabla 8. Lógica de dominio encapsulada en review-service. Elaboración propia.*
+*Tabla 10. Lógica de dominio encapsulada en review-service. Elaboración propia.*
 
 | Elemento | Tipo | Regla / invariante que protege |
 |---|---|---|
@@ -386,6 +441,8 @@ Se aplica arquitectura limpia hexagonal a **`review-service`** porque es el micr
 | `ReviewerProfile` | Objeto de Valor | Solo los roles REVISOR o DOCENTE pueden revisar |
 | `UnanimousApprovalPolicy` | Política (Strategy) | La pregunta se aprueba solo si todos los revisores aprueban |
 | `PageResult` | Objeto de Valor | Cálculo del total de páginas de la paginación |
+| `ReviewRound` | Objeto de Valor (HU-06) | Resultado de una ronda: en curso mientras falten evaluaciones; luego lo decide la política de veredicto |
+| `ReviewHistory` | Objeto de Valor (HU-06) | Solo se permite una versión mejorada si la última ronda terminó rechazada; reúne las observaciones por atender |
 
 La pureza del núcleo y la dirección de las dependencias se comprueban con `ArquitecturaHexagonalTest`, que falla si (1) el dominio importa Spring/JPA/Hibernate/Lombok/Jackson, (2) el dominio importa `application`/`infrastructure`/`presentation`, o (3) la aplicación importa `infrastructure`/`presentation`.
 
@@ -393,7 +450,7 @@ La pureza del núcleo y la dirección de las dependencias se comprueban con `Arq
 
 Además de los seis patrones GoF exigidos (2 creacionales, 2 estructurales, 2 de comportamiento), se documenta el patrón estructural **Adapter** como base de la arquitectura de puertos y adaptadores.
 
-*Tabla 9. Patrones de diseño implementados. Elaboración propia.*
+*Tabla 11. Patrones de diseño implementados. Elaboración propia.*
 
 | # | Patrón | Tipo | Dónde | Cómo y para qué se aplicó |
 |---|---|---|---|---|
@@ -401,7 +458,7 @@ Además de los seis patrones GoF exigidos (2 creacionales, 2 estructurales, 2 de
 | 2 | **Factory Method** | Creacional | `notification-service` · `email/EmailSenderFactory` | El creador abstracto define `sender()` y delega en `createSender()`. Se cambia entre correo simulado y SMTP con la propiedad `notifications.email.mode`. |
 | 3 | **Facade** | Estructural | `question-service` · `application/QuestionAuthoringFacade` | Oculta la coordinación de validation-service, lifecycle-service, el repositorio y RabbitMQ detrás de una interfaz simple para el controlador. |
 | 4 | **Decorator** | Estructural | `notification-service` · `email/LoggingEmailSenderDecorator` | Añade trazabilidad a cualquier `EmailSender` sin modificar las clases que envían. |
-| 5 | **Adapter** | Estructural | `JpaReviewRepositoryAdapter`, `QuestionRestClient`, `UserRestClient`, `LifecycleRestClient` (review-service) | Adaptan Spring Data JPA y las API REST de otros servicios a los puertos que espera el dominio, de modo que el dominio no dependa de HTTP ni de JPA. |
+| 5 | **Adapter** | Estructural | `JpaReviewRepositoryAdapter`, `QuestionRestClient`, `UserRestClient`, `LifecycleRestClient` (review-service); `JpaLifecycleRepository` (lifecycle-service); `UserServiceIdentityResolver` y `KeycloakJwtAuthenticationConverter` (api-gateway) | Adaptan Spring Data JPA, las API REST de otros servicios y el JWT de Keycloak a las interfaces que espera el resto del código, de modo que el dominio no dependa de HTTP, de JPA ni del proveedor de identidad. |
 | 6 | **Strategy** | Comportamiento | `validation-service` · `ValidationRule`; `review-service` · `VerdictPolicy` | Cada regla estructural y cada política de veredicto es una estrategia sustituible (abierto/cerrado). |
 | 7 | **Observer** | Comportamiento | RabbitMQ: consumidores de eventos en `notification-service` y `lifecycle-service` | Los productores publican eventos sin conocer a sus suscriptores; cada consumidor reacciona (correos, cambio de estado). |
 
@@ -410,52 +467,61 @@ El monolito del Corte 1 (`banco-preguntas/`) conserva sus propios patrones (Buil
 ## 9. API REST documentada con Swagger
 
 - **Swagger UI unificado (gateway):** http://localhost:8080/swagger-ui.html
-- Swagger individual: `http://localhost:{8081..8086}/swagger-ui.html`.
+- Swagger individual: `http://localhost:{8081..8086}/swagger-ui.html` (con Maven o con `docker-compose.debug.yml`).
 
-*Tabla 10. Endpoints públicos de la API REST. Elaboración propia.*
+Todas las rutas, salvo las de autenticación, exigen `Authorization: Bearer <JWT>`. La identidad sale del token: ya no se envía en parámetros.
+
+*Tabla 12. Endpoints públicos de la API REST. Elaboración propia.*
 
 | Módulo | Método | Ruta pública | HU |
 |---|---|---|---|
-| Autenticación | POST | `/api/v1/auth/login` | Soporte (a migrar a Keycloak — RNF #1) |
+| Autenticación | POST | `/api/v1/auth/token` (token y renovación) y `/api/v1/auth/logout` | RNF #1 |
+| Usuarios | GET | `/api/v1/usuarios/me` | RNF #1 |
 | Preguntas | POST | `/api/v1/preguntas` | HU-01 |
-| Preguntas | PUT | `/api/v1/preguntas/{id}?requestedBy=` | HU-03, HU-06 |
-| Preguntas | GET | `/api/v1/preguntas?authorId&status&competency&topic&difficulty&keyword&page&size` | HU-03 |
-| Preguntas | POST | `/api/v1/preguntas/{id}/submit-review?requestedBy=` | HU-02, HU-06 |
+| Preguntas | PUT | `/api/v1/preguntas/{id}` | HU-03, HU-06 (versión mejorada) |
+| Preguntas | GET | `/api/v1/preguntas?status&competency&topic&difficulty&keyword&page&size` | HU-03 |
+| Preguntas | POST | `/api/v1/preguntas/{id}/submit-review` | HU-02, HU-06 |
+| Preguntas | GET | `/api/v1/preguntas/operations/{operationId}` | HU-02 |
 | Usuarios | GET | `/api/v1/usuarios/reviewers/eligible?authorId=` | HU-04 |
 | Asignaciones | POST / GET | `/api/v1/asignaciones` | HU-04 |
-| Revisiones | GET | `/api/v1/revisiones/asignadas?revisorId&page&size` | HU-05 |
+| Revisiones | GET | `/api/v1/revisiones/asignadas?page&size` | HU-05 |
 | Revisiones | POST | `/api/v1/revisiones/evaluar` | HU-05 |
-| Revisiones | GET | `/api/v1/revisiones/pregunta/{questionId}` | HU-05, HU-06 |
+| Revisiones | GET | `/api/v1/revisiones/pregunta/{questionId}/historial` | **HU-06** |
 | Ciclo de vida | GET | `/api/v1/ciclo-vida/{id}` y `/api/v1/ciclo-vida?ids=` | HU-02 |
 | Notificaciones | GET | `/api/v1/notificaciones/recipient/{id}` | HU-04, HU-05, HU-06 |
 
 ## 10. Pruebas unitarias del dominio
 
-Se ejecutan con `mvn test` (JUnit 5, Java 21) y en GitHub Actions en cada push. La rúbrica del Corte 3 otorga peso propio a las **pruebas unitarias de las clases del dominio**; el núcleo del dominio de `review-service` se cubre con `ReviewDomainTest` (entidades, objetos de valor, política de veredicto, paginación) y la arquitectura se blinda con `ArquitecturaHexagonalTest`.
+Se ejecutan con `mvn test` (JUnit 5, Java 21) y en GitHub Actions en cada push y en cada Pull Request. La rúbrica del Corte 3 otorga peso propio a las **pruebas unitarias de las clases del dominio**.
 
-*Tabla 11. Pruebas unitarias del dominio y de la arquitectura. Elaboración propia.*
+*Tabla 13. Pruebas unitarias del dominio y de la arquitectura. Elaboración propia.*
 
 | Módulo | Clases de prueba | Qué cubren |
 |---|---|---|
-| review-service (dominio) | `ReviewDomainTest` | Invariantes de `Review`, `ReviewAssignment`, `ReviewerSelection`, `ReviewerProfile`, `UnanimousApprovalPolicy` y `PageResult` |
-| review-service (arquitectura) | `ArquitecturaHexagonalTest` | Reglas de la arquitectura hexagonal (pureza del dominio y dirección de dependencias) |
-| review-service (aplicación) | `ReviewServiceTest` | Casos de uso de asignación y evaluación con dobles de prueba |
-| review-service (infraestructura) | `JpaReviewRepositoryAdapterTest`, `RevisionControllerTest` | Adaptador de persistencia y adaptador de entrada REST |
-| Resto de módulos | `QuestionBuilderTest`, `QuestionValidatorTest`, `LifecycleControllerTest`, `EmailNotificationTest`, `AuthControllerTest`, `GatewayRoutesTest`, … | Dominio, patrones y persistencia de cada servicio |
+| review-service (dominio) | `ReviewDomainTest`, `ReviewHistoryTest` | Invariantes de `Review`, `ReviewAssignment`, `ReviewerSelection`, `ReviewerProfile`, `UnanimousApprovalPolicy`, `PageResult`, `ReviewRound` y `ReviewHistory` |
+| review-service (arquitectura) | `ArquitecturaHexagonalTest` | Pureza del dominio y dirección de las dependencias |
+| review-service (aplicación) | `ReviewServiceTest` | Casos de uso de asignación, evaluación e historial con dobles de prueba |
+| review-service (adaptadores) | `JpaReviewRepositoryAdapterTest`, `RevisionControllerTest` | Persistencia y entrada REST |
+| question-service | `QuestionBuilderTest`, `QuestionAuthoringFacadeTest`, `JpaQuestionRepositoryTest`, `RequestIdentityTest` | `Question` (incluida la versión mejorada), Builder, Facade, persistencia y autorización por dato |
+| validation-service | `QuestionValidatorTest`, `ValidationControllerTest` | Cada regla estructural DCE |
+| lifecycle-service | `QuestionSubmittedEventTest`, `QuestionSubmitConsumerTest`, `LifecycleControllerTest`, `JpaLifecycleRepositoryTest` | Transiciones de `QuestionState`, `OperationResult` y su persistencia |
+| user-service | `UserDomainTest`, `UserControllerTest`, `JpaUserRepositoryTest` | `User` sin contraseña, sincronización con Keycloak y roles |
+| notification-service | `EmailNotificationTest`, `NotificationIdempotencyTest`, `NotificationServiceConsumerTest`, `QuestionSubmittedConsumerTest`, `NotificationControllerTest` | Factory Method, Decorator, idempotencia y avisos de la HU-06 |
+| api-gateway | `GatewaySecurityTest`, `KeycloakIdentityTest`, `IdentityPropagationFilterTest`, `GatewayRoutesTest` | Reglas 401/403, lectura del JWT, propagación de identidad y rutas |
 
-Cifras reales de la suite (14 de noviembre de 2026, `mvn -f microservicios/pom.xml test`): **114 pruebas, 0 fallos**. En `review-service`: `ReviewDomainTest` 10, `ArquitecturaHexagonalTest` 3, `ReviewServiceTest` 20, `JpaReviewRepositoryAdapterTest` 4 y `RevisionControllerTest` 8 (45 en total).
+Cifras de la suite (15 de noviembre de 2026, `mvn -f microservicios/pom.xml test`): **160 pruebas, 0 fallos, 0 errores**. En el Corte 2 eran 114.
 
-*Tabla 12. Pruebas por módulo (ejecución del 14 de noviembre de 2026). Elaboración propia.*
+*Tabla 14. Pruebas por módulo (ejecución del 15 de noviembre de 2026). Elaboración propia.*
 
 | Módulo | Pruebas | Módulo | Pruebas |
 |---|---|---|---|
-| user-service | 14 | notification-service | 12 |
-| question-service | 18 | api-gateway | 6 |
-| validation-service | 11 | shared-contracts | 0 |
-| lifecycle-service | 8 | **Total** | **114** |
-| review-service | 45 | | |
+| user-service | 14 | notification-service | 17 |
+| question-service | 28 | api-gateway | 19 |
+| validation-service | 11 | shared-contracts | 0 (sus clases se prueban desde los servicios) |
+| lifecycle-service | 11 | **Total** | **160** |
+| review-service | 60 | | |
 
-> **[PENDIENTE]** Publicar el resumen de la ejecución en el CI (GitHub Actions) como evidencia.
+El flujo de GitHub Actions ([`pruebas.yml`](.github/workflows/pruebas.yml)) tiene cinco trabajos: monolito, dominio DDD, microservicios, frontend y **Docker Compose** (valida el `docker-compose.yml` y construye las imágenes). Los Pull Requests #15, #16 y #17 entraron a `main` con todos los trabajos en verde: https://github.com/santyxswc/Banco_preguntas-ISoftII/actions/workflows/pruebas.yml
 
 ---
 
@@ -465,15 +531,40 @@ Cifras reales de la suite (14 de noviembre de 2026, `mvn -f microservicios/pom.x
 
 **Requisito.** Implementar autenticación y autorización con **JWT** usando **Keycloak**; la gestión de usuarios y roles se hará por **Postman** (sin interfaz propia).
 
-**Estado: [PENDIENTE de implementación].** En el repositorio actual no existen dependencias ni configuración de Keycloak, Spring Security ni validación de JWT (búsqueda sin resultados sobre `keycloak`, `jwt`, `spring-security`). La iteración 2 usa un esquema propio: `user-service` emite un token y el gateway propaga la identidad; ese esquema debe sustituirse por Keycloak + JWT.
+**Estado: implementado.** Detalle completo en [`arquitectura/08-seguridad-keycloak-jwt.md`](arquitectura/08-seguridad-keycloak-jwt.md).
 
-Trabajo pendiente (para el equipo):
+- **Keycloak 26** corre en Docker Compose con su propia base de datos y volumen. Al arrancar importa el realm `banco-preguntas`: roles `ADMINISTRADOR`, `AUTOR`, `REVISOR`, `DOCENTE` y `ESTUDIANTE`, el cliente `banco-preguntas-frontend` y los usuarios de prueba.
+- **El API Gateway es el Resource Server OAuth2.** Valida la firma (JWKS), el emisor y la vigencia de cada JWT y aplica las reglas por rol antes de enrutar. Sin token responde 401; sin el rol necesario, 403.
+- **Propagación de identidad.** El gateway sincroniza el perfil con `user-service` y agrega `X-User-Id`, `X-User-Name` y `X-User-Roles`. Las cabeceras que envíe el cliente se descartan.
+- **Ningún microservicio guarda contraseñas.** `user-service` eliminó la columna de la contraseña (migración `V3`) y su login propio.
+- **Autorización por dato.** El autor solo lista sus preguntas, cada usuario solo lee sus notificaciones y el historial de una pregunta solo lo ven su autor, los revisores que participaron y el administrador.
 
-1. Levantar **Keycloak** (realm, cliente y roles: autor, administrador, revisor) — preferiblemente dentro del `docker-compose` (ver RNF #3).
-2. Configurar `api-gateway` como **OAuth2 Resource Server** (validación del JWT con el `issuer-uri` / JWKS de Keycloak) y los microservicios como resource servers.
-3. Migrar el login a Keycloak y propagar los roles por `scope`/`realm_access`.
-4. Añadir la captura de Postman (creación de usuario, asignación de rol y obtención del token) como evidencia.
-5. Regenerar los diagramas C4 de las iteraciones 2 y 3 marcando **Keycloak** y el flujo JWT.
+*Tabla 15. Reglas de autorización por rol en el gateway. Elaboración propia.*
+
+| Ruta | Método | Rol exigido |
+|---|---|---|
+| `/api/v1/auth/**`, Swagger | — | Público |
+| `/api/v1/preguntas`, `/api/v1/preguntas/{id}`, `/submit-review` | POST, PUT | AUTOR |
+| `/api/v1/asignaciones/**` | Todos | ADMINISTRADOR |
+| `/api/v1/usuarios/**` (salvo `/me`) | Todos | ADMINISTRADOR |
+| `/api/v1/revisiones/asignadas`, `/api/v1/revisiones/evaluar` | GET, POST | REVISOR |
+| Las demás rutas | Todos | Cualquier usuario autenticado |
+
+**Gestión de usuarios y roles por Postman.** La colección [`banco-preguntas-corte3.postman_collection.json`](microservicios/banco-preguntas-corte3.postman_collection.json) usa la API de administración de Keycloak: obtener el token del administrador, crear un usuario, asignarle un rol, cambiarle la contraseña y quitarle el rol. También trae los casos 401 y 403 y el flujo HU-01 a HU-06.
+
+*Tabla 16. Resultados de las peticiones de seguridad (15 de noviembre de 2026, contra los contenedores). Elaboración propia.*
+
+| Caso | Respuesta |
+|---|---|
+| `POST /admin/realms/banco-preguntas/users` (crear `revisor3`) | 201 Created |
+| `POST .../users/{id}/role-mappings/realm` (asignar REVISOR) | 204 No Content |
+| `revisor3` inicia sesión y consulta `/api/v1/usuarios/me` | 200, perfil creado con el rol REVISOR |
+| Petición sin token o con el token alterado | 401 |
+| Un revisor crea una pregunta · un autor asigna revisores · un estudiante lista usuarios | 403 |
+| Un autor lee las notificaciones de otro usuario | 403 |
+| Credenciales incorrectas | 400 `invalid_grant` |
+
+> Las capturas de pantalla de Postman las toma el equipo al ejecutar la colección (Anexo A).
 
 ## 12. RNF #2 — Arquitectura limpia en un microservicio con lógica de dominio
 
@@ -485,28 +576,95 @@ Trabajo pendiente (para el equipo):
 
 **Requisito.** Dockerizar el sistema y orquestarlo con Docker Compose, usando **volúmenes** para la persistencia.
 
-**Estado: parcial.**
+**Estado: implementado.** Detalle completo en [`arquitectura/09-docker-compose.md`](arquitectura/09-docker-compose.md).
 
-*Tabla 12. Estado de la dockerización. Elaboración propia.*
+`docker compose up -d --build` en `microservicios/` levanta **15 contenedores**: el frontend, el API Gateway, seis microservicios, RabbitMQ, Keycloak y cinco bases de datos PostgreSQL.
 
-| Archivo | Contenido actual | Volúmenes | Estado |
-|---|---|---|---|
-| `microservicios/docker-compose.yml` | `rabbitmq:3.13-management` (puertos 5672 y 15672, healthcheck) | No | Falta dockerizar los servicios y las bases de datos |
-| `banco-preguntas/docker-compose.yml` | `postgres:16` del monolito (Corte 1) | Sí (`banco-preguntas-data:/var/lib/postgresql/data`) | Correcto (línea base) |
+![Ilustración 11. Despliegue con Docker Compose](arquitectura/diagramas/despliegue-docker.png)
 
-Trabajo pendiente (para el equipo):
+*Ilustración 11. Despliegue con Docker Compose: puertos publicados, red interna y volúmenes.*
 
-1. Añadir a `microservicios/docker-compose.yml` un servicio por microservicio (con su `Dockerfile`) y **PostgreSQL** por contexto (`question_db`, `review_db`, `user_db`, …), cada uno con **volumen nombrado** para persistir los datos.
-2. Añadir **Keycloak** y su volumen (RNF #1).
-3. Capturar la evidencia: `docker compose up -d`, `docker compose ps`, `docker volume ls` y la persistencia de datos tras reiniciar.
+- **Un Dockerfile multi-etapa** ([`microservicios/Dockerfile`](microservicios/Dockerfile)) construye los siete servicios: compila con Maven y JDK 21 y ejecuta con JRE 21 Alpine y un usuario sin privilegios.
+- **Una base de datos por contexto**, cada una con su **volumen con nombre**.
+- Solo se publican el frontend (5173), el gateway (8080), Keycloak (8180) y RabbitMQ (5672 y 15672). Los microservicios y las bases de datos solo son alcanzables dentro de la red `bp-net`.
+- Healthchecks y `depends_on` ordenan el arranque.
 
-> **[PENDIENTE]** Crear los `Dockerfile` de los microservicios, completar el `docker-compose.yml` con volúmenes y capturar la evidencia.
+*Tabla 17. Volúmenes de Docker Compose. Elaboración propia.*
+
+| Volumen | Contenedor | Qué guarda |
+|---|---|---|
+| `banco-preguntas_user-db-data` | `bp-user-db` | Perfiles y roles |
+| `banco-preguntas_question-db-data` | `bp-question-db` | Preguntas, opciones y versiones |
+| `banco-preguntas_lifecycle-db-data` | `bp-lifecycle-db` | Estado de cada pregunta y operaciones asíncronas |
+| `banco-preguntas_review-db-data` | `bp-review-db` | Asignaciones, rondas y evaluaciones |
+| `banco-preguntas_keycloak-db-data` | `bp-keycloak-db` | Realm, usuarios, credenciales y roles |
+| `banco-preguntas_rabbitmq-data` | `bp-rabbitmq` | Colas durables y mensajes pendientes |
+
+**Evidencia** (salida real del 15 de noviembre de 2026; en el equipo de prueba el puerto 8080 estaba ocupado, por eso el gateway se publicó en el 8088 con `GATEWAY_PORT=8088`):
+
+```text
+$ GATEWAY_PORT=8088 docker compose ps   # 8080 estaba ocupado en el equipo de prueba
+NAME                      IMAGE                                         STATUS                    PORTS
+bp-api-gateway            banco-preguntas/api-gateway:corte3            Up 12 seconds (healthy)   0.0.0.0:8088->8080/tcp
+bp-frontend               banco-preguntas/frontend:corte3               Up 12 seconds             0.0.0.0:5173->5173/tcp
+bp-keycloak               quay.io/keycloak/keycloak:26.8.1              Up 33 seconds (healthy)   8443/tcp, 9000/tcp, 0.0.0.0:8180->8080/tcp
+bp-keycloak-db            postgres:16-alpine                            Up 39 seconds (healthy)   5432/tcp
+bp-lifecycle-db           postgres:16-alpine                            Up 39 seconds (healthy)   5432/tcp
+bp-lifecycle-service      banco-preguntas/lifecycle-service:corte3      Up 26 seconds (healthy)   
+bp-notification-service   banco-preguntas/notification-service:corte3   Up 27 seconds (healthy)   
+bp-question-db            postgres:16-alpine                            Up 38 seconds (healthy)   5432/tcp
+bp-question-service       banco-preguntas/question-service:corte3       Up 26 seconds (healthy)   
+bp-rabbitmq               rabbitmq:3.13-management                      Up 38 seconds (healthy)   4369/tcp, 5671/tcp, 0.0.0.0:5672->5672/tcp, 15671/tcp, 15691-15692/tcp, 25672/tcp, 0.0.0.0:15672->15672/tcp
+bp-review-db              postgres:16-alpine                            Up 38 seconds (healthy)   5432/tcp
+bp-review-service         banco-preguntas/review-service:corte3         Up 26 seconds (healthy)   
+bp-user-db                postgres:16-alpine                            Up 38 seconds (healthy)   5432/tcp
+bp-user-service           banco-preguntas/user-service:corte3           Up 32 seconds (healthy)   
+bp-validation-service     banco-preguntas/validation-service:corte3     Up 38 seconds (healthy)   
+
+$ docker volume ls
+DRIVER    VOLUME NAME
+local     banco-preguntas_keycloak-db-data
+local     banco-preguntas_lifecycle-db-data
+local     banco-preguntas_question-db-data
+local     banco-preguntas_rabbitmq-data
+local     banco-preguntas_review-db-data
+local     banco-preguntas_user-db-data
+```
+
+**Persistencia.** Después de recorrer el flujo completo (la pregunta 4 se crea, se rechaza, pasa a la versión 2 y se aprueba en la segunda ronda) se ejecutó `docker compose down` y `docker compose up -d`. Los contenedores son nuevos y los datos siguen en los volúmenes:
+
+```text
+$ docker compose down && docker compose up -d   # los contenedores se eliminan y se crean de nuevo
+$ curl -H "Authorization: Bearer $TOKEN" http://localhost:8088/api/v1/ciclo-vida/4
+{"id":1,"questionId":4,"state":"APPROVED","changedAt":"2026-11-15T23:02:47.884505","changedBy":"Revisor 5","message":"Resultado de la revisión por pares: APPROVED"}
+$ curl -H "Authorization: Bearer $TOKEN" http://localhost:8088/api/v1/revisiones/pregunta/4/historial
+{"questionId": 4, "totalRounds": 2, "improvedVersionAllowed": false} [(1, 'REJECTED'), (2, 'APPROVED')]
+$ docker exec bp-question-db psql -U question_db -c "select id, version, author_id from question order by id"
+ id | version | author_id 
+----+---------+-----------
+  1 |       1 |         2
+  2 |       1 |         2
+  3 |       1 |         3
+  4 |       2 |         2
+(4 rows)
+
+$ docker exec bp-lifecycle-db psql -U lifecycle_db -c "select question_id, state, changed_by from question_state"
+ question_id |  state   | changed_by 
+-------------+----------+------------
+           2 | DRAFT    | SYSTEM
+           1 | DRAFT    | SYSTEM
+           4 | APPROVED | Revisor 5
+(3 rows)
+
+```
+
+Limitación conocida: `notification-service` guarda el historial de avisos en memoria, así que esa lista se vacía al reiniciar su contenedor (los correos sí se envían).
 
 ## 14. RNF #4 — Documento de arquitectura y README
 
 **Requisito.** Entregar el documento final de arquitectura (PDF) y actualizar el README del repositorio.
 
-**Estado: en curso.** Este documento (`DOCUMENTO_ARQUITECTURA_CORTE3.md`) es la fuente; debe exportarse a PDF y el [`README.md`](README.md) del repositorio debe enlazarlo, junto con [`arquitectura/README.md`](arquitectura/README.md).
+**Estado: implementado.** Este documento se entrega en PDF ([`DOCUMENTO_ARQUITECTURA_CORTE3.pdf`](DOCUMENTO_ARQUITECTURA_CORTE3.pdf)); la fuente es `DOCUMENTO_ARQUITECTURA_CORTE3.md`. El [`README.md`](README.md) del repositorio es la carta de presentación del proyecto: qué problema resuelve, cómo levantarlo con un comando, usuarios de prueba, arquitectura por corte y enlaces a los entregables. El detalle por tema está en [`arquitectura/`](arquitectura/README.md).
 
 ---
 
@@ -515,10 +673,12 @@ Trabajo pendiente (para el equipo):
 ## 15. Enlaces
 
 - **Repositorio Git:** https://github.com/santyxswc/Banco_preguntas-ISoftII (rama `main`)
-- **Tablero Scrum (Jira):** [PENDIENTE] URL del tablero y del Sprint 3
-- **Video de sustentación (YouTube):** [PENDIENTE] URL del video del Corte 3
+- **Tablero Scrum (Jira):** https://ingsoft2bancodepreguntas.atlassian.net (proyecto SCRUM)
+- **Video de sustentación del Corte 3 (YouTube):** por agregar cuando el equipo lo grabe (Anexo A). Video del Corte 2: https://youtu.be/B-chmKrIsbY
 - **Swagger unificado:** http://localhost:8080/swagger-ui.html
 - **Frontend local:** http://localhost:5173
+- **Keycloak local:** http://localhost:8180
+- **Colección de Postman:** [`microservicios/banco-preguntas-corte3.postman_collection.json`](microservicios/banco-preguntas-corte3.postman_collection.json)
 
 ---
 
@@ -530,25 +690,20 @@ Trabajo pendiente (para el equipo):
 - Evans, E. (2003). *Domain-Driven Design: Tackling Complexity in the Heart of Software*. Addison-Wesley.
 - Gamma, E., Helm, R., Johnson, R. y Vlissides, J. (1994). *Design Patterns: Elements of Reusable Object-Oriented Software*. Addison-Wesley.
 - International Organization for Standardization. (2023). *ISO/IEC 25010:2023 — Product quality model*. ISO.
+- Keycloak. (2026). *Server Administration Guide* y *Admin REST API*. https://www.keycloak.org/documentation
 - Martin, R. C. (2017). *Clean Architecture: A Craftsman's Guide to Software Structure and Design*. Prentice Hall.
 - Newman, S. (2021). *Building Microservices* (2.ª ed.). O'Reilly Media.
 - Universidad del Cauca. (2026). *Entregables Proyecto de Curso — Tercer Corte 2026.2. Ingeniería de Software II*.
 
 ---
 
-## Anexo A — Pendientes y evidencia por completar
+## Anexo A — Pendientes del equipo
 
-Lista de verificación para cerrar el Corte 3. Los puntos marcados como **[PENDIENTE]** a lo largo del documento se resumen aquí.
+Todo lo que se podía construir y verificar en el código está hecho. Queda lo que requiere a las personas del equipo:
 
-| # | Pendiente | RNF/RF asociado | Responsable sugerido |
-|---|---|---|---|
-| 1 | Implementar Keycloak + JWT (realm, cliente, roles), resource server en el gateway y los servicios | RNF #1 | Iván / Adrián |
-| 2 | Capturas de Postman: crear usuario, asignar rol y obtener token | RNF #1 | Iván |
-| 3 | Regenerar C4 (contexto, contenedores, componentes) de las iteraciones 2 y 3 evidenciando Keycloak/JWT | Documento | Adrián |
-| 4 | Completar `docker-compose.yml` (microservicios + PostgreSQL por contexto) con volúmenes y `Dockerfile` | RNF #3 | Carlos |
-| 5 | Evidencia Docker Compose: `up -d`, `ps`, `volume ls` y persistencia tras reinicio | RNF #3 | Carlos |
-| 6 | Capturas de Jira de los Sprints 1 y 3 + tabla de historias del Sprint 3 | Documento | Yeferson |
-| 7 | Verificar y completar la HU-06 (historial de revisiones y versión mejorada) | RF #6 | Adrián |
-| 8 | Medición cuantitativa del escenario de modificabilidad | Documento | Adrián |
-| 9 | Ejecutar `mvn test` completo y publicar el total de pruebas y el CI | Rúbrica | Carlos |
-| 10 | Exportar este documento a PDF y enlazarlo desde el README del repositorio | RNF #4 | Iván |
+| # | Pendiente | Asociado a |
+|---|---|---|
+| 1 | Capturas del tablero de Jira de los Sprints 1 y 3 (y registrar en Jira las historias del Sprint 3 de la Tabla 2) | Documento |
+| 2 | Capturas de pantalla de Postman al ejecutar la colección del corte 3 (crear usuario, asignar rol, obtener token) | RNF #1 |
+| 3 | Grabar el video de sustentación del Corte 3 y agregar el enlace en la sección 15 y en el README | Entrega |
+| 4 | Volver a exportar el PDF después de agregar las capturas | RNF #4 |

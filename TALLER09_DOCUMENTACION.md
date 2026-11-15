@@ -10,6 +10,9 @@
 
 ---
 
+> **Nota (corte 3):** este documento describe el taller 09 tal como se entregó. El inicio de sesión propio de user-service (`POST /auth/login`) se reemplazó en el corte 3 por Keycloak y JWT; ver [`arquitectura/08-seguridad-keycloak-jwt.md`](arquitectura/08-seguridad-keycloak-jwt.md).
+
+
 > **Nota (corte 2):** este documento describe el Taller 09 tal como se entregó. Después del taller el sistema creció: se agregaron el **API Gateway** (:8080), el **frontend web** (:5173), la evaluación de revisores (HU-05), el correo real y los patrones GoF en los microservicios. La pregunta ahora exige todos los campos DCE (contexto, justificación, bibliografía, competencia, tema, subtema y dificultad), y la colección de Postman ya está actualizada con ellos. La arquitectura vigente está en [`DOCUMENTO_ARQUITECTURA_CORTE2.md`](DOCUMENTO_ARQUITECTURA_CORTE2.md).
 
 ## 1. Introducción y Objetivo del Taller

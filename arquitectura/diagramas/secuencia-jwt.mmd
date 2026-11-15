@@ -1,0 +1,30 @@
+sequenceDiagram
+    autonumber
+    actor U as Usuario (navegador)
+    participant FE as Frontend web
+    participant GW as API Gateway<br/>(Resource Server)
+    participant KC as Keycloak<br/>(realm banco-preguntas)
+    participant US as user-service
+    participant MS as Microservicio<br/>(p. ej. question-service)
+
+    U->>FE: usuario y contraseña
+    FE->>GW: POST /api/v1/auth/token (password grant)
+    GW->>KC: POST /realms/banco-preguntas/protocol/openid-connect/token
+    KC-->>GW: access_token (JWT RS256) + refresh_token
+    GW-->>FE: tokens
+    FE->>GW: GET /api/v1/preguntas — Authorization: Bearer JWT
+    GW->>KC: GET .../certs (JWKS, queda en caché)
+    KC-->>GW: llaves públicas
+    Note over GW: Valida firma, emisor (iss) y vigencia (exp).<br/>Lee los roles de realm_access.roles y aplica la regla de la ruta.
+    alt token ausente o inválido
+        GW-->>FE: 401 Unauthorized (JSON)
+    else el rol no alcanza
+        GW-->>FE: 403 Forbidden (JSON)
+    else autorizado
+        GW->>US: POST /internal/users/sync (username, nombre, correo, roles)
+        US-->>GW: perfil local (id numérico)
+        GW->>MS: petición + X-User-Id, X-User-Name, X-User-Roles
+        Note over MS: Autorización por dato: el autor solo ve<br/>sus preguntas y cada usuario sus notificaciones.
+        MS-->>GW: 200 OK
+        GW-->>FE: 200 OK
+    end

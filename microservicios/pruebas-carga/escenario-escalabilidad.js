@@ -30,6 +30,29 @@ export const options = {
     summaryTrendStats: ['avg', 'med', 'p(90)', 'p(95)', 'p(99)', 'max'],
 };
 
+// Corte 3: el gateway exige un JWT de Keycloak. setup() se ejecuta una vez antes de la carga,
+// pide un token para el autor y otro para el revisor y los entrega a los usuarios virtuales.
+// El token dura 15 minutos, más que la prueba (2 min 45 s por defecto).
+function pedirToken(usuario, clave) {
+    const res = http.post(`${BASE_URL}/api/v1/auth/token`, {
+        grant_type: 'password',
+        client_id: __ENV.CLIENT_ID || 'banco-preguntas-frontend',
+        username: usuario,
+        password: clave,
+    });
+    if (res.status !== 200) {
+        throw new Error(`No se pudo obtener el token de ${usuario}: HTTP ${res.status}. ¿Está Keycloak arriba?`);
+    }
+    return res.json('access_token');
+}
+
+export function setup() {
+    return {
+        autor: pedirToken(__ENV.AUTOR || 'autor1', __ENV.AUTOR_CLAVE || 'autor123'),
+        revisor: pedirToken(__ENV.REVISOR || 'revisor1', __ENV.REVISOR_CLAVE || 'revisor123'),
+    };
+}
+
 const OPCIONES = ['Popayán', 'Cali', 'Pasto', 'Neiva'];
 
 function cuerpoPregunta() {
@@ -48,16 +71,17 @@ function cuerpoPregunta() {
     });
 }
 
-export default function () {
+export default function (tokens) {
     if (Math.random() < 0.9) {
         const res = http.post(`${BASE_URL}/api/v1/preguntas`, cuerpoPregunta(), {
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tokens.autor}` },
             tags: { operacion: 'crear_pregunta' },
         });
         crearPregunta.add(res.timings.duration);
         check(res, { 'pregunta creada (201)': (r) => r.status === 201 });
     } else {
-        const res = http.get(`${BASE_URL}/api/v1/revisiones/asignadas?revisorId=4&page=0&size=10`, {
+        const res = http.get(`${BASE_URL}/api/v1/revisiones/asignadas?page=0&size=10`, {
+            headers: { Authorization: `Bearer ${tokens.revisor}` },
             tags: { operacion: 'listar_asignadas' },
         });
         listarAsignadas.add(res.timings.duration);

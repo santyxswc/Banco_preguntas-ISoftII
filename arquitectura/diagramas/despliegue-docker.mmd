@@ -1,0 +1,55 @@
+flowchart LR
+    subgraph HOST["Equipo anfitrión (puertos publicados)"]
+        P1["localhost:5173"]
+        P2["localhost:8080"]
+        P3["localhost:8180"]
+        P4["localhost:15672"]
+    end
+    subgraph NET["Red Docker bp-net (docker compose up -d)"]
+        FE["bp-frontend"]
+        GW["bp-api-gateway"]
+        KC["bp-keycloak"]
+        MQ["bp-rabbitmq"]
+        subgraph SVC["Microservicios (sin puertos publicados)"]
+            US["bp-user-service"]
+            QS["bp-question-service"]
+            VS["bp-validation-service"]
+            LS["bp-lifecycle-service"]
+            RS["bp-review-service"]
+            NS["bp-notification-service"]
+        end
+        subgraph DBS["PostgreSQL 16 — una base por contexto"]
+            UDB[("bp-user-db")]
+            QDB[("bp-question-db")]
+            LDB[("bp-lifecycle-db")]
+            RDB[("bp-review-db")]
+            KDB[("bp-keycloak-db")]
+        end
+    end
+    subgraph VOL["Volúmenes con nombre"]
+        V1[/"user-db-data"/]
+        V2[/"question-db-data"/]
+        V3[/"lifecycle-db-data"/]
+        V4[/"review-db-data"/]
+        V5[/"keycloak-db-data"/]
+        V6[/"rabbitmq-data"/]
+    end
+    P1 --> FE
+    P2 --> GW
+    P3 --> KC
+    P4 --> MQ
+    GW --> US & QS & RS & LS & NS
+    GW -. JWKS .-> KC
+    QS --> VS
+    US --> UDB
+    QS --> QDB
+    LS --> LDB
+    RS --> RDB
+    KC --> KDB
+    QS & LS & RS & NS --> MQ
+    UDB --- V1
+    QDB --- V2
+    LDB --- V3
+    RDB --- V4
+    KDB --- V5
+    MQ --- V6
