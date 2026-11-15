@@ -4,13 +4,28 @@ server:
 gateway:
   question-uri: ${QUESTION_SERVICE_ROUTE:http://localhost:8081}
 
-auth:
-  token:
-    secret: ${AUTH_TOKEN_SECRET:banco-preguntas-secreto-desarrollo}
+# RNF #1: identidad. Keycloak emite los JWT; el gateway los valida y sincroniza el perfil local.
+keycloak:
+  # URL por la que el gateway alcanza a Keycloak (en Docker Compose: http://keycloak:8080)
+  url: ${KEYCLOAK_URL:http://localhost:8180}
+  realm: ${KEYCLOAK_REALM:banco-preguntas}
+  # Emisor esperado en el claim "iss": la URL pública de Keycloak, igual dentro y fuera de Docker
+  issuer: ${KEYCLOAK_ISSUER:http://localhost:8180/realms/${keycloak.realm}}
+
+identity:
+  user-service-url: ${USER_SERVICE_URL:http://localhost:8083}
+  cache-ttl-seconds: ${IDENTITY_CACHE_TTL_SECONDS:60}
 
 spring:
   application:
     name: api-gateway
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # Con jwk-set-uri las llaves se descargan en la primera petición: el gateway arranca aunque Keycloak tarde
+          jwk-set-uri: ${keycloak.url}/realms/${keycloak.realm}/protocol/openid-connect/certs
+          issuer-uri: ${keycloak.issuer}
   cloud:
     gateway:
       default-filters:
@@ -35,12 +50,13 @@ spring:
             - Path=/api/v1/usuarios,/api/v1/usuarios/**
           filters:
             - RewritePath=/api/v1/usuarios(?<segment>.*), /users$\{segment}
+        # Inicio y cierre de sesión: el frontend solo conoce al gateway, que reenvía a Keycloak (OpenID Connect)
         - id: autenticacion
-          uri: ${USER_SERVICE_URL:http://localhost:8083}
+          uri: ${keycloak.url}
           predicates:
-            - Path=/api/v1/auth/**
+            - Path=/api/v1/auth/token,/api/v1/auth/logout
           filters:
-            - RewritePath=/api/v1/auth(?<segment>.*), /auth$\{segment}
+            - RewritePath=/api/v1/auth/(?<operation>token|logout), /realms/${keycloak.realm}/protocol/openid-connect/$\{operation}
         - id: asignaciones
           uri: ${REVIEW_SERVICE_URL:http://localhost:8085}
           predicates:

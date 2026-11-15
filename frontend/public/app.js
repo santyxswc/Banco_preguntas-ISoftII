@@ -91,13 +91,14 @@
             sessionStorage.setItem('bp-user', JSON.stringify(res.user));
             await startApp();
         } catch (e) {
-            showError(e.status === 401 ? { message: 'Usuario o contraseña incorrectos' } : e);
+            showError(e.status === 401 ? { message: 'Usuario o contraseña incorrectos' }
+                : e.status === 403 ? { message: 'Su usuario no tiene un rol asignado en Keycloak' } : e);
         }
     }
 
     function logout() {
         sessionStorage.removeItem('bp-user');
-        Api.clearSession();
+        Api.logout();
         state.user = null;
         $('#app-view').hidden = true;
         $('#session').hidden = true;
@@ -530,7 +531,7 @@
         renderOptions();
         try {
             const saved = JSON.parse(sessionStorage.getItem('bp-user'));
-            if (saved) {
+            if (saved && Api.hasSession()) {
                 state.user = saved;
                 startApp();
             }

@@ -64,7 +64,7 @@ public class UserController {
 
     @GetMapping("/me")
     @Operation(summary = "Usuario autenticado",
-            description = "Usa la cabecera X-User-Id que agrega el api-gateway después de validar el token.")
+            description = "Usa la cabecera X-User-Id que agrega el api-gateway después de validar el JWT de Keycloak.")
     @ApiResponse(responseCode = "401", description = "La petición no trae identidad")
     public ResponseEntity<UserDTO> me(@RequestHeader(value = IdentityHeaders.USER_ID, required = false) Long userId) {
         if (userId == null) {
