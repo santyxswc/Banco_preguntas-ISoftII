@@ -85,6 +85,23 @@ class QuestionBuilderTest {
     }
 
     @Test
+    @DisplayName("HU-06: una pregunta nace en la versión 1 y cada versión mejorada la aumenta y la deja en borrador")
+    void versionMejorada() {
+        Question pregunta = QuestionBuilder.from(solicitud(2L)).status(QuestionStatus.REJECTED).build();
+        assertEquals(1, pregunta.getVersion());
+        assertFalse(pregunta.isImprovedVersion());
+        assertEquals(1, pregunta.toDTO().getVersion());
+
+        pregunta.startImprovedVersion();
+
+        assertEquals(2, pregunta.getVersion());
+        assertTrue(pregunta.isImprovedVersion());
+        assertEquals(QuestionStatus.DRAFT, pregunta.getStatus());
+        assertEquals(2, pregunta.toDTO().getVersion());
+        assertThrows(IllegalArgumentException.class, () -> pregunta.setVersion(0));
+    }
+
+    @Test
     @DisplayName("El filtro combina autor, competencia, tema, dificultad y palabra clave sin distinguir mayúsculas")
     void filtro() {
         Question q = QuestionBuilder.from(solicitud(2L)).build();

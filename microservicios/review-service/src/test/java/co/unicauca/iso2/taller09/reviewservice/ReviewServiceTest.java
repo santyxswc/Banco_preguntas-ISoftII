@@ -6,11 +6,13 @@ import co.unicauca.iso2.taller09.common.enums.ReviewResult;
 import co.unicauca.iso2.taller09.common.messages.ReviewCompleted;
 import co.unicauca.iso2.taller09.reviewservice.application.AssignedQuestionView;
 import co.unicauca.iso2.taller09.reviewservice.application.EvaluationOutcome;
+import co.unicauca.iso2.taller09.reviewservice.application.QuestionReviewHistory;
 import co.unicauca.iso2.taller09.reviewservice.application.ReviewService;
 import co.unicauca.iso2.taller09.reviewservice.domain.exception.ReviewException;
 import co.unicauca.iso2.taller09.reviewservice.domain.model.PageResult;
 import co.unicauca.iso2.taller09.reviewservice.domain.model.Review;
 import co.unicauca.iso2.taller09.reviewservice.domain.model.ReviewAssignment;
+import co.unicauca.iso2.taller09.reviewservice.domain.model.RoundOutcome;
 import co.unicauca.iso2.taller09.reviewservice.domain.policy.UnanimousApprovalPolicy;
 import co.unicauca.iso2.taller09.reviewservice.support.FakeCollaborators;
 import co.unicauca.iso2.taller09.reviewservice.support.InMemoryReviewRepository;
@@ -280,5 +282,61 @@ class ReviewServiceTest {
         assertEquals(QuestionStatus.APPROVED, outcome.questionFinalState());
         assertEquals(3, service.observations(PREGUNTA).size());
         assertEquals(2, outcome.review().getRound());
+    }
+
+    @Test
+    @DisplayName("HU-06: el autor ve el historial por rondas y puede sacar una versión mejorada tras el rechazo")
+    void historialDelAutor() {
+        service.assignReviewers(PREGUNTA, List.of(REVISOR_A, REVISOR_B), ADMIN);
+        service.evaluate(PREGUNTA, REVISOR_A, ReviewResult.APPROVED, null);
+        service.evaluate(PREGUNTA, REVISOR_B, ReviewResult.REJECTED, "Corregir el contexto");
+
+        QuestionReviewHistory resultado = service.history(PREGUNTA, AUTOR, List.of("AUTOR", "DOCENTE"));
+
+        assertEquals(AUTOR, resultado.question().authorId());
+        assertEquals(1, resultado.history().totalRounds());
+        assertEquals(RoundOutcome.REJECTED, resultado.history().rounds().get(0).outcome());
+        assertTrue(resultado.history().allowsImprovedVersion());
+        assertEquals(List.of("Corregir el contexto"), resultado.history().observationsToAddress());
+    }
+
+    @Test
+    @DisplayName("HU-06: la versión mejorada abre la ronda 2 y el historial conserva la ronda 1")
+    void historialConDosRondas() {
+        service.assignReviewers(PREGUNTA, List.of(REVISOR_A), ADMIN);
+        service.evaluate(PREGUNTA, REVISOR_A, ReviewResult.REJECTED, "Corregir el contexto");
+        lifecycle.set(PREGUNTA, QuestionStatus.PENDING_REVIEW);
+        service.assignReviewers(PREGUNTA, List.of(REVISOR_B), ADMIN);
+
+        QuestionReviewHistory resultado = service.history(PREGUNTA, AUTOR, List.of("AUTOR"));
+
+        assertEquals(2, resultado.history().totalRounds());
+        assertEquals(RoundOutcome.REJECTED, resultado.history().rounds().get(0).outcome());
+        assertEquals(RoundOutcome.IN_PROGRESS, resultado.history().rounds().get(1).outcome());
+        assertEquals(List.of(REVISOR_B), resultado.history().rounds().get(1).pendingReviewerIds());
+        assertTrue(!resultado.history().allowsImprovedVersion());
+        assertEquals(List.of(1, 2), events.assigned.stream().map(e -> e.getRound()).toList());
+    }
+
+    @Test
+    @DisplayName("HU-06: el historial solo lo ven el autor, los revisores de la pregunta y el administrador")
+    void historialRestringido() {
+        service.assignReviewers(PREGUNTA, List.of(REVISOR_A), ADMIN);
+
+        assertEquals(1, service.history(PREGUNTA, REVISOR_A, List.of("REVISOR")).history().totalRounds());
+        assertEquals(1, service.history(PREGUNTA, ADMIN, List.of("administrador")).history().totalRounds());
+        assertEquals(ReviewException.Type.FORBIDDEN, typeOf(() -> service.history(PREGUNTA, REVISOR_B, List.of("REVISOR"))));
+        assertEquals(ReviewException.Type.FORBIDDEN, typeOf(() -> service.history(PREGUNTA, ESTUDIANTE, null)));
+        assertEquals(ReviewException.Type.VALIDATION, typeOf(() -> service.history(PREGUNTA, null, List.of())));
+        assertEquals(ReviewException.Type.NOT_FOUND, typeOf(() -> service.history(999L, AUTOR, List.of("AUTOR"))));
+    }
+
+    @Test
+    @DisplayName("HU-06: una pregunta sin revisores asignados tiene historial vacío")
+    void historialSinRondas() {
+        QuestionReviewHistory resultado = service.history(PREGUNTA, AUTOR, List.of("AUTOR"));
+
+        assertTrue(resultado.history().isEmpty());
+        assertTrue(!resultado.history().allowsImprovedVersion());
     }
 }

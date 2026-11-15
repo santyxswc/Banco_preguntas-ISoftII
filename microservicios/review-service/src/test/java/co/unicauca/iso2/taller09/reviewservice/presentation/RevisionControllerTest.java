@@ -6,6 +6,10 @@ import co.unicauca.iso2.taller09.common.enums.ReviewResult;
 import co.unicauca.iso2.taller09.reviewservice.application.AssignedQuestionView;
 import co.unicauca.iso2.taller09.reviewservice.application.EvaluationOutcome;
 import co.unicauca.iso2.taller09.reviewservice.application.ReviewService;
+import co.unicauca.iso2.taller09.reviewservice.domain.policy.UnanimousApprovalPolicy;
+import co.unicauca.iso2.taller09.reviewservice.domain.model.ReviewHistory;
+import co.unicauca.iso2.taller09.reviewservice.domain.model.QuestionSummary;
+import co.unicauca.iso2.taller09.reviewservice.application.QuestionReviewHistory;
 import co.unicauca.iso2.taller09.reviewservice.domain.exception.ReviewException;
 import co.unicauca.iso2.taller09.reviewservice.domain.model.PageResult;
 import co.unicauca.iso2.taller09.reviewservice.domain.model.Review;
@@ -127,5 +131,37 @@ class RevisionControllerTest {
 
         mvc.perform(get("/api/v1/revisiones/asignadas"))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void historialDevuelveLasRondasConSuResultadoYColor() throws Exception {
+        LocalDateTime ahora = LocalDateTime.now();
+        ReviewHistory history = ReviewHistory.of(100L,
+                List.of(new ReviewAssignment(1L, 100L, 4L, 1L, 1, ahora, AssignmentStatus.COMPLETED)),
+                List.of(new Review(7L, 100L, 4L, 1, ReviewResult.REJECTED, "Corregir el contexto", ahora)),
+                new UnanimousApprovalPolicy());
+        when(reviewService.history(eq(100L), eq(2L), eq(List.of("AUTOR", "DOCENTE"))))
+                .thenReturn(new QuestionReviewHistory(new QuestionSummary(100L, "Pregunta", 2L), history));
+
+        mvc.perform(get("/api/v1/revisiones/pregunta/100/historial")
+                        .header("X-User-Id", "2").header("X-User-Roles", "AUTOR, DOCENTE"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalRounds").value(1))
+                .andExpect(jsonPath("$.improvedVersionAllowed").value(true))
+                .andExpect(jsonPath("$.observationsToAddress[0]").value("Corregir el contexto"))
+                .andExpect(jsonPath("$.rounds[0].outcome").value("REJECTED"))
+                .andExpect(jsonPath("$.rounds[0].outcomeLabel").value("Rechazada"))
+                .andExpect(jsonPath("$.rounds[0].outcomeColor").value("#DC3545"))
+                .andExpect(jsonPath("$.rounds[0].reviews[0].comments").value("Corregir el contexto"));
+    }
+
+    @Test
+    void historialDeUnaPreguntaAjenaDevuelve403() throws Exception {
+        when(reviewService.history(eq(100L), eq(3L), anyList()))
+                .thenThrow(ReviewException.forbidden(ReviewService.MENSAJE_HISTORIAL_AJENO));
+
+        mvc.perform(get("/api/v1/revisiones/pregunta/100/historial").param("solicitanteId", "3"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").value(ReviewService.MENSAJE_HISTORIAL_AJENO));
     }
 }

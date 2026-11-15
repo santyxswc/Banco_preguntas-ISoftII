@@ -69,6 +69,7 @@
         assigned: (revisorId, page, size) => request('GET', '/revisiones/asignadas', { query: { revisorId, page, size } }),
         evaluate: (questionId, reviewerId, result, comments) => request('POST', '/revisiones/evaluar', { body: { questionId, reviewerId, result, comments } }),
         observations: (questionId) => request('GET', `/revisiones/pregunta/${questionId}`),
+        reviewHistory: (questionId, solicitanteId) => request('GET', `/revisiones/pregunta/${questionId}/historial`, { query: { solicitanteId } }),
 
         notifications: (recipientId) => request('GET', `/notificaciones/recipient/${recipientId}`),
     };

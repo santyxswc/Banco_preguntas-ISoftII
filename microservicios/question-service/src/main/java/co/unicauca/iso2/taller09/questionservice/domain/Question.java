@@ -13,6 +13,9 @@ import java.util.Locale;
  * <p>
  * Se construye con {@link QuestionBuilder}. El estado que guarda es solo una copia local: la
  * autoridad del estado es lifecycle-service, por eso al listar se reemplaza con el que él reporta.
+ * <p>
+ * {@code version} empieza en 1 y aumenta cada vez que el autor saca una versión mejorada a
+ * partir de las observaciones de un rechazo (HU-06).
  */
 public class Question {
     private Long id;
@@ -30,6 +33,7 @@ public class Question {
     private QuestionStatus status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private int version = 1;
 
     Question() {
         this.status = QuestionStatus.DRAFT;
@@ -63,6 +67,20 @@ public class Question {
         this.updatedAt = LocalDateTime.now();
     }
 
+    /**
+     * HU-06: abre una versión mejorada de una pregunta rechazada. Se llama una sola vez por
+     * rechazo; las ediciones siguientes ocurren sobre el borrador de esa misma versión.
+     */
+    public void startImprovedVersion() {
+        this.version++;
+        this.status = QuestionStatus.DRAFT;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public boolean isImprovedVersion() {
+        return version > 1;
+    }
+
     public boolean isAuthoredBy(Long userId) {
         return userId != null && userId.equals(authorId);
     }
@@ -89,6 +107,7 @@ public class Question {
         dto.setTopic(topic);
         dto.setSubtopic(subtopic);
         dto.setDifficulty(difficulty);
+        dto.setVersion(version);
         return dto;
     }
 
@@ -136,6 +155,14 @@ public class Question {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public int getVersion() { return version; }
+    public void setVersion(int version) {
+        if (version < 1) {
+            throw new IllegalArgumentException("La versión de la pregunta debe ser mayor o igual a 1");
+        }
+        this.version = version;
+    }
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }

@@ -72,6 +72,9 @@ public class QuestionEntity {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @Column(name = "version", nullable = false)
+    private int version = 1;
+
     protected QuestionEntity() {
     }
 
@@ -105,6 +108,9 @@ public class QuestionEntity {
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    public int getVersion() { return version; }
+    public void setVersion(int version) { this.version = version; }
 
     static QuestionEntity create() {
         return new QuestionEntity();

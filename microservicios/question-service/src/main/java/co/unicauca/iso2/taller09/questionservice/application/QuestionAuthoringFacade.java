@@ -30,6 +30,9 @@ import java.util.UUID;
  * validation-service (REST), lifecycle-service (REST), el repositorio local y RabbitMQ. El
  * controlador REST solo habla con esta fachada, que oculta ese orden de llamadas y las reglas
  * de autoría (solo el autor edita o envía su pregunta, y solo en borrador o rechazada).
+ * <p>
+ * HU-06: editar una pregunta rechazada abre una <b>versión mejorada</b> (versión + 1) que vuelve
+ * a borrador; una pregunta rechazada no se reenvía a revisión sin esa nueva versión.
  */
 @Service
 public class QuestionAuthoringFacade {
@@ -63,7 +66,10 @@ public class QuestionAuthoringFacade {
         return saved;
     }
 
-    /** HU-03: el autor edita su pregunta mientras esté en borrador o haya sido rechazada. */
+    /**
+     * HU-03: el autor edita su pregunta mientras esté en borrador o haya sido rechazada.
+     * HU-06: si estaba rechazada, la edición abre una versión mejorada y la devuelve a borrador.
+     */
     public Question update(Long id, CreateQuestionRequest request, Long requestedBy) {
         Question current = repository.findById(id).orElseThrow(() -> QuestionException.notFound(id));
         Long editor = requestedBy != null ? requestedBy : request.getAuthorId();
@@ -77,13 +83,19 @@ public class QuestionAuthoringFacade {
         }
         request.setAuthorId(current.getAuthorId());
         requireValid(request);
+        if (state == QuestionStatus.REJECTED) {
+            lifecycle.reopenForImprovement(id, current.getAuthorId(), current.getVersion() + 1);
+            current.startImprovedVersion();
+            log.info("Pregunta {}: el autor {} abrió la versión mejorada {}", id, current.getAuthorId(), current.getVersion());
+        }
         current.updateContentFrom(QuestionBuilder.from(request).build());
         return repository.save(current);
     }
 
     /**
      * HU-02: publica el comando asíncrono hacia lifecycle-service y devuelve el operationId
-     * para consultar después si la transición se completó.
+     * para consultar después si la transición se completó. El comando lleva la versión de la
+     * pregunta para que las notificaciones distingan un reenvío de una versión mejorada (HU-06).
      */
     public String submitForReview(Long id, Long requestedBy) {
         Question question = repository.findById(id).orElseThrow(() -> QuestionException.notFound(id));
@@ -91,8 +103,13 @@ public class QuestionAuthoringFacade {
         if (!question.isAuthoredBy(requester)) {
             throw QuestionException.forbidden("Solo el autor puede enviar su pregunta a revisión");
         }
+        if (currentStateOrLocal(question) == QuestionStatus.REJECTED) {
+            throw QuestionException.conflict("La pregunta fue rechazada: edítela para crear una versión mejorada "
+                    + "que atienda las observaciones antes de reenviarla a revisión");
+        }
         String operationId = UUID.randomUUID().toString();
-        publisher.publish(new SubmitQuestionForReview(operationId, id, requester, LocalDateTime.now()));
+        publisher.publish(new SubmitQuestionForReview(operationId, id, requester, question.getVersion(),
+                LocalDateTime.now()));
         return operationId;
     }
 

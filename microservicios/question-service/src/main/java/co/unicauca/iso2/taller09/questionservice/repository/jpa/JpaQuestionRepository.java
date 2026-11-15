@@ -85,6 +85,7 @@ public class JpaQuestionRepository implements QuestionRepository {
         target.setStatus(source.getStatus());
         target.setCreatedAt(source.getCreatedAt());
         target.setUpdatedAt(source.getUpdatedAt());
+        target.setVersion(source.getVersion());
     }
 
     static Question toDomain(QuestionEntity e) {
@@ -104,6 +105,7 @@ public class JpaQuestionRepository implements QuestionRepository {
                 .build();
         question.setId(e.getId());
         question.setCreatedAt(e.getCreatedAt());
+        question.setVersion(Math.max(1, e.getVersion()));
         question.setUpdatedAt(e.getUpdatedAt());
         return question;
     }

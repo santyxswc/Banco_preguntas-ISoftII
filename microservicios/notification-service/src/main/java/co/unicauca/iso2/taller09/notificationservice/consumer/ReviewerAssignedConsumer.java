@@ -14,7 +14,8 @@ import org.springframework.stereotype.Component;
 /**
  * Patrón GoF <b>Observer</b> (comportamiento) sobre RabbitMQ: review-service publica
  * {@code RevisorAsignado} sin saber quién lo escucha; este consumidor es un observador suscrito
- * a la cola y reacciona enviando el correo al revisor (HU-04).
+ * a la cola y reacciona enviando el correo al revisor (HU-04). Cuando la asignación abre una
+ * ronda posterior a la primera, el correo aclara que se trata de una versión mejorada (HU-06).
  */
 @Component
 public class ReviewerAssignedConsumer {
@@ -37,10 +38,16 @@ public class ReviewerAssignedConsumer {
         log.info("Evento RevisorAsignado recibido: questionId={}, reviewerId={}, assignedBy={}",
                 event.getQuestionId(), event.getReviewerId(), event.getAssignedBy());
 
-        String subject = String.format("Nueva pregunta Saber Pro asignada para evaluación (Pregunta #%d)", event.getQuestionId());
-        String body = String.format("Estimado docente revisor (ID: %d), el administrador %d le asignó la pregunta #%d para su dictamen. "
+        boolean newRound = event.getRound() > 1;
+        String subject = newRound
+                ? String.format("Versión mejorada de la pregunta #%d asignada para evaluación (ronda %d)",
+                event.getQuestionId(), event.getRound())
+                : String.format("Nueva pregunta Saber Pro asignada para evaluación (Pregunta #%d)", event.getQuestionId());
+        String body = String.format("Estimado docente revisor (ID: %d), el administrador %d le asignó la pregunta #%d para su dictamen%s. "
                         + "Ingrese al Banco de Preguntas, sección Revisor, para evaluarla. Operación: %s",
-                event.getReviewerId(), event.getAssignedBy(), event.getQuestionId(), event.getOperationId());
+                event.getReviewerId(), event.getAssignedBy(), event.getQuestionId(),
+                newRound ? ": el autor la corrigió atendiendo las observaciones de la ronda anterior (ronda " + event.getRound() + ")" : "",
+                event.getOperationId());
 
         Notification sent = dispatcher.notify(event.getReviewerId(), NotificationType.REVIEWER_ASSIGNED, subject, body);
         processedEvents.markProcessed("ReviewerAssigned", event.getOperationId());

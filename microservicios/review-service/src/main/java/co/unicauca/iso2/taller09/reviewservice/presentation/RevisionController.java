@@ -7,6 +7,7 @@ import co.unicauca.iso2.taller09.reviewservice.application.ReviewService;
 import co.unicauca.iso2.taller09.reviewservice.domain.exception.ReviewException;
 import co.unicauca.iso2.taller09.reviewservice.presentation.dto.EvaluationResponse;
 import co.unicauca.iso2.taller09.reviewservice.presentation.dto.PageResponse;
+import co.unicauca.iso2.taller09.reviewservice.presentation.dto.ReviewHistoryResponse;
 import co.unicauca.iso2.taller09.reviewservice.presentation.dto.ReviewResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -21,11 +22,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Arrays;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/revisiones")
-@Tag(name = "Revisiones", description = "HU-05: preguntas asignadas, evaluación y observaciones")
+@Tag(name = "Revisiones", description = "HU-05 y HU-06: preguntas asignadas, evaluación, observaciones e historial de revisiones")
 public class RevisionController {
 
     private final ReviewService reviewService;
@@ -66,5 +68,24 @@ public class RevisionController {
     @Operation(summary = "Consultar en solo lectura las observaciones de cada revisor sobre una pregunta")
     public ResponseEntity<List<ReviewResponse>> observations(@PathVariable Long questionId) {
         return ResponseEntity.ok(reviewService.observations(questionId).stream().map(ReviewResponse::from).toList());
+    }
+
+    @GetMapping("/pregunta/{questionId}/historial")
+    @Operation(summary = "Historial de revisiones de una pregunta, agrupado por ronda (HU-06)",
+            description = "Devuelve cada ronda con su resultado, los revisores asignados, las decisiones y las "
+                    + "observaciones. Indica además si el autor puede sacar una versión mejorada (última ronda rechazada).")
+    @ApiResponse(responseCode = "200", description = "Historial de la pregunta; sin rondas si aún no se le asignan revisores")
+    @ApiResponse(responseCode = "400", description = "No se pudo determinar quién consulta")
+    @ApiResponse(responseCode = "403", description = "Quien consulta no es el autor, un revisor de la pregunta ni un administrador")
+    @ApiResponse(responseCode = "404", description = "La pregunta no existe")
+    public ResponseEntity<ReviewHistoryResponse> history(@PathVariable Long questionId,
+                                                         @RequestParam(required = false) Long solicitanteId,
+                                                         @RequestHeader(value = IdentityHeaders.USER_ID, required = false) Long userId,
+                                                         @RequestHeader(value = IdentityHeaders.USER_ROLES, required = false) String roles) {
+        Long requester = userId != null ? userId : solicitanteId;
+        List<String> requesterRoles = roles == null || roles.isBlank()
+                ? List.of()
+                : Arrays.stream(roles.split(",")).map(String::trim).toList();
+        return ResponseEntity.ok(ReviewHistoryResponse.from(reviewService.history(questionId, requester, requesterRoles)));
     }
 }

@@ -147,8 +147,71 @@ class QuestionAuthoringFacadeTest {
                 () -> facade.search(QuestionFilter.none(), -1, 10)).httpStatus());
     }
 
+    @Test
+    @DisplayName("HU-06: editar una pregunta rechazada abre la versión 2 y la devuelve a borrador")
+    void versionMejoradaTrasRechazo() {
+        Question q = facade.create(QuestionBuilderTest.solicitud(2L));
+        lifecycle.states.put(q.getId(), QuestionStatus.REJECTED);
+        CreateQuestionRequest cambios = QuestionBuilderTest.solicitud(2L);
+        cambios.setTopic("Arquitectura hexagonal");
+
+        Question mejorada = facade.update(q.getId(), cambios, 2L);
+
+        assertEquals(2, mejorada.getVersion());
+        assertTrue(mejorada.isImprovedVersion());
+        assertEquals("Arquitectura hexagonal", mejorada.getTopic());
+        assertEquals(QuestionStatus.DRAFT, lifecycle.states.get(q.getId()));
+        assertEquals(List.of(q.getId() + ":v2"), lifecycle.reopened);
+        assertEquals(2, facade.findById(q.getId()).getVersion());
+    }
+
+    @Test
+    @DisplayName("HU-06: seguir editando el borrador de la versión mejorada no aumenta la versión")
+    void edicionesDelBorradorNoAumentanLaVersion() {
+        Question q = facade.create(QuestionBuilderTest.solicitud(2L));
+        lifecycle.states.put(q.getId(), QuestionStatus.REJECTED);
+        facade.update(q.getId(), QuestionBuilderTest.solicitud(2L), 2L);
+
+        Question otraEdicion = facade.update(q.getId(), QuestionBuilderTest.solicitud(2L), 2L);
+
+        assertEquals(2, otraEdicion.getVersion());
+        assertEquals(1, lifecycle.reopened.size());
+    }
+
+    @Test
+    @DisplayName("HU-06: una pregunta rechazada no se reenvía sin crear antes la versión mejorada")
+    void rechazadaNoSeReenviaSinCorregir() {
+        Question q = facade.create(QuestionBuilderTest.solicitud(2L));
+        lifecycle.states.put(q.getId(), QuestionStatus.REJECTED);
+
+        assertEquals(409, assertThrows(QuestionException.class, () -> facade.submitForReview(q.getId(), 2L)).httpStatus());
+        assertTrue(published.isEmpty());
+
+        facade.update(q.getId(), QuestionBuilderTest.solicitud(2L), 2L);
+        facade.submitForReview(q.getId(), 2L);
+
+        assertEquals(1, published.size());
+        assertEquals(2, published.get(0).getVersion());
+    }
+
+    @Test
+    @DisplayName("HU-06: si la versión mejorada es inválida no se abre ni cambia el estado")
+    void versionMejoradaInvalidaNoCambiaNada() {
+        Question q = facade.create(QuestionBuilderTest.solicitud(2L));
+        lifecycle.states.put(q.getId(), QuestionStatus.REJECTED);
+        validationErrors.add("La justificación es obligatoria.");
+
+        assertEquals(400, assertThrows(QuestionException.class,
+                () -> facade.update(q.getId(), QuestionBuilderTest.solicitud(2L), 2L)).httpStatus());
+
+        assertEquals(1, repository.findById(q.getId()).orElseThrow().getVersion());
+        assertEquals(QuestionStatus.REJECTED, lifecycle.states.get(q.getId()));
+        assertTrue(lifecycle.reopened.isEmpty());
+    }
+
     static class FakeLifecycle implements QuestionLifecycle {
         final Map<Long, QuestionStatus> states = new HashMap<>();
+        final List<String> reopened = new ArrayList<>();
         boolean down;
         int batchCalls;
 
@@ -156,6 +219,13 @@ class QuestionAuthoringFacadeTest {
         public QuestionStatus stateOf(Long questionId) {
             if (down) throw QuestionException.unavailable("caído");
             return states.getOrDefault(questionId, QuestionStatus.DRAFT);
+        }
+
+        @Override
+        public void reopenForImprovement(Long questionId, Long authorId, int version) {
+            if (down) throw QuestionException.unavailable("caído");
+            reopened.add(questionId + ":v" + version);
+            states.put(questionId, QuestionStatus.DRAFT);
         }
 
         @Override

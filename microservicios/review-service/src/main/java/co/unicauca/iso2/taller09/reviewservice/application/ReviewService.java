@@ -9,6 +9,7 @@ import co.unicauca.iso2.taller09.reviewservice.domain.model.PageResult;
 import co.unicauca.iso2.taller09.reviewservice.domain.model.QuestionSummary;
 import co.unicauca.iso2.taller09.reviewservice.domain.model.Review;
 import co.unicauca.iso2.taller09.reviewservice.domain.model.ReviewAssignment;
+import co.unicauca.iso2.taller09.reviewservice.domain.model.ReviewHistory;
 import co.unicauca.iso2.taller09.reviewservice.domain.model.ReviewerProfile;
 import co.unicauca.iso2.taller09.reviewservice.domain.model.ReviewerSelection;
 import co.unicauca.iso2.taller09.reviewservice.domain.policy.VerdictPolicy;
@@ -20,6 +21,7 @@ import co.unicauca.iso2.taller09.reviewservice.domain.port.ReviewerDirectory;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -29,6 +31,9 @@ public class ReviewService {
 
     public static final int MAX_TAMANO_PAGINA = 50;
     public static final String MENSAJE_NO_ASIGNADA = "No tiene asignada esta pregunta";
+    public static final String MENSAJE_HISTORIAL_AJENO =
+            "Solo el autor de la pregunta, sus revisores o un administrador pueden ver el historial de revisiones";
+    private static final String ROL_ADMINISTRADOR = "ADMINISTRADOR";
 
     private final ReviewRepository repository;
     private final QuestionCatalog questions;
@@ -77,7 +82,7 @@ public class ReviewService {
                     ReviewAssignment.create(questionId, reviewerId, assignedBy, round));
             saved.add(assignment);
             events.reviewerAssigned(new ReviewerAssigned(UUID.randomUUID().toString(), questionId,
-                    reviewerId, assignedBy, LocalDateTime.now()));
+                    reviewerId, assignedBy, round, LocalDateTime.now()));
         }
         return saved;
     }
@@ -135,6 +140,29 @@ public class ReviewService {
     public List<Review> observations(Long questionId) {
         requireId(questionId, "questionId");
         return repository.findReviewsByQuestion(questionId);
+    }
+
+    /**
+     * HU-06: historial de revisiones de una pregunta, agrupado por ronda.
+     * <p>
+     * Lo consulta el autor para leer las observaciones y sacar una versión mejorada. También
+     * pueden verlo un administrador y los revisores que participaron; cualquier otro usuario
+     * recibe 403.
+     */
+    public QuestionReviewHistory history(Long questionId, Long requesterId, Collection<String> requesterRoles) {
+        requireId(questionId, "questionId");
+        requireId(requesterId, "solicitante");
+        QuestionSummary question = findQuestion(questionId);
+        ReviewHistory history = ReviewHistory.of(questionId, repository.findAssignmentsByQuestion(questionId),
+                repository.findReviewsByQuestion(questionId), verdictPolicy);
+
+        boolean isAuthor = Objects.equals(requesterId, question.authorId());
+        boolean isAdministrator = requesterRoles != null
+                && requesterRoles.stream().anyMatch(ROL_ADMINISTRADOR::equalsIgnoreCase);
+        if (!isAuthor && !isAdministrator && !history.involvesReviewer(requesterId)) {
+            throw ReviewException.forbidden(MENSAJE_HISTORIAL_AJENO);
+        }
+        return new QuestionReviewHistory(question, history);
     }
 
     public List<ReviewAssignment> assignmentsOf(Long questionId) {
