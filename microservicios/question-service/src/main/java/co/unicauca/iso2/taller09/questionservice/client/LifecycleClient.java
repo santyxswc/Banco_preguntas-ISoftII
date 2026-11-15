@@ -22,7 +22,8 @@ import java.util.stream.Collectors;
 
 /**
  * Patrón GoF <b>Adapter</b>: traduce la API REST de lifecycle-service
- * ({@code GET /lifecycle/{id}} y {@code GET /lifecycle?ids=}) al puerto {@link QuestionLifecycle}.
+ * ({@code GET /lifecycle/{id}}, {@code GET /lifecycle?ids=} y {@code POST /lifecycle/{id}/transition})
+ * al puerto {@link QuestionLifecycle}.
  */
 @Component
 public class LifecycleClient implements QuestionLifecycle {
@@ -55,6 +56,23 @@ public class LifecycleClient implements QuestionLifecycle {
             return Optional.empty();
         } catch (RestClientException e) {
             log.error("No se pudo obtener el estado de la operación {}: {}", operationId, e.getMessage());
+            throw QuestionException.unavailable("El servicio de ciclo de vida no está disponible.");
+        }
+    }
+
+    @Override
+    public void reopenForImprovement(Long questionId, Long authorId, int version) {
+        Map<String, String> body = Map.of(
+                "targetState", QuestionStatus.DRAFT.name(),
+                "changedBy", "Autor " + authorId,
+                "message", "Versión mejorada " + version + " abierta a partir de las observaciones de los revisores");
+        try {
+            restTemplate.postForObject(baseUrl + "/lifecycle/{id}/transition", body, QuestionStateDTO.class, questionId);
+        } catch (HttpClientErrorException e) {
+            log.warn("lifecycle-service rechazó reabrir la pregunta {}: {}", questionId, e.getMessage());
+            throw QuestionException.conflict("No se pudo abrir la versión mejorada: la pregunta ya no está rechazada");
+        } catch (RestClientException e) {
+            log.error("Servicio de ciclo de vida no disponible al reabrir la pregunta {}: {}", questionId, e.getMessage());
             throw QuestionException.unavailable("El servicio de ciclo de vida no está disponible.");
         }
     }

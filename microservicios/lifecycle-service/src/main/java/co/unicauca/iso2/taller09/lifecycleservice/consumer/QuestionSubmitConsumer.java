@@ -69,7 +69,8 @@ public class QuestionSubmitConsumer {
         lifecycleRepository.saveOperation(operation);
 
         eventPublisher.questionSubmittedForReview(new QuestionSubmittedForReview(
-                command.getOperationId(), command.getQuestionId(), QuestionStatus.PENDING_REVIEW, LocalDateTime.now()));
+                command.getOperationId(), command.getQuestionId(), QuestionStatus.PENDING_REVIEW,
+                command.getRequestedBy(), command.getVersion(), LocalDateTime.now()));
 
         log.info("<<< [LIFECYCLE-SERVICE] Transición exitosa a PENDING_REVIEW para questionId={}. Operación {} marcada como COMPLETED",
                 command.getQuestionId(), command.getOperationId());

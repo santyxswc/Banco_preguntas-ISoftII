@@ -12,6 +12,11 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+/**
+ * Observador del evento {@code PreguntaEnviadaARevision}: avisa al administrador que debe asignar
+ * revisores (HU-02) y confirma el envío al autor. Si lo enviado es una versión mejorada de una
+ * pregunta rechazada (HU-06), los mensajes lo indican con el número de versión.
+ */
 @Component
 public class QuestionSubmittedConsumer {
     private static final Logger log = LoggerFactory.getLogger(QuestionSubmittedConsumer.class);
@@ -34,12 +39,27 @@ public class QuestionSubmittedConsumer {
             log.info("Evento PreguntaEnviadaARevision duplicado ignorado: operationId={}", event.getOperationId());
             return;
         }
-        String subject = String.format("La pregunta #%d está pendiente de asignar revisores", event.getQuestionId());
-        String body = String.format("La pregunta #%d pasó a %s. Ingrese al Banco de Preguntas, sección Administrador, "
+        boolean improved = event.improvedVersion();
+        String subject = improved
+                ? String.format("Versión mejorada %d de la pregunta #%d pendiente de asignar revisores",
+                event.getVersion(), event.getQuestionId())
+                : String.format("La pregunta #%d está pendiente de asignar revisores", event.getQuestionId());
+        String body = String.format("La pregunta #%d%s pasó a %s. Ingrese al Banco de Preguntas, sección Administrador, "
                 + "y asígnele entre 1 y 3 revisores. Operación: %s",
-                event.getQuestionId(), event.getNewState(), event.getOperationId());
+                event.getQuestionId(),
+                improved ? " (versión mejorada " + event.getVersion() + ", corregida tras un rechazo)" : "",
+                event.getNewState(), event.getOperationId());
 
         Notification sent = dispatcher.notify(administratorId, NotificationType.QUESTION_SUBMITTED, subject, body);
+        if (event.getAuthorId() != null && !event.getAuthorId().equals(administratorId)) {
+            dispatcher.notify(event.getAuthorId(), NotificationType.QUESTION_SUBMITTED,
+                    improved
+                            ? String.format("Su versión mejorada %d de la pregunta #%d fue enviada a revisión",
+                            event.getVersion(), event.getQuestionId())
+                            : String.format("Su pregunta #%d fue enviada a revisión", event.getQuestionId()),
+                    String.format("La pregunta #%d quedó en estado %s. Recibirá un correo cuando los revisores "
+                            + "registren su decisión.", event.getQuestionId(), event.getNewState()));
+        }
         processedEvents.markProcessed(EVENT, event.getOperationId());
         log.info("Notificación #{} ({}) al administrador #{} por la pregunta #{}",
                 sent.getId(), sent.getStatus(), administratorId, event.getQuestionId());

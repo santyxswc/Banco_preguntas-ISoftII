@@ -47,4 +47,33 @@ class QuestionSubmittedConsumerTest {
         assertEquals(NotificationType.QUESTION_SUBMITTED, admin.get(0).getType());
         assertTrue(admin.get(0).getSubject().contains("#120"));
     }
+
+    @Test
+    @DisplayName("HU-06: al reenviar una versión mejorada se notifica al administrador y al autor con la versión")
+    void versionMejoradaNotificaAlAdministradorYAlAutor() {
+        QuestionSubmittedForReview event = new QuestionSubmittedForReview("op-10", 120L, QuestionStatus.PENDING_REVIEW,
+                2L, 2, LocalDateTime.now());
+
+        consumer.handleQuestionSubmitted(event);
+        consumer.handleQuestionSubmitted(event);
+
+        List<Notification> admin = repository.findByRecipientId(1L);
+        List<Notification> autor = repository.findByRecipientId(2L);
+        assertEquals(1, admin.size());
+        assertEquals(1, autor.size());
+        assertTrue(admin.get(0).getSubject().contains("Versión mejorada 2"));
+        assertTrue(autor.get(0).getSubject().contains("versión mejorada 2"));
+        assertEquals(NotificationType.QUESTION_SUBMITTED, autor.get(0).getType());
+    }
+
+    @Test
+    @DisplayName("En el primer envío el autor recibe la confirmación sin mención de versión mejorada")
+    void primerEnvioConfirmaAlAutor() {
+        consumer.handleQuestionSubmitted(new QuestionSubmittedForReview("op-11", 121L, QuestionStatus.PENDING_REVIEW,
+                2L, 1, LocalDateTime.now()));
+
+        List<Notification> autor = repository.findByRecipientId(2L);
+        assertEquals(1, autor.size());
+        assertEquals("Su pregunta #121 fue enviada a revisión", autor.get(0).getSubject());
+    }
 }

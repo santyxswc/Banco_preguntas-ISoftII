@@ -151,3 +151,12 @@ footer { text-align: center; padding: 20px 16px; font-size: .85rem; }
     .details { grid-template-columns: 1fr; }
     .narrow { margin: 16px auto; }
 }
+
+/* HU-06: historial de revisiones por ronda y versión mejorada */
+.chip.version { background: #6F42C1; color: #fff; font-weight: 600; }
+.round { border: 1px solid var(--border, #d9dde3); border-radius: 8px; padding: 10px 12px; margin: 10px 0; }
+.improve, .observations-note {
+    border-left: 4px solid #E6A014; background: rgba(230, 160, 20, .1);
+    padding: 10px 12px; border-radius: 6px; margin-top: 12px;
+}
+.observations-note ul { margin: 6px 0 0; padding-left: 18px; }

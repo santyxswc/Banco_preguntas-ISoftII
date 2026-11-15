@@ -12,4 +12,10 @@ public interface QuestionLifecycle {
 
     /** Estados de varias preguntas en una sola consulta (las desconocidas vienen en DRAFT). */
     Map<Long, QuestionStatus> statesOf(Collection<Long> questionIds);
+
+    /**
+     * HU-06: devuelve a borrador una pregunta rechazada porque su autor abrió una versión
+     * mejorada (transición REJECTED → DRAFT).
+     */
+    void reopenForImprovement(Long questionId, Long authorId, int version);
 }

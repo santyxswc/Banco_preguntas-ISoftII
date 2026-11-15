@@ -1,6 +1,7 @@
 package co.unicauca.iso2.taller09.reviewservice.presentation.dto;
 
 import co.unicauca.iso2.taller09.common.enums.QuestionStatus;
+import co.unicauca.iso2.taller09.reviewservice.domain.model.RoundOutcome;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -23,5 +24,17 @@ public final class StateColors {
 
     public static String of(QuestionStatus state) {
         return state == null ? null : COLORES.get(state);
+    }
+
+    /** Color de una ronda del historial (HU-06): el del estado equivalente de la pregunta. */
+    public static String of(RoundOutcome outcome) {
+        if (outcome == null) {
+            return null;
+        }
+        return switch (outcome) {
+            case IN_PROGRESS -> COLORES.get(QuestionStatus.IN_REVIEW);
+            case APPROVED -> COLORES.get(QuestionStatus.APPROVED);
+            case REJECTED -> COLORES.get(QuestionStatus.REJECTED);
+        };
     }
 }

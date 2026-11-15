@@ -68,6 +68,7 @@
                     <div class="row wrap gap">
                         ${badge(q.status)}
                         <span class="muted">#${q.id}</span>
+                        ${q.version > 1 ? `<span class="chip version" title="Versión mejorada tras un rechazo">v${q.version}</span>` : ''}
                         <span class="chip">${esc(q.competency || 'Sin competencia')}</span>
                         <span class="chip">${esc(q.topic || 'Sin tema')}</span>
                         <span class="chip">${esc(q.difficulty || '—')}</span>
@@ -175,12 +176,15 @@
     function authorActions(q) {
         const s = stateInfo(q.status);
         const buttons = [];
-        if (s.editable) {
+        if (q.status === 'REJECTED') {
+            // HU-06: una pregunta rechazada solo vuelve a revisión como versión mejorada
+            buttons.push(`<button class="btn primary" data-action="improve" data-id="${q.id}">Crear versión mejorada</button>`);
+        } else if (s.editable) {
             buttons.push(`<button class="btn" data-action="edit" data-id="${q.id}">Editar</button>`);
             buttons.push(`<button class="btn primary" data-action="submit" data-id="${q.id}">Enviar a revisión</button>`);
         }
-        if (['IN_REVIEW', 'APPROVED', 'REJECTED', 'PUBLISHED'].includes(q.status)) {
-            buttons.push(`<button class="btn ghost" data-action="observations" data-id="${q.id}">Ver observaciones</button>`);
+        if (q.status !== 'DRAFT' && q.status !== 'PENDING_REVIEW' || q.version > 1) {
+            buttons.push(`<button class="btn ghost" data-action="history" data-id="${q.id}">Historial de revisiones</button>`);
         }
         return buttons.join('');
     }
@@ -189,8 +193,8 @@
         const btn = event.target.closest('button[data-action]');
         if (!btn) return;
         const id = Number(btn.dataset.id);
-        if (btn.dataset.action === 'edit') return editQuestion(id);
-        if (btn.dataset.action === 'observations') return showObservations(id);
+        if (btn.dataset.action === 'edit' || btn.dataset.action === 'improve') return editQuestion(id);
+        if (btn.dataset.action === 'history' || btn.dataset.action === 'observations') return showHistory(id);
         if (btn.dataset.action === 'submit') return submitForReview(id, btn);
     }
 
@@ -223,17 +227,48 @@
         return null;
     }
 
-    async function showObservations(questionId) {
+    // ---------- AUTOR: historial de revisiones y versión mejorada (HU-06) ----------
+    function roundHtml(round) {
+        const reviews = round.reviews.map((r) => `
+            <div class="observation ${r.result === 'APPROVED' ? 'ok' : 'bad'}">
+                <strong>${r.result === 'APPROVED' ? 'Aprobada' : 'Rechazada'}</strong>
+                <span class="muted">Revisor #${r.reviewerId} · ${fmtDate(r.createdAt)}</span>
+                <p>${esc(r.comments) || '<span class="muted">Sin observaciones</span>'}</p>
+            </div>`).join('');
+        const pending = round.pendingReviewerIds.length
+            ? `<p class="muted small">Falta la decisión de: ${round.pendingReviewerIds.map((id) => 'revisor #' + id).join(', ')}</p>` : '';
+        return `
+            <section class="round">
+                <header class="row between wrap">
+                    <strong>Ronda ${round.round}</strong>
+                    <span class="badge" style="--c:${esc(round.outcomeColor)}">${esc(round.outcomeLabel)}</span>
+                </header>
+                <span class="muted small">Asignada ${fmtDate(round.startedAt)}${round.closedAt ? ' · cerrada ' + fmtDate(round.closedAt) : ''}
+                    · ${round.reviewerIds.length} revisor(es)</span>
+                ${reviews || '<p class="muted">Aún no hay evaluaciones en esta ronda.</p>'}
+                ${pending}
+            </section>`;
+    }
+
+    async function showHistory(questionId) {
         try {
-            const reviews = await Api.observations(questionId);
+            const h = await Api.reviewHistory(questionId, state.user.id);
+            const mine = h.authorId === state.user.id;
+            const improve = h.improvedVersionAllowed && mine ? `
+                <div class="improve">
+                    <strong>La última ronda fue rechazada.</strong> Corrija la pregunta atendiendo las observaciones;
+                    al guardarla se crea una versión mejorada que puede reenviar a revisión.
+                    <div class="row end"><button class="btn primary" type="button" data-improve="${questionId}">Crear versión mejorada</button></div>
+                </div>` : '';
             openDialog(`
-                <h3>Observaciones de los revisores · pregunta #${questionId}</h3>
-                ${reviews.length ? reviews.map((r) => `
-                    <div class="observation ${r.result === 'APPROVED' ? 'ok' : 'bad'}">
-                        <strong>${r.result === 'APPROVED' ? 'Aprobada' : 'Rechazada'}</strong>
-                        <span class="muted">Revisor #${r.reviewerId} · ronda ${r.round} · ${fmtDate(r.createdAt)}</span>
-                        <p>${esc(r.comments) || '<span class="muted">Sin observaciones</span>'}</p>
-                    </div>`).join('') : '<p class="empty">Aún no hay evaluaciones registradas.</p>'}`);
+                <h3>Historial de revisiones · pregunta #${questionId}</h3>
+                <p class="muted">${esc(h.questionText)}</p>
+                ${h.rounds.length ? [...h.rounds].reverse().map(roundHtml).join('') : '<p class="empty">La pregunta aún no ha tenido rondas de revisión.</p>'}
+                ${improve}`);
+            $('#dialog-content [data-improve]')?.addEventListener('click', () => {
+                $('#dialog').close();
+                editQuestion(questionId);
+            });
         } catch (e) {
             showError(e);
         }
@@ -255,6 +290,7 @@
         form.elements.namedItem('id').value = '';
         $('#form-title').textContent = 'Nueva pregunta';
         $('#form-errors').hidden = true;
+        $('#form-observations').hidden = true;
         renderOptions();
     }
 
@@ -266,8 +302,21 @@
                 .forEach((f) => (form[f].value = q[f] || ''));
             form.elements.namedItem('id').value = q.id;
             renderOptions(q.options, q.correctOptionId);
-            $('#form-title').textContent = `Editar pregunta #${q.id}`;
+            const improving = q.status === 'REJECTED';
+            $('#form-title').textContent = improving
+                ? `Versión mejorada ${q.version + 1} de la pregunta #${q.id}`
+                : `Editar pregunta #${q.id}`;
             $('#form-errors').hidden = true;
+            const notes = $('#form-observations');
+            notes.hidden = true;
+            if (improving) {
+                Api.reviewHistory(q.id, state.user.id).then((h) => {
+                    if (!h.observationsToAddress.length) return;
+                    notes.innerHTML = '<strong>Observaciones de los revisores que debe atender:</strong><ul>'
+                        + h.observationsToAddress.map((o) => `<li>${esc(o)}</li>`).join('') + '</ul>';
+                    notes.hidden = false;
+                }).catch(() => { /* el formulario sigue funcionando sin el resumen */ });
+            }
             showTab('tab-form');
         } catch (e) {
             showError(e);
@@ -295,8 +344,10 @@
         try {
             const id = data.get('id');
             if (id) {
-                await Api.updateQuestion(id, body, state.user.id);
-                toast(`Pregunta #${id} actualizada`);
+                const saved = await Api.updateQuestion(id, body, state.user.id);
+                toast(saved?.version > 1
+                    ? `Pregunta #${id} guardada como versión ${saved.version} (borrador). Ya puede enviarla a revisión.`
+                    : `Pregunta #${id} actualizada`);
             } else {
                 const res = await Api.createQuestion(body);
                 toast(`Pregunta #${res.questionId ?? res.id ?? ''} creada en borrador`);
@@ -368,7 +419,7 @@
             const res = await Api.questions({ page, size: PAGE_SIZE });
             list.innerHTML = res.content.length
                 ? res.content.map((q) => questionCard(q, `<span class="muted small">Autor #${q.authorId}</span>
-                    <button class="btn ghost" data-action="observations" data-id="${q.id}">Ver observaciones</button>`)).join('')
+                    <button class="btn ghost" data-action="history" data-id="${q.id}">Historial de revisiones</button>`)).join('')
                 : '<p class="empty">No hay preguntas registradas.</p>';
             pager('all-pager', res, loadAll);
         } catch (e) {

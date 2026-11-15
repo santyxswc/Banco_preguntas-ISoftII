@@ -84,4 +84,15 @@ class NotificationIdempotencyTest {
 
         assertEquals(3, repository.findAll().size());
     }
+
+    @Test
+    @DisplayName("HU-06: la asignación de una ronda posterior avisa al revisor que es una versión mejorada")
+    void asignacionDeUnaNuevaRonda() {
+        assignedConsumer.handleReviewerAssigned(new ReviewerAssigned("op-5", 100L, 5L, 1L, 2, LocalDateTime.now()));
+
+        Notification aviso = repository.findByRecipientId(5L).get(0);
+        assertEquals(NotificationType.REVIEWER_ASSIGNED, aviso.getType());
+        assertTrue(aviso.getSubject().contains("Versión mejorada"));
+        assertTrue(aviso.getSubject().contains("ronda 2"));
+    }
 }

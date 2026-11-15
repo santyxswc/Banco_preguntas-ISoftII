@@ -7,7 +7,8 @@ import java.util.List;
 
 /**
  * Vista de una pregunta que viaja entre servicios y hacia el frontend.
- * {@code statusColor} es el color hexadecimal con el que la interfaz pinta el estado (HU-02).
+ * {@code statusColor} es el color hexadecimal con el que la interfaz pinta el estado (HU-02) y
+ * {@code version} el número de versión de la pregunta (HU-06: versiones mejoradas tras un rechazo).
  */
 public class QuestionDTO implements Serializable {
     private Long id;
@@ -27,6 +28,7 @@ public class QuestionDTO implements Serializable {
     private String statusColor;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private int version = 1;
 
     public QuestionDTO() {}
 
@@ -92,6 +94,9 @@ public class QuestionDTO implements Serializable {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public int getVersion() { return version; }
+    public void setVersion(int version) { this.version = version; }
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }

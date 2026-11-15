@@ -57,6 +57,19 @@ class JpaQuestionRepositoryTest {
     }
 
     @Test
+    @DisplayName("HU-06: la versión de la pregunta se persiste (columna version, migración V2)")
+    void persisteLaVersion() {
+        Question guardada = repository.save(pregunta(2L, "Diseño", "Patrones", "¿Enunciado de la primera versión?"));
+        assertEquals(1, repository.findById(guardada.getId()).orElseThrow().getVersion());
+
+        Question rechazada = repository.findById(guardada.getId()).orElseThrow();
+        rechazada.startImprovedVersion();
+        repository.save(rechazada);
+
+        assertEquals(2, repository.findById(guardada.getId()).orElseThrow().getVersion());
+    }
+
+    @Test
     @DisplayName("Actualizar una pregunta existente no crea otra")
     void actualiza() {
         Question guardada = repository.save(pregunta(2L, "Diseño", "Patrones", "¿Enunciado original de la pregunta?"));
