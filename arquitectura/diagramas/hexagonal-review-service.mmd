@@ -1,0 +1,40 @@
+flowchart LR
+    subgraph ENTRADA["Adaptadores de entrada (primarios)"]
+        direction TB
+        RC["RevisionController<br/>REST /api/v1/revisiones"]
+        AC["AsignacionController<br/>REST /api/v1/asignaciones"]
+        LC["LegacyReviewController<br/>REST /reviews"]
+    end
+
+    subgraph APLICACION["Aplicación · casos de uso"]
+        RS["ReviewService"]
+    end
+
+    subgraph DOMINIO["Dominio · núcleo sin frameworks (RNF #2)"]
+        direction TB
+        ENT["Entidades<br/>Review · ReviewAssignment"]
+        VO["Objetos de Valor<br/>ReviewerSelection · ReviewerProfile<br/>QuestionSummary · PageResult"]
+        POL["Política «Strategy»<br/>VerdictPolicy → UnanimousApprovalPolicy"]
+        PORTS(["Puertos<br/>ReviewRepository · QuestionCatalog<br/>ReviewerDirectory · QuestionLifecycle<br/>ReviewEventPublisher"])
+    end
+
+    subgraph SALIDA["Adaptadores de salida (secundarios)"]
+        direction TB
+        JPA["JpaReviewRepositoryAdapter<br/>Spring Data JPA · H2 / PostgreSQL"]
+        QR["QuestionRestClient<br/>REST → question-service"]
+        UR["UserRestClient<br/>REST → user-service"]
+        LRC["LifecycleRestClient<br/>REST → lifecycle-service"]
+        RAB["RabbitReviewEventPublisher<br/>RabbitMQ banco.exchange"]
+    end
+
+    RC --> RS
+    AC --> RS
+    LC --> RS
+    RS --> ENT
+    RS --> POL
+    RS --> PORTS
+    JPA -. implementa .-> PORTS
+    QR -. implementa .-> PORTS
+    UR -. implementa .-> PORTS
+    LRC -. implementa .-> PORTS
+    RAB -. implementa .-> PORTS

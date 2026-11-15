@@ -8,6 +8,7 @@
 | [04-escenario-escalabilidad.md](04-escenario-escalabilidad.md) | HU-T13 | Escenario de calidad, prueba de carga k6 y resultados medidos (1 y 2 instancias) |
 | [05-entrega-garantizada.md](05-entrega-garantizada.md) | HU-T9.3 | Prueba de eventos pendientes al reiniciar el consumidor |
 | [06-guion-video.md](06-guion-video.md) | HU-T16.1 | Guion del video con tiempos, responsables y qué decir |
+| [07-arquitectura-hexagonal.md](07-arquitectura-hexagonal.md) | RNF #2 (Corte 3) | Arquitectura limpia hexagonal en `review-service`: capas, regla de dependencias, tabla puerto→adaptador y lógica de dominio |
 
 Los diagramas están en `diagramas/`: el `.png` sirve para el documento Word y el video, y el `.mmd` (Mermaid) es la fuente editable. Incluye C4 niveles 1 a 3 (`c4-contexto`, `c4-contenedores`, `c4-componentes`), UML de clases y de secuencia (`uml-clases`, `uml-secuencia`), contextos delimitados (`contextos`) y las capturas del Sprint 2 en Jira (`sprint2-jira-lista.png`, `sprint2-jira-resumen.png`).
 
