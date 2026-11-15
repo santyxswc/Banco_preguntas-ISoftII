@@ -10,6 +10,7 @@ import co.unicauca.iso2.taller09.reviewservice.domain.model.QuestionSummary;
 import co.unicauca.iso2.taller09.reviewservice.domain.model.Review;
 import co.unicauca.iso2.taller09.reviewservice.domain.model.ReviewAssignment;
 import co.unicauca.iso2.taller09.reviewservice.domain.model.ReviewerProfile;
+import co.unicauca.iso2.taller09.reviewservice.domain.model.ReviewerSelection;
 import co.unicauca.iso2.taller09.reviewservice.domain.policy.VerdictPolicy;
 import co.unicauca.iso2.taller09.reviewservice.domain.port.QuestionCatalog;
 import co.unicauca.iso2.taller09.reviewservice.domain.port.QuestionLifecycle;
@@ -26,8 +27,6 @@ import java.util.UUID;
 
 public class ReviewService {
 
-    public static final int MIN_REVISORES = 1;
-    public static final int MAX_REVISORES = 3;
     public static final int MAX_TAMANO_PAGINA = 50;
     public static final String MENSAJE_NO_ASIGNADA = "No tiene asignada esta pregunta";
 
@@ -51,14 +50,7 @@ public class ReviewService {
     public List<ReviewAssignment> assignReviewers(Long questionId, List<Long> reviewerIds, Long assignedBy) {
         requireId(questionId, "questionId");
         requireId(assignedBy, "assignedBy");
-        List<Long> requested = reviewerIds == null ? List.of() : reviewerIds.stream().filter(Objects::nonNull).toList();
-        List<Long> distinct = requested.stream().distinct().toList();
-        if (distinct.size() < MIN_REVISORES || distinct.size() > MAX_REVISORES) {
-            throw ReviewException.validation("Debe asignar entre " + MIN_REVISORES + " y " + MAX_REVISORES + " revisores.");
-        }
-        if (distinct.size() != requested.size()) {
-            throw ReviewException.validation("No se puede asignar el mismo revisor más de una vez.");
-        }
+        List<Long> distinct = ReviewerSelection.of(reviewerIds).reviewerIds();
 
         QuestionSummary question = findQuestion(questionId);
         QuestionStatus state = lifecycle.currentState(questionId)
