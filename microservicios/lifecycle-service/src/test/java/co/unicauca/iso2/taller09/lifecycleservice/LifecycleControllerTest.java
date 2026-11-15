@@ -15,7 +15,8 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+        properties = "spring.datasource.url=jdbc:h2:mem:lifecycle-controller-test;DB_CLOSE_DELAY=-1")
 class LifecycleControllerTest {
 
     @Autowired

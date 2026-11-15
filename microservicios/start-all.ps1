@@ -1,12 +1,13 @@
-# Script PowerShell para iniciar RabbitMQ, los microservicios, el API Gateway y el frontend web
+# Script PowerShell para iniciar RabbitMQ, Keycloak, los microservicios, el API Gateway y el frontend web
 
 Write-Host "==========================================================" -ForegroundColor Cyan
 Write-Host " Iniciando Arquitectura de Microservicios - Taller 09" -ForegroundColor Cyan
 Write-Host "==========================================================" -ForegroundColor Cyan
 
-# 1. Verificar y levantar RabbitMQ
-Write-Host "`n[1/7] Verificando contenedor Docker de RabbitMQ..." -ForegroundColor Yellow
-docker compose -f (Join-Path $PSScriptRoot "docker-compose.yml") up -d
+# 1. Levantar la infraestructura: RabbitMQ y Keycloak (los servicios se ejecutan con Maven).
+#    Para levantar TODO el sistema en contenedores use: docker compose up -d --build
+Write-Host "`n[1/7] Levantando RabbitMQ y Keycloak con Docker Compose..." -ForegroundColor Yellow
+docker compose -f (Join-Path $PSScriptRoot "docker-compose.yml") up -d rabbitmq keycloak
 
 # 2. Configurar JAVA_HOME si es necesario
 $env:JAVA_HOME = "C:\Program Files\Eclipse Adoptium\jdk-21.0.12.101-hotspot"
@@ -46,6 +47,7 @@ Write-Host "  - Frontend web:        http://localhost:5173" -ForegroundColor Gra
 Write-Host "  - API Gateway:         http://localhost:8080/api/v1/..." -ForegroundColor Gray
 Write-Host "  - Swagger unificado:   http://localhost:8080/swagger-ui.html" -ForegroundColor Gray
 Write-Host "  - RabbitMQ Management: http://localhost:15672 (guest/guest)" -ForegroundColor Gray
+Write-Host "  - Keycloak:            http://localhost:8180 (admin/admin)" -ForegroundColor Gray
 Write-Host "  - Question Service:    http://localhost:8081/swagger-ui.html" -ForegroundColor Gray
 Write-Host "  - Validation Service:  http://localhost:8082/swagger-ui.html" -ForegroundColor Gray
 Write-Host "  - User Service:        http://localhost:8083/swagger-ui.html" -ForegroundColor Gray

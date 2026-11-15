@@ -1,32 +1,69 @@
-# Infraestructura del Banco de Preguntas (corte 3).
-#   docker compose up -d          RabbitMQ + Keycloak (con su base de datos)
-# Los microservicios se ejecutan con Maven (ver README) y se conectan a estos contenedores.
+# Banco de Preguntas Saber Pro — despliegue completo con Docker Compose (RNF #3, corte 3).
+#
+#   docker compose up -d --build      construye las imágenes y levanta todo el sistema
+#   docker compose ps                 estado y salud de los contenedores
+#   docker compose logs -f api-gateway
+#   docker compose down               detiene y elimina los contenedores (los datos se conservan)
+#   docker compose down -v            además borra los volúmenes (empezar desde cero)
+#
+# Solo desarrollo local con Maven:    docker compose up -d rabbitmq keycloak
+#
+# Puntos de entrada publicados en el equipo anfitrión:
+#   Frontend web   http://localhost:5173
+#   API Gateway    http://localhost:8080   (Swagger unificado en /swagger-ui.html)
+#   Keycloak       http://localhost:8180   (consola de administración: admin / admin)
+#   RabbitMQ       http://localhost:15672  (guest / guest)
+#
+# Los microservicios y las bases de datos NO publican puertos: solo son alcanzables dentro de la
+# red bp-net. Así el único camino hacia la API es el gateway, que valida el JWT de Keycloak.
+# Cada base de datos guarda sus datos en un volumen con nombre, uno por contexto delimitado.
+# Los puertos del anfitrión se pueden cambiar con variables (ver .env.example).
 
 name: banco-preguntas
 
+# Configuración común de los siete microservicios Java: misma imagen base (Dockerfile multi-etapa)
+x-servicio-java: &servicio-java
+  restart: unless-stopped
+  networks: [bp-net]
+  mem_limit: 512m
+
+x-postgres: &postgres
+  image: postgres:16-alpine
+  restart: unless-stopped
+  networks: [bp-net]
+
+x-rabbit-env: &rabbit-env
+  RABBITMQ_HOST: rabbitmq
+  RABBITMQ_PORT: 5672
+  RABBITMQ_USER: ${RABBITMQ_USER:-guest}
+  RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
+
 services:
-  # Broker de mensajería: comandos y eventos entre microservicios
+  # ============================ Infraestructura ============================
+
+  # Broker de mensajería: comandos y eventos entre microservicios (colas durables y DLQ)
   rabbitmq:
     image: rabbitmq:3.13-management
     container_name: bp-rabbitmq
     ports:
-      - "5672:5672"     # AMQP
-      - "15672:15672"   # Consola de administración (guest / guest)
+      - "${RABBITMQ_AMQP_PORT:-5672}:5672"          # AMQP (para ejecutar servicios con Maven)
+      - "${RABBITMQ_CONSOLE_PORT:-15672}:15672"     # Consola de administración
     environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
     restart: unless-stopped
+    networks: [bp-net]
 
   # Base de datos de Keycloak (realm, usuarios, roles y sesiones)
   keycloak-db:
-    image: postgres:16-alpine
+    <<: *postgres
     container_name: bp-keycloak-db
     environment:
       POSTGRES_DB: keycloak
@@ -38,11 +75,10 @@ services:
       test: ["CMD-SHELL", "pg_isready -U keycloak -d keycloak"]
       interval: 5s
       timeout: 3s
-      retries: 10
-    restart: unless-stopped
+      retries: 12
 
   # RNF #1: proveedor de identidad. Autentica a los usuarios y emite los tokens JWT.
-  # Al primer arranque importa el realm "banco-preguntas" (roles, cliente y usuarios de prueba).
+  # En el primer arranque importa el realm "banco-preguntas" (roles, cliente y usuarios de prueba).
   keycloak:
     image: quay.io/keycloak/keycloak:26.8.1
     container_name: bp-keycloak
@@ -68,13 +104,320 @@ services:
         condition: service_healthy
     healthcheck:
       # La imagen no trae curl: se consulta la sonda de salud (puerto 9000) con /dev/tcp de bash
-      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000 && printf 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && grep -q '\"status\": \"UP\"' <&3"]
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000 && printf 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && grep -q UP <&3"]
       interval: 10s
       timeout: 5s
       retries: 30
       start_period: 40s
     restart: unless-stopped
+    networks: [bp-net]
 
+  # ==================== Bases de datos: una por contexto delimitado ====================
+
+  # Contexto de Identidad: perfiles y roles de los usuarios
+  user-db:
+    <<: *postgres
+    container_name: bp-user-db
+    environment:
+      POSTGRES_DB: user_db
+      POSTGRES_USER: user_db
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-banco_preguntas}
+    volumes:
+      - user-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user_db -d user_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  # Contexto de Autoría: preguntas, opciones y versiones
+  question-db:
+    <<: *postgres
+    container_name: bp-question-db
+    environment:
+      POSTGRES_DB: question_db
+      POSTGRES_USER: question_db
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-banco_preguntas}
+    volumes:
+      - question-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U question_db -d question_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  # Contexto de Ciclo de vida: estado de cada pregunta y operaciones asíncronas
+  lifecycle-db:
+    <<: *postgres
+    container_name: bp-lifecycle-db
+    environment:
+      POSTGRES_DB: lifecycle_db
+      POSTGRES_USER: lifecycle_db
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-banco_preguntas}
+    volumes:
+      - lifecycle-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lifecycle_db -d lifecycle_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  # Contexto de Revisión: asignaciones, rondas y evaluaciones
+  review-db:
+    <<: *postgres
+    container_name: bp-review-db
+    environment:
+      POSTGRES_DB: review_db
+      POSTGRES_USER: review_db
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-banco_preguntas}
+    volumes:
+      - review-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U review_db -d review_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  # ============================ Microservicios ============================
+
+  # Identidad: perfiles y roles sincronizados con Keycloak
+  user-service:
+    <<: *servicio-java
+    build:
+      context: .
+      args:
+        SERVICE: user-service
+    image: banco-preguntas/user-service:corte3
+    container_name: bp-user-service
+    environment:
+      USER_DB_URL: jdbc:postgresql://user-db:5432/user_db
+      USER_DB_USER: user_db
+      USER_DB_PASSWORD: ${DB_PASSWORD:-banco_preguntas}
+    depends_on:
+      user-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 8083"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 30s
+
+  # Validación estructural DCE (sin estado)
+  validation-service:
+    <<: *servicio-java
+    build:
+      context: .
+      args:
+        SERVICE: validation-service
+    image: banco-preguntas/validation-service:corte3
+    container_name: bp-validation-service
+    environment:
+      VALIDATION_SERVICE_PORT: 8082
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 8082"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 30s
+
+  # Ciclo de vida: autoridad del estado de las preguntas
+  lifecycle-service:
+    <<: *servicio-java
+    build:
+      context: .
+      args:
+        SERVICE: lifecycle-service
+    image: banco-preguntas/lifecycle-service:corte3
+    container_name: bp-lifecycle-service
+    environment:
+      <<: *rabbit-env
+      LIFECYCLE_DB_URL: jdbc:postgresql://lifecycle-db:5432/lifecycle_db
+      LIFECYCLE_DB_USER: lifecycle_db
+      LIFECYCLE_DB_PASSWORD: ${DB_PASSWORD:-banco_preguntas}
+    depends_on:
+      lifecycle-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 8084"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 30s
+
+  # Autoría: crear, editar, listar y enviar preguntas a revisión
+  question-service:
+    <<: *servicio-java
+    build:
+      context: .
+      args:
+        SERVICE: question-service
+    image: banco-preguntas/question-service:corte3
+    container_name: bp-question-service
+    environment:
+      <<: *rabbit-env
+      QUESTION_DB_URL: jdbc:postgresql://question-db:5432/question_db
+      QUESTION_DB_USER: question_db
+      QUESTION_DB_PASSWORD: ${DB_PASSWORD:-banco_preguntas}
+      VALIDATION_SERVICE_URL: http://validation-service:8082
+      LIFECYCLE_SERVICE_URL: http://lifecycle-service:8084
+      QUESTIONS_DEMO_DATA: ${QUESTIONS_DEMO_DATA:-true}
+    depends_on:
+      question-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      validation-service:
+        condition: service_started
+      lifecycle-service:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 8081"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 30s
+
+  # Revisión por pares: asignación, evaluación e historial (arquitectura hexagonal)
+  review-service:
+    <<: *servicio-java
+    build:
+      context: .
+      args:
+        SERVICE: review-service
+    image: banco-preguntas/review-service:corte3
+    container_name: bp-review-service
+    environment:
+      <<: *rabbit-env
+      REVIEW_DB_URL: jdbc:postgresql://review-db:5432/review_db
+      REVIEW_DB_USER: review_db
+      REVIEW_DB_PASSWORD: ${DB_PASSWORD:-banco_preguntas}
+      REVIEW_DB_DDL: update
+      QUESTION_SERVICE_URL: http://question-service:8081
+      USER_SERVICE_URL: http://user-service:8083
+      LIFECYCLE_SERVICE_URL: http://lifecycle-service:8084
+    depends_on:
+      review-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      question-service:
+        condition: service_started
+      user-service:
+        condition: service_started
+      lifecycle-service:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 8085"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 30s
+
+  # Notificaciones: consume los eventos y envía los correos
+  notification-service:
+    <<: *servicio-java
+    build:
+      context: .
+      args:
+        SERVICE: notification-service
+    image: banco-preguntas/notification-service:corte3
+    container_name: bp-notification-service
+    environment:
+      <<: *rabbit-env
+      USER_SERVICE_URL: http://user-service:8083
+      EMAIL_MODE: ${EMAIL_MODE:-console}
+      EMAIL_FROM: ${EMAIL_FROM:-banco.preguntas@unicauca.edu.co}
+      SPRING_MAIL_HOST: ${SPRING_MAIL_HOST:-}
+      SPRING_MAIL_PORT: ${SPRING_MAIL_PORT:-587}
+      SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME:-}
+      SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD:-}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      user-service:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 8086"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 30s
+
+  # Punto de entrada único: valida el JWT, autoriza por rol y enruta (único servicio publicado)
+  api-gateway:
+    <<: *servicio-java
+    build:
+      context: .
+      args:
+        SERVICE: api-gateway
+    image: banco-preguntas/api-gateway:corte3
+    container_name: bp-api-gateway
+    ports:
+      - "${GATEWAY_PORT:-8080}:8080"
+    environment:
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_REALM: banco-preguntas
+      KEYCLOAK_ISSUER: http://localhost:${KEYCLOAK_PORT:-8180}/realms/banco-preguntas
+      FRONTEND_ORIGINS: ${FRONTEND_ORIGINS:-*}
+      QUESTION_SERVICE_ROUTE: http://question-service:8081
+      QUESTION_SERVICE_URL: http://question-service:8081
+      VALIDATION_SERVICE_URL: http://validation-service:8082
+      USER_SERVICE_URL: http://user-service:8083
+      LIFECYCLE_SERVICE_URL: http://lifecycle-service:8084
+      REVIEW_SERVICE_URL: http://review-service:8085
+      NOTIFICATION_SERVICE_URL: http://notification-service:8086
+    depends_on:
+      keycloak:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+      question-service:
+        condition: service_started
+      review-service:
+        condition: service_started
+      lifecycle-service:
+        condition: service_started
+      validation-service:
+        condition: service_started
+      notification-service:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health | grep -q UP"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 30s
+
+  # ============================ Frontend ============================
+
+  # Aplicación web: solo conoce la URL pública del gateway
+  frontend:
+    build:
+      context: ../frontend
+    image: banco-preguntas/frontend:corte3
+    container_name: bp-frontend
+    environment:
+      API_BASE: http://localhost:${GATEWAY_PORT:-8080}/api/v1
+    ports:
+      - "${FRONTEND_PORT:-5173}:5173"
+    depends_on:
+      api-gateway:
+        condition: service_started
+    restart: unless-stopped
+    networks: [bp-net]
+
+networks:
+  bp-net:
+    name: bp-net
+
+# Volúmenes con nombre: los datos sobreviven a `docker compose down` y a la recreación de los contenedores
 volumes:
   rabbitmq-data:
   keycloak-db-data:
+  user-db-data:
+  question-db-data:
+  lifecycle-db-data:
+  review-db-data:

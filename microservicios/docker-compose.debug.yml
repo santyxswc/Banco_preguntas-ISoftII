@@ -1,0 +1,18 @@
+# Complemento opcional para depurar: publica el puerto de cada microservicio y su Swagger propio.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.debug.yml up -d
+#
+# No se usa en el despliegue normal: allí los servicios solo son alcanzables a través del gateway.
+services:
+  question-service:
+    ports: ["8081:8081"]
+  validation-service:
+    ports: ["8082:8082"]
+  user-service:
+    ports: ["8083:8083"]
+  lifecycle-service:
+    ports: ["8084:8084"]
+  review-service:
+    ports: ["8085:8085"]
+  notification-service:
+    ports: ["8086:8086"]

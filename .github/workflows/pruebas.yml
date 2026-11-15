@@ -71,3 +71,16 @@ jobs:
           node --check frontend/public/api.js
           node --check frontend/public/app.js
           node --check frontend/public/config.js
+
+  docker:
+    name: Docker Compose (corte 3)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: microservicios
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validar el docker-compose.yml
+        run: docker compose config -q
+      - name: Construir las imágenes de los microservicios y del frontend
+        run: docker compose build

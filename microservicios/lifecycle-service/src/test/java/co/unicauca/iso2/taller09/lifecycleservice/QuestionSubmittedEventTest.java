@@ -5,6 +5,7 @@ import co.unicauca.iso2.taller09.common.messages.QuestionSubmittedForReview;
 import co.unicauca.iso2.taller09.common.messages.SubmitQuestionForReview;
 import co.unicauca.iso2.taller09.lifecycleservice.consumer.QuestionSubmitConsumer;
 import co.unicauca.iso2.taller09.lifecycleservice.domain.QuestionState;
+import co.unicauca.iso2.taller09.lifecycleservice.repository.InMemoryLifecycleRepository;
 import co.unicauca.iso2.taller09.lifecycleservice.repository.LifecycleRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -25,7 +26,7 @@ class QuestionSubmittedEventTest {
 
     @BeforeEach
     void setUp() {
-        repository = new LifecycleRepository();
+        repository = new InMemoryLifecycleRepository();
         published = new ArrayList<>();
         consumer = new QuestionSubmitConsumer(repository, published::add);
     }
