@@ -1,0 +1,15 @@
+# Lo que no entra al contexto de construcción de las imágenes
+**/target
+**/data
+**/*.db
+**/*.log
+.git
+.idea
+.vscode
+pruebas
+pruebas-carga
+keycloak
+*.md
+*.ps1
+*.json
+.env

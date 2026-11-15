@@ -1,44 +1,25 @@
 package co.unicauca.iso2.taller09.lifecycleservice.repository;
 
-import co.unicauca.iso2.taller09.common.enums.QuestionStatus;
 import co.unicauca.iso2.taller09.lifecycleservice.domain.OperationResult;
 import co.unicauca.iso2.taller09.lifecycleservice.domain.QuestionState;
-import org.springframework.stereotype.Repository;
 
-import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
 
-@Repository
-public class LifecycleRepository {
-    private final Map<Long, QuestionState> statesByQuestionId = new ConcurrentHashMap<>();
-    private final Map<String, OperationResult> operationsById = new ConcurrentHashMap<>();
-    private final AtomicLong stateIdGen = new AtomicLong(1);
+/**
+ * Puerto de persistencia del contexto de Ciclo de vida: estado actual de cada pregunta y
+ * resultado de las operaciones asíncronas. Lo implementan {@code JpaLifecycleRepository}
+ * (base de datos lifecycle_db) e {@link InMemoryLifecycleRepository} (pruebas unitarias).
+ */
+public interface LifecycleRepository {
 
-    public QuestionState getOrCreateState(Long questionId) {
-        return statesByQuestionId.computeIfAbsent(questionId, qId ->
-                new QuestionState(stateIdGen.incrementAndGet(), qId, QuestionStatus.DRAFT, "SYSTEM", "Estado inicial DRAFT"));
-    }
+    /** Estado de la pregunta; si aún no tiene historial se registra en DRAFT. */
+    QuestionState getOrCreateState(Long questionId);
 
-    public Optional<QuestionState> findStateByQuestionId(Long questionId) {
-        return Optional.ofNullable(statesByQuestionId.get(questionId));
-    }
+    Optional<QuestionState> findStateByQuestionId(Long questionId);
 
-    public QuestionState saveState(QuestionState state) {
-        if (state.getId() == null) {
-            state.setId(stateIdGen.incrementAndGet());
-        }
-        statesByQuestionId.put(state.getQuestionId(), state);
-        return state;
-    }
+    QuestionState saveState(QuestionState state);
 
-    public OperationResult saveOperation(OperationResult operation) {
-        operationsById.put(operation.getId(), operation);
-        return operation;
-    }
+    OperationResult saveOperation(OperationResult operation);
 
-    public Optional<OperationResult> findOperationById(String operationId) {
-        return Optional.ofNullable(operationsById.get(operationId));
-    }
+    Optional<OperationResult> findOperationById(String operationId);
 }

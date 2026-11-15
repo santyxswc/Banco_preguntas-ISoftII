@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest
+@SpringBootTest(properties = "spring.datasource.url=jdbc:h2:mem:lifecycle-consumer-test;DB_CLOSE_DELAY=-1")
 class QuestionSubmitConsumerTest {
 
     @Autowired
