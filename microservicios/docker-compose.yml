@@ -1,18 +1,80 @@
-version: '3.8'
+# Infraestructura del Banco de Preguntas (corte 3).
+#   docker compose up -d          RabbitMQ + Keycloak (con su base de datos)
+# Los microservicios se ejecutan con Maven (ver README) y se conectan a estos contenedores.
+
+name: banco-preguntas
 
 services:
+  # Broker de mensajería: comandos y eventos entre microservicios
   rabbitmq:
     image: rabbitmq:3.13-management
-    container_name: rabbitmq-taller09
+    container_name: bp-rabbitmq
     ports:
-      - "5672:5672"     # AMQP protocol
-      - "15672:15672"   # RabbitMQ Management Web UI
+      - "5672:5672"     # AMQP
+      - "15672:15672"   # Consola de administración (guest / guest)
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
     restart: unless-stopped
+
+  # Base de datos de Keycloak (realm, usuarios, roles y sesiones)
+  keycloak-db:
+    image: postgres:16-alpine
+    container_name: bp-keycloak-db
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-keycloak}
+    volumes:
+      - keycloak-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak -d keycloak"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  # RNF #1: proveedor de identidad. Autentica a los usuarios y emite los tokens JWT.
+  # Al primer arranque importa el realm "banco-preguntas" (roles, cliente y usuarios de prueba).
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.8.1
+    container_name: bp-keycloak
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-keycloak}
+      # URL pública fija: el claim "iss" de los tokens es el mismo aunque se pidan desde otro contenedor
+      KC_HOSTNAME: http://localhost:${KEYCLOAK_PORT:-8180}
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
+      KC_HTTP_ENABLED: "true"
+      KC_HEALTH_ENABLED: "true"
+    ports:
+      - "${KEYCLOAK_PORT:-8180}:8080"
+    volumes:
+      - ./keycloak/realm-banco-preguntas.json:/opt/keycloak/data/import/realm-banco-preguntas.json:ro
+    depends_on:
+      keycloak-db:
+        condition: service_healthy
+    healthcheck:
+      # La imagen no trae curl: se consulta la sonda de salud (puerto 9000) con /dev/tcp de bash
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000 && printf 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && grep -q '\"status\": \"UP\"' <&3"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 40s
+    restart: unless-stopped
+
+volumes:
+  rabbitmq-data:
+  keycloak-db-data:

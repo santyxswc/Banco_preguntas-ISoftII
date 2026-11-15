@@ -22,7 +22,7 @@ public class JpaUserRepository implements UserRepository {
     @Override
     @Transactional
     public User save(User user) {
-        UserEntity saved = jpa.save(new UserEntity(user.getId(), user.getUsername(), user.getPasswordHash(),
+        UserEntity saved = jpa.save(new UserEntity(user.getId(), user.getUsername(),
                 user.getFullName(), user.getEmail(), user.getRoles()));
         return toDomain(saved);
     }
@@ -48,7 +48,7 @@ public class JpaUserRepository implements UserRepository {
     }
 
     private User toDomain(UserEntity entity) {
-        return new User(entity.getId(), entity.getUsername(), entity.getPasswordHash(),
+        return new User(entity.getId(), entity.getUsername(),
                 entity.getFullName(), entity.getEmail(), entity.getRoles());
     }
 }

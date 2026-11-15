@@ -6,6 +6,7 @@ import co.unicauca.iso2.taller09.common.dto.CreateQuestionResponse;
 import co.unicauca.iso2.taller09.common.dto.OperationResultDTO;
 import co.unicauca.iso2.taller09.common.dto.QuestionDTO;
 import co.unicauca.iso2.taller09.common.enums.QuestionStatus;
+import co.unicauca.iso2.taller09.common.security.RequestIdentity;
 import co.unicauca.iso2.taller09.questionservice.application.QuestionAuthoringFacade;
 import co.unicauca.iso2.taller09.questionservice.client.LifecycleClient;
 import co.unicauca.iso2.taller09.questionservice.domain.PageResult;
@@ -127,7 +128,8 @@ public class QuestionController {
 
     @GetMapping
     @Operation(summary = "Listar preguntas con filtros y paginación (HU-03)",
-            description = "Todos los filtros son opcionales. El estado y su color se consultan en lifecycle-service.")
+            description = "Todos los filtros son opcionales. El estado y su color se consultan en lifecycle-service. "
+                    + "Un autor solo ve sus propias preguntas; el administrador puede listar las de cualquier autor.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Página de preguntas"),
             @ApiResponse(responseCode = "400", description = "Parámetros de paginación o de estado inválidos", content = @Content)
@@ -140,8 +142,12 @@ public class QuestionController {
             @Parameter(description = "BAJO, MEDIO o ALTO") @RequestParam(required = false) String difficulty,
             @Parameter(description = "Texto a buscar en contexto, enunciado, tema y subtema") @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        QuestionFilter filter = new QuestionFilter(authorId, status, competency, topic, difficulty, keyword);
+            @RequestParam(defaultValue = "10") int size,
+            @RequestHeader(value = IdentityHeaders.USER_ID, required = false) Long userId,
+            @RequestHeader(value = IdentityHeaders.USER_ROLES, required = false) String roles) {
+        // Autorización por dato: solo el administrador lista preguntas de otros autores
+        Long visibleAuthor = RequestIdentity.of(userId, roles).ownerFilter(authorId);
+        QuestionFilter filter = new QuestionFilter(visibleAuthor, status, competency, topic, difficulty, keyword);
         return ResponseEntity.ok(facade.search(filter, page, size));
     }
 

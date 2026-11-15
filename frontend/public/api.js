@@ -1,10 +1,60 @@
 // Cliente de la API REST del API Gateway. Toda la comunicación frontend → backend pasa por aquí.
+// Cada petición lleva el JWT emitido por Keycloak en la cabecera Authorization: Bearer <token>.
 (function () {
     const BASE = window.APP_CONFIG.API_BASE;
-    const TOKEN_KEY = 'bp-token';
+    const CLIENT_ID = window.APP_CONFIG.AUTH_CLIENT_ID;
+    const SESSION_KEY = 'bp-session';
 
-    function token() {
-        try { return sessionStorage.getItem(TOKEN_KEY); } catch { return null; }
+    // Sesión OAuth2: access token JWT de Keycloak, refresh token y vencimiento (RNF #1)
+    function session() {
+        try { return JSON.parse(sessionStorage.getItem(SESSION_KEY)); } catch { return null; }
+    }
+
+    function saveSession(tokens) {
+        const data = {
+            accessToken: tokens.access_token,
+            refreshToken: tokens.refresh_token,
+            expiresAt: Date.now() + (tokens.expires_in || 60) * 1000,
+        };
+        try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(data)); } catch { }
+        return data;
+    }
+
+    function clearSession() {
+        try { sessionStorage.removeItem(SESSION_KEY); } catch { }
+    }
+
+    // Pide tokens a Keycloak a través del gateway (formulario application/x-www-form-urlencoded)
+    async function tokenRequest(params) {
+        let res;
+        try {
+            res = await fetch(BASE + '/auth/token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ client_id: CLIENT_ID, ...params }),
+            });
+        } catch {
+            throw new ApiError(0, { message: 'No hay conexión con el API Gateway (' + BASE + '). ¿Están levantados los servicios?' });
+        }
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            throw new ApiError(res.status === 400 ? 401 : res.status, { message: data.error_description || 'No se pudo iniciar sesión' });
+        }
+        return saveSession(data);
+    }
+
+    // Devuelve un access token vigente; lo renueva con el refresh token poco antes de que venza
+    async function token() {
+        const current = session();
+        if (!current) return null;
+        if (Date.now() < current.expiresAt - 30000) return current.accessToken;
+        if (!current.refreshToken) return current.accessToken;
+        try {
+            return (await tokenRequest({ grant_type: 'refresh_token', refresh_token: current.refreshToken })).accessToken;
+        } catch {
+            clearSession();
+            return null;
+        }
     }
 
     class ApiError extends Error {
@@ -21,7 +71,11 @@
             if (v !== undefined && v !== null && v !== '') url.searchParams.set(k, v);
         });
         const headers = body ? { 'Content-Type': 'application/json' } : {};
-        const current = path.startsWith('/auth/') ? null : token();
+        const hadSession = !!session();
+        const current = await token();
+        if (hadSession && !current) {
+            throw new ApiError(401, { message: 'La sesión venció. Cierre sesión e ingrese de nuevo.' });
+        }
         if (current) headers.Authorization = 'Bearer ' + current;
         let res;
         try {
@@ -37,7 +91,7 @@
         let data = null;
         try { data = text ? JSON.parse(text) : null; } catch { data = { message: text }; }
         if (res.status === 401 && current) {
-            try { sessionStorage.removeItem(TOKEN_KEY); } catch { }
+            clearSession();
             throw new ApiError(401, { message: 'La sesión venció. Cierre sesión e ingrese de nuevo.' });
         }
         if (!res.ok) throw new ApiError(res.status, data);
@@ -46,12 +100,31 @@
 
     window.Api = {
         ApiError,
+        // Inicio de sesión: Keycloak valida las credenciales y emite el JWT; luego se carga el perfil
         login: async (username, password) => {
-            const res = await request('POST', '/auth/login', { body: { username, password } });
-            try { if (res && res.token) sessionStorage.setItem(TOKEN_KEY, res.token); } catch { }
-            return res;
+            await tokenRequest({ grant_type: 'password', username, password, scope: 'openid' });
+            try {
+                return { user: await request('GET', '/usuarios/me') };
+            } catch (e) {
+                clearSession();
+                throw e;
+            }
         },
-        clearSession: () => { try { sessionStorage.removeItem(TOKEN_KEY); } catch { } },
+        // Cierre de sesión: invalida la sesión en Keycloak (revoca el refresh token) y borra los tokens locales
+        logout: async () => {
+            const current = session();
+            clearSession();
+            if (!current?.refreshToken) return;
+            try {
+                await fetch(BASE + '/auth/logout', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({ client_id: CLIENT_ID, refresh_token: current.refreshToken }),
+                });
+            } catch { /* la sesión local ya se borró */ }
+        },
+        clearSession,
+        hasSession: () => !!session(),
         me: () => request('GET', '/usuarios/me'),
         reviewers: (authorId) => request('GET', '/usuarios/reviewers/eligible', { query: { authorId } }),
         users: () => request('GET', '/usuarios'),

@@ -1,65 +1,66 @@
 package co.unicauca.iso2.taller09.userservice.domain;
 
 import co.unicauca.iso2.taller09.common.enums.Role;
-import co.unicauca.iso2.taller09.common.security.AuthTokenCodec;
-import co.unicauca.iso2.taller09.common.security.AuthenticatedUser;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.time.Clock;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/** Pruebas unitarias de la entidad {@link User}: reglas de revisión y sincronización con Keycloak. */
 class UserDomainTest {
 
-    private static final String SECRET = "secreto-de-pruebas-1234";
-
     @Test
-    void elHashUsaSalAleatoriaYVerificaLaContrasena() {
-        String primero = PasswordHasher.hash("autor123");
-        String segundo = PasswordHasher.hash("autor123");
-
-        assertNotEquals(primero, segundo);
-        assertTrue(PasswordHasher.matches("autor123", primero));
-        assertFalse(PasswordHasher.matches("otra", primero));
-        assertFalse(PasswordHasher.matches("autor123", "sin-separador"));
-    }
-
-    @Test
+    @DisplayName("Un revisor no puede revisar su propia pregunta")
     void unRevisorNoPuedeRevisarSuPropiaPregunta() {
-        User revisor = new User(4L, "revisor1", "x", "Revisor", "r@u.co", List.of(Role.REVISOR, Role.DOCENTE));
-        User autor = new User(2L, "autor1", "x", "Autor", "a@u.co", List.of(Role.AUTOR));
+        User revisor = new User(4L, "revisor1", "Revisor", "r@u.co", List.of(Role.REVISOR, Role.DOCENTE));
+        User autor = new User(2L, "autor1", "Autor", "a@u.co", List.of(Role.AUTOR));
 
         assertTrue(revisor.canReview(2L));
+        assertTrue(revisor.canReview(null));
         assertFalse(revisor.canReview(4L));
         assertFalse(autor.canReview(9L));
         assertEquals(List.of("REVISOR", "DOCENTE"), revisor.roleNames());
+        assertTrue(revisor.hasRole(Role.DOCENTE));
+        assertFalse(revisor.hasRole(null));
     }
 
     @Test
-    void elTokenFirmadoSeVerificaYDetectaAlteracionesYVencimiento() {
-        Instant ahora = Instant.parse("2026-11-02T12:00:00Z");
-        AuthTokenCodec codec = new AuthTokenCodec(SECRET, Duration.ofMinutes(30), Clock.fixed(ahora, ZoneOffset.UTC));
-        String token = codec.issue(5L, "revisor2", List.of("REVISOR", "DOCENTE"));
+    @DisplayName("El perfil creado desde la identidad normaliza el usuario y completa nombre y correo")
+    void perfilDesdeLaIdentidad() {
+        User nuevo = User.fromIdentity("  Revisor3 ", "Revisora Nueva", null, List.of(Role.REVISOR));
 
-        AuthenticatedUser usuario = codec.verify(token).orElseThrow();
-        assertEquals(5L, usuario.userId().longValue());
-        assertEquals("revisor2", usuario.username());
-        assertTrue(usuario.hasRole("revisor"));
+        assertNull(nuevo.getId());
+        assertEquals("revisor3", nuevo.getUsername());
+        assertEquals("Revisora Nueva", nuevo.getFullName());
+        assertEquals("revisor3@unicauca.edu.co", nuevo.getEmail());
+        assertEquals(Set.of(Role.REVISOR), nuevo.getRoles());
 
-        String alterado = (token.charAt(0) == 'a' ? "b" : "a") + token.substring(1);
-        assertTrue(codec.verify(alterado).isEmpty());
-        assertTrue(new AuthTokenCodec("otro-secreto-distinto", Duration.ofMinutes(30)).verify(token).isEmpty());
+        assertEquals("autor9", User.fromIdentity("autor9", " ", "a9@u.co", null).getFullName());
+        assertThrows(IllegalArgumentException.class, () -> User.fromIdentity(" ", "x", "y", List.of()));
+    }
 
-        AuthTokenCodec despues = new AuthTokenCodec(SECRET, Duration.ofMinutes(30),
-                Clock.fixed(ahora.plus(Duration.ofMinutes(31)), ZoneOffset.UTC));
-        assertTrue(despues.verify(token).isEmpty());
-        assertTrue(codec.verify("basura").isEmpty());
+    @Test
+    @DisplayName("La sincronización adopta los roles de Keycloak y dice si hubo cambios")
+    void sincronizacion() {
+        User usuario = new User(7L, "docente7", "Docente Siete", "d7@u.co", List.of(Role.AUTOR));
+
+        assertFalse(usuario.synchronizeWith("Docente Siete", "d7@u.co", List.of(Role.AUTOR)));
+        assertTrue(usuario.synchronizeWith("Docente Siete", "d7@u.co", List.of(Role.AUTOR, Role.REVISOR)));
+        assertEquals(Set.of(Role.AUTOR, Role.REVISOR), usuario.getRoles());
+
+        assertTrue(usuario.synchronizeWith("Nombre Nuevo", null, List.of(Role.AUTOR, Role.REVISOR)));
+        assertEquals("Nombre Nuevo", usuario.getFullName());
+        assertEquals("d7@u.co", usuario.getEmail());
+
+        assertTrue(usuario.synchronizeWith(null, null, null));
+        assertTrue(usuario.getRoles().isEmpty());
+        assertEquals(7L, usuario.toDTO().getId());
     }
 }

@@ -28,9 +28,6 @@ public class UserEntity {
     @Column(name = "username", nullable = false, unique = true, length = 60)
     private String username;
 
-    @Column(name = "password_hash", nullable = false, length = 200)
-    private String passwordHash;
-
     @Column(name = "full_name", nullable = false, length = 200)
     private String fullName;
 
@@ -46,10 +43,9 @@ public class UserEntity {
     protected UserEntity() {
     }
 
-    public UserEntity(Long id, String username, String passwordHash, String fullName, String email, Set<Role> roles) {
+    public UserEntity(Long id, String username, String fullName, String email, Set<Role> roles) {
         this.id = id;
         this.username = username;
-        this.passwordHash = passwordHash;
         this.fullName = fullName;
         this.email = email;
         this.roles = new HashSet<>(roles);
@@ -57,7 +53,6 @@ public class UserEntity {
 
     public Long getId() { return id; }
     public String getUsername() { return username; }
-    public String getPasswordHash() { return passwordHash; }
     public String getFullName() { return fullName; }
     public String getEmail() { return email; }
     public Set<Role> getRoles() { return roles; }

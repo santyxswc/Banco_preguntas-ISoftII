@@ -26,7 +26,8 @@
     <!-- Inicio de sesión -->
     <section id="login-view" class="card narrow">
         <h1>Iniciar sesión</h1>
-        <p class="muted">El frontend se comunica solo con el API Gateway (<code id="api-base"></code>).</p>
+        <p class="muted">El frontend se comunica solo con el API Gateway (<code id="api-base"></code>).
+            Las credenciales las valida <strong>Keycloak</strong>, que emite el token JWT de la sesión.</p>
         <form id="login-form" class="stack">
             <label>Usuario <input name="username" autocomplete="username" required></label>
             <label>Contraseña <input name="password" type="password" autocomplete="current-password" required></label>
@@ -39,6 +40,7 @@
                 <tr><td>Administrador</td><td>admin</td><td>admin123</td></tr>
                 <tr><td>Autor</td><td>autor1 / autor2</td><td>autor123</td></tr>
                 <tr><td>Revisor</td><td>revisor1 / revisor2</td><td>revisor123</td></tr>
+                <tr><td>Estudiante</td><td>estudiante1</td><td>estudiante123</td></tr>
             </table>
         </details>
     </section>

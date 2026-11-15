@@ -16,7 +16,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SpringBootTest(properties = {
         "QUESTION_SERVICE_ROUTE=http://preguntas:9001",
         "USER_SERVICE_URL=http://usuarios:9003",
-        "REVIEW_SERVICE_URL=http://revision:9005"
+        "REVIEW_SERVICE_URL=http://revision:9005",
+        "KEYCLOAK_URL=http://keycloak:8080",
+        "KEYCLOAK_REALM=banco-preguntas"
 })
 class GatewayRoutesTest {
 
@@ -49,5 +51,11 @@ class GatewayRoutesTest {
         assertTrue(routes.keySet().containsAll(List.of("docs-preguntas", "docs-revisiones", "docs-ciclo-vida",
                 "docs-validaciones", "docs-usuarios", "docs-notificaciones")));
         assertEquals("http://preguntas:9001", routes.get("docs-preguntas").getUri().toString());
+    }
+
+    @Test
+    void enrutaElInicioDeSesionHaciaKeycloak() {
+        Map<String, Route> routes = routes();
+        assertEquals("http://keycloak:8080", routes.get("autenticacion").getUri().toString());
     }
 }
