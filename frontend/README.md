@@ -48,3 +48,12 @@ llama a `/api/v1/auth/logout`. Los usuarios y roles se administran en Keycloak (
 | `public/api.js` | Cliente REST: un método por endpoint del gateway; maneja el JWT y su renovación |
 | `public/app.js` | Vistas, eventos y estado de la sesión |
 | `public/styles.css` | Estilos, colores de estado, modo oscuro y diseño adaptable |
+
+## Prueba de extremo a extremo con clics
+
+`pruebas-e2e/flujo.mjs` abre Chromium y recorre con clics reales el flujo HU-01 a HU-06 con los cuatro
+roles, guardando capturas. No usa dependencias de npm (Node 22+ y Chromium):
+
+```bash
+node pruebas-e2e/flujo.mjs /tmp/capturas /tmp/perfil-chromium
+```
