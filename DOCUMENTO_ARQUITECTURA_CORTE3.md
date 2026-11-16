@@ -205,9 +205,9 @@ El proyecto se gestiona en **Jira** (proyecto SCRUM). El trabajo se organizó en
 
 | Iteración | Alcance | Estado de la evidencia |
 |---|---|---|
-| Sprint 1 | Monolito en capas (Corte 1) y su línea base de historias HU-01 a HU-04 | Captura por agregar (ver Anexo A) |
+| Sprint 1 | Monolito en capas (Corte 1) y su línea base de historias HU-01 a HU-04 | Captura de Jira (Ilustración 2a) |
 | Sprint 2 | Refactorización a microservicios orientados a eventos, HU-04 y HU-05, documentación y pruebas | Capturas disponibles (Ilustraciones 1 y 2) |
-| Sprint 3 | HU-06 y los cuatro requisitos no funcionales del Corte 3 | Tabla 2 (trabajo realizado y Pull Requests); captura de Jira por agregar (ver Anexo A) |
+| Sprint 3 | HU-06 y los cuatro requisitos no funcionales del Corte 3 | Tabla 2 (trabajo realizado y Pull Requests) y resumen del espacio en Jira (Ilustración 2b) |
 
 *Tabla 1. Historias del Sprint 2 en Jira. Elaboración propia (fuente: Corte 2).*
 
@@ -243,6 +243,16 @@ El proyecto se gestiona en **Jira** (proyecto SCRUM). El trabajo se organizó en
 
 *Ilustración 2. Resumen del espacio en Jira: estado de las actividades y progreso de las épicas.*
 
+### 2.2. Evidencia del Sprint 1 y resumen del espacio (Jira)
+
+![Ilustración 2a. Historias del Sprint 1 en Jira](arquitectura/diagramas/sprint1-jira-lista.png)
+
+*Ilustración 2a. Vista Lista de Jira (16 de noviembre de 2026): las historias del Sprint 1 (SCRUM-6 a SCRUM-10: fundaciones de arquitectura y HU01 a HU04) aparecen finalizadas; debajo, las épicas del Corte 2.*
+
+![Ilustración 2b. Resumen del espacio en Jira](arquitectura/diagramas/jira-resumen-corte3.png)
+
+*Ilustración 2b. Resumen del espacio en Jira (16 de noviembre de 2026): 25 actividades, 22 finalizadas, y las épicas del Corte 2 al 100 %.*
+
 ### 2.2. Trabajo del Sprint 3
 
 *Tabla 2. Historias del Sprint 3 y Pull Request con el que entró cada una a `main`. Elaboración propia.*
@@ -255,7 +265,7 @@ El proyecto se gestiona en **Jira** (proyecto SCRUM). El trabajo se organizó en
 | RNF #3 · Docker Compose | Dockerfile multi-etapa, 15 contenedores, PostgreSQL por contexto con volúmenes, persistencia del ciclo de vida | [#17](https://github.com/santyxswc/Banco_preguntas-ISoftII/pull/17) |
 | RNF #4 · Documento y README | Este documento, diagramas C4 de la iteración 3 y README del repositorio | Este Pull Request |
 
-> Las capturas del tablero de Jira de los Sprints 1 y 3 las debe tomar el equipo desde https://ingsoft2bancodepreguntas.atlassian.net y guardarlas como `arquitectura/diagramas/sprint1-jira-*.png` y `sprint3-jira-*.png` (Anexo A).
+> Las historias del Sprint 3 se gestionaron con ramas y Pull Requests en GitHub (Tabla 2); aún no están registradas como actividades en Jira (Anexo A).
 
 ---
 
@@ -564,7 +574,49 @@ El flujo de GitHub Actions ([`pruebas.yml`](.github/workflows/pruebas.yml)) tien
 | Un autor lee las notificaciones de otro usuario | 403 |
 | Credenciales incorrectas | 400 `invalid_grant` |
 
-> Las capturas de pantalla de Postman las toma el equipo al ejecutar la colección (Anexo A).
+Las mismas operaciones quedan visibles en la consola de administración de Keycloak:
+
+![Ilustración 12. Usuarios del realm en Keycloak](arquitectura/diagramas/keycloak-usuarios.png)
+
+*Ilustración 12. Usuarios del realm `banco-preguntas` en Keycloak; `revisor3` se creó por la API de administración.*
+
+![Ilustración 13. Roles del realm](arquitectura/diagramas/keycloak-roles.png)
+
+*Ilustración 13. Roles del realm: ADMINISTRADOR, AUTOR, REVISOR, DOCENTE y ESTUDIANTE.*
+
+![Ilustración 14. Rol asignado al usuario nuevo](arquitectura/diagramas/keycloak-usuario-rol.png)
+
+*Ilustración 14. Rol REVISOR asignado a `revisor3` por la API de administración.*
+
+> Las capturas de la aplicación Postman las toma el equipo al ejecutar la colección (Anexo A).
+
+### 11.1. Prueba en el navegador con los cuatro roles
+
+El frontend se recorrió con clics reales en Chromium (16 de noviembre de 2026, contra los contenedores) con el guion [`frontend/pruebas-e2e/flujo.mjs`](frontend/pruebas-e2e/flujo.mjs): credenciales incorrectas, autor (crear, filtrar y enviar), administrador (asignar), revisor (rechazo sin observaciones bloqueado, rechazo y aprobación), autor (historial, versión mejorada y reenvío) y estudiante (solo notificaciones). El flujo terminó sin errores en la consola del navegador; cada rol ve únicamente sus pestañas.
+
+![Ilustración 15. Mis preguntas (autor)](arquitectura/diagramas/ui-02-autor-mis-preguntas.png)
+
+*Ilustración 15. Autor: mis preguntas con filtros, estados con color y versión.*
+
+![Ilustración 16. Asignar revisores (administrador)](arquitectura/diagramas/ui-05-admin-asignar.png)
+
+*Ilustración 16. Administrador: asignación de revisores (HU-04).*
+
+![Ilustración 17. Evaluar (revisor)](arquitectura/diagramas/ui-06-revisor-evaluar.png)
+
+*Ilustración 17. Revisor: evaluación con observaciones (HU-05).*
+
+![Ilustración 18. Versión mejorada](arquitectura/diagramas/ui-09-autor-version-mejorada.png)
+
+*Ilustración 18. Autor: formulario de la versión mejorada con las observaciones por atender (HU-06).*
+
+![Ilustración 19. Historial con dos rondas](arquitectura/diagramas/ui-10-autor-historial-dos-rondas.png)
+
+*Ilustración 19. Autor: historial de revisiones con la ronda 1 rechazada y la ronda 2 aprobada (HU-06).*
+
+![Ilustración 20. Notificaciones del autor](arquitectura/diagramas/ui-12-autor-notificaciones.png)
+
+*Ilustración 20. Notificaciones recibidas por el autor a lo largo del flujo.*
 
 ## 12. RNF #2 — Arquitectura limpia en un microservicio con lógica de dominio
 
@@ -703,7 +755,7 @@ Todo lo que se podía construir y verificar en el código está hecho. Queda lo 
 
 | # | Pendiente | Asociado a |
 |---|---|---|
-| 1 | Capturas del tablero de Jira de los Sprints 1 y 3 (y registrar en Jira las historias del Sprint 3 de la Tabla 2) | Documento |
-| 2 | Capturas de pantalla de Postman al ejecutar la colección del corte 3 (crear usuario, asignar rol, obtener token) | RNF #1 |
+| 1 | Registrar en Jira las historias del Sprint 3 (Tabla 2) y capturar el tablero | Documento |
+| 2 | Capturas de la aplicación Postman al ejecutar la colección del corte 3 (el documento ya trae los resultados y las capturas de Keycloak) | RNF #1 |
 | 3 | Grabar el video de sustentación del Corte 3 y agregar el enlace en la sección 15 y en el README | Entrega |
 | 4 | Volver a exportar el PDF después de agregar las capturas | RNF #4 |
