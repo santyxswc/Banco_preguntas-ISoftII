@@ -27,3 +27,9 @@ docs/
 
 # Bases de datos locales H2 de los microservicios
 **/data/*.db
+
+# Espacio de trabajo local de Postman (las colecciones versionadas son los .postman_collection.json)
+.postman/
+/postman/
+/microservicios/Banco de Preguntas - Corte 3 (Keycloak + JWT + HU-01 a HU-06)/
+/microservicios/Taller 09 - Banco de Preguntas Microservicios (REST + RabbitMQ)/
