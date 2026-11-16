@@ -207,7 +207,7 @@ El proyecto se gestiona en **Jira** (proyecto SCRUM). El trabajo se organizó en
 |---|---|---|
 | Sprint 1 | Monolito en capas (Corte 1) y su línea base de historias HU-01 a HU-04 | Captura de Jira (Ilustración 2a) |
 | Sprint 2 | Refactorización a microservicios orientados a eventos, HU-04 y HU-05, documentación y pruebas | Capturas disponibles (Ilustraciones 1 y 2) |
-| Sprint 3 | HU-06 y los cuatro requisitos no funcionales del Corte 3 | Tabla 2 (trabajo realizado y Pull Requests) y resumen del espacio en Jira (Ilustración 2b) |
+| Sprint 3 | HU-06 y los cuatro requisitos no funcionales del Corte 3 | Tabla 2 (actividades en Jira y Pull Requests) y resumen del espacio en Jira (Ilustración 2b) |
 
 *Tabla 1. Historias del Sprint 2 en Jira. Elaboración propia (fuente: Corte 2).*
 
@@ -255,17 +255,18 @@ El proyecto se gestiona en **Jira** (proyecto SCRUM). El trabajo se organizó en
 
 ### 2.2. Trabajo del Sprint 3
 
-*Tabla 2. Historias del Sprint 3 y Pull Request con el que entró cada una a `main`. Elaboración propia.*
+*Tabla 2. Actividades del Sprint 3 en Jira (épica HE-05, [SCRUM-121](https://ingsoft2bancodepreguntas.atlassian.net/browse/SCRUM-121)) y Pull Request con el que entró cada una a `main`. Elaboración propia.*
 
-| Historia | Alcance | Pull Request |
-|---|---|---|
-| RNF #2 · Arquitectura hexagonal en review-service | Capas dominio, aplicación, infraestructura y presentación; puertos y adaptadores; prueba de arquitectura | [#14](https://github.com/santyxswc/Banco_preguntas-ISoftII/pull/14) |
-| HU-06 · Historial de revisiones y versión mejorada | Rondas en el dominio, endpoint de historial, versión de la pregunta, notificaciones y pantallas del autor | [#15](https://github.com/santyxswc/Banco_preguntas-ISoftII/pull/15) |
-| RNF #1 · JWT con Keycloak | Realm, gateway como Resource Server, propagación de identidad, autorización por rol y por dato, colección de Postman | [#16](https://github.com/santyxswc/Banco_preguntas-ISoftII/pull/16) |
-| RNF #3 · Docker Compose | Dockerfile multi-etapa, 15 contenedores, PostgreSQL por contexto con volúmenes, persistencia del ciclo de vida | [#17](https://github.com/santyxswc/Banco_preguntas-ISoftII/pull/17) |
-| RNF #4 · Documento y README | Este documento, diagramas C4 de la iteración 3 y README del repositorio | Este Pull Request |
+| Jira | Historia | Alcance | Pull Request |
+|---|---|---|---|
+| [SCRUM-124](https://ingsoft2bancodepreguntas.atlassian.net/browse/SCRUM-124) | RNF #2 · Arquitectura hexagonal en review-service | Capas dominio, aplicación, infraestructura y presentación; puertos y adaptadores; prueba de arquitectura | [#14](https://github.com/santyxswc/Banco_preguntas-ISoftII/pull/14) |
+| [SCRUM-122](https://ingsoft2bancodepreguntas.atlassian.net/browse/SCRUM-122) | HU-06 · Historial de revisiones y versión mejorada | Rondas en el dominio, endpoint de historial, versión de la pregunta, notificaciones y pantallas del autor | [#15](https://github.com/santyxswc/Banco_preguntas-ISoftII/pull/15) |
+| [SCRUM-123](https://ingsoft2bancodepreguntas.atlassian.net/browse/SCRUM-123) | RNF #1 · JWT con Keycloak | Realm, gateway como Resource Server, propagación de identidad, autorización por rol y por dato, colección de Postman | [#16](https://github.com/santyxswc/Banco_preguntas-ISoftII/pull/16) |
+| [SCRUM-125](https://ingsoft2bancodepreguntas.atlassian.net/browse/SCRUM-125) | RNF #3 · Docker Compose | Dockerfile multi-etapa, 15 contenedores, PostgreSQL por contexto con volúmenes, persistencia del ciclo de vida | [#17](https://github.com/santyxswc/Banco_preguntas-ISoftII/pull/17) |
+| [SCRUM-126](https://ingsoft2bancodepreguntas.atlassian.net/browse/SCRUM-126) | RNF #4 · Documento y README | Este documento, diagramas C4 de la iteración 3 y README del repositorio | [#18](https://github.com/santyxswc/Banco_preguntas-ISoftII/pull/18) y [#19](https://github.com/santyxswc/Banco_preguntas-ISoftII/pull/19) |
+| [SCRUM-127](https://ingsoft2bancodepreguntas.atlassian.net/browse/SCRUM-127) | Video de sustentación del Corte 3 | Guion y grabación con los cuatro integrantes | Pendiente |
 
-> Las historias del Sprint 3 se gestionaron con ramas y Pull Requests en GitHub (Tabla 2); aún no están registradas como actividades en Jira (Anexo A).
+> Las actividades del Sprint 3 se registraron en Jira el 16 de noviembre de 2026 bajo la épica HE-05, con criterios de aceptación, puntos de historia y las etiquetas `corte-3` y `sprint-3`. SCRUM-122 a SCRUM-125 están finalizadas, SCRUM-126 en curso y SCRUM-127 por hacer. Falta moverlas a un sprint en el tablero y asignar responsables (Anexo A).
 
 ---
 
@@ -588,7 +589,33 @@ Las mismas operaciones quedan visibles en la consola de administración de Keycl
 
 *Ilustración 14. Rol REVISOR asignado a `revisor3` por la API de administración.*
 
-> Las capturas de la aplicación Postman las toma el equipo al ejecutar la colección (Anexo A).
+Las mismas peticiones enviadas desde la aplicación Postman (16 de noviembre de 2026, usuario `revisor4`; en este equipo el gateway está en el puerto 8088):
+
+![Ilustración 14a. Crear usuario en Keycloak desde Postman](arquitectura/diagramas/postman-02-crear-usuario.png)
+
+*Ilustración 14a. Postman: creación del usuario `revisor4` con la API de administración de Keycloak (201 Created).*
+
+![Ilustración 14b. Asignar el rol desde Postman](arquitectura/diagramas/postman-03-asignar-rol.png)
+
+*Ilustración 14b. Postman: asignación del rol REVISOR al usuario (204 No Content).*
+
+![Ilustración 14c. Token JWT del usuario nuevo](arquitectura/diagramas/postman-05-token-usuario-gateway.png)
+
+*Ilustración 14c. Postman: el usuario nuevo obtiene su JWT a través del gateway (200 OK).*
+
+![Ilustración 14d. Perfil del usuario nuevo](arquitectura/diagramas/postman-06-perfil-usuario-nuevo.png)
+
+*Ilustración 14d. Postman: `/api/v1/usuarios/me` con el JWT; el perfil se crea con el rol REVISOR sin pasos adicionales (200 OK).*
+
+![Ilustración 14e. Petición sin token](arquitectura/diagramas/postman-07-sin-token-401.png)
+
+*Ilustración 14e. Postman: petición sin token (401 Unauthorized).*
+
+![Ilustración 14f. Autor sin permiso](arquitectura/diagramas/postman-08-autor-asigna-403.png)
+
+*Ilustración 14f. Postman: un autor intenta asignar revisores (403 Forbidden).*
+
+> Las capturas del token del administrador de Keycloak y de la consulta de roles del usuario están en `arquitectura/diagramas/postman-01-token-admin-keycloak.png` y `postman-04-roles-del-usuario.png`.
 
 ### 11.1. Prueba en el navegador con los cuatro roles
 
@@ -755,7 +782,6 @@ Todo lo que se podía construir y verificar en el código está hecho. Queda lo 
 
 | # | Pendiente | Asociado a |
 |---|---|---|
-| 1 | Registrar en Jira las historias del Sprint 3 (Tabla 2) y capturar el tablero | Documento |
-| 2 | Capturas de la aplicación Postman al ejecutar la colección del corte 3 (el documento ya trae los resultados y las capturas de Keycloak) | RNF #1 |
-| 3 | Grabar el video de sustentación del Corte 3 y agregar el enlace en la sección 15 y en el README | Entrega |
-| 4 | Volver a exportar el PDF después de agregar las capturas | RNF #4 |
+| 1 | En Jira: mover SCRUM-122 a SCRUM-127 a un sprint del tablero (requiere permiso de administrador del tablero), asignar responsables y capturar el tablero | Documento |
+| 2 | Grabar el video de sustentación del Corte 3 y agregar el enlace en la sección 15 y en el README | Entrega |
+| 3 | Volver a exportar el PDF después de agregar la captura del tablero y el enlace del video | RNF #4 |
