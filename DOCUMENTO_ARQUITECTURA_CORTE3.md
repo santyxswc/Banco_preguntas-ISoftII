@@ -24,7 +24,7 @@ Popayán, noviembre de 2026
 
 </div>
 
-> Documento final del Corte 3. Parte de la arquitectura descrita en [`DOCUMENTO_ARQUITECTURA_CORTE2.md`](DOCUMENTO_ARQUITECTURA_CORTE2.md) y añade lo construido en la tercera iteración. Las cifras y las salidas de consola son de la ejecución del 15 de noviembre de 2026. Lo que aún debe completar el equipo está en el [Anexo A](#anexo-a--pendientes-del-equipo).
+> Documento final del Corte 3. Parte de la arquitectura descrita en [`DOCUMENTO_ARQUITECTURA_CORTE2.md`](DOCUMENTO_ARQUITECTURA_CORTE2.md) y añade lo construido en la tercera iteración. Las cifras y las salidas de consola son de la ejecución del 15 de noviembre de 2026. Las limitaciones conocidas de la entrega están en el [Anexo A](#anexo-a--notas-de-la-entrega).
 
 ---
 
@@ -51,7 +51,7 @@ Popayán, noviembre de 2026
   - [14. RNF #4 — Documento de arquitectura y README](#14-rnf-4--documento-de-arquitectura-y-readme)
 - [Capítulo 5 — Entrega](#capítulo-5--entrega)
 - [Referencias](#referencias)
-- [Anexo A — Pendientes del equipo](#anexo-a--pendientes-del-equipo)
+- [Anexo A — Notas de la entrega](#anexo-a--notas-de-la-entrega)
 
 ---
 
@@ -207,7 +207,7 @@ El proyecto se gestiona en **Jira** (proyecto SCRUM). El trabajo se organizó en
 |---|---|---|
 | Sprint 1 | Monolito en capas (Corte 1) y su línea base de historias HU-01 a HU-04 | Captura de Jira (Ilustración 2a) |
 | Sprint 2 | Refactorización a microservicios orientados a eventos, HU-04 y HU-05, documentación y pruebas | Capturas disponibles (Ilustraciones 1 y 2) |
-| Sprint 3 | HU-06 y los cuatro requisitos no funcionales del Corte 3 | Tabla 2 (actividades en Jira y Pull Requests) y resumen del espacio en Jira (Ilustración 2b) |
+| Sprint 3 | HU-06 y los cuatro requisitos no funcionales del Corte 3 | Captura de Jira (Ilustración 2c) y Tabla 2 (actividades y Pull Requests) |
 
 *Tabla 1. Historias del Sprint 2 en Jira. Elaboración propia (fuente: Corte 2).*
 
@@ -264,9 +264,13 @@ El proyecto se gestiona en **Jira** (proyecto SCRUM). El trabajo se organizó en
 | [SCRUM-123](https://ingsoft2bancodepreguntas.atlassian.net/browse/SCRUM-123) | RNF #1 · JWT con Keycloak | Realm, gateway como Resource Server, propagación de identidad, autorización por rol y por dato, colección de Postman | [#16](https://github.com/santyxswc/Banco_preguntas-ISoftII/pull/16) |
 | [SCRUM-125](https://ingsoft2bancodepreguntas.atlassian.net/browse/SCRUM-125) | RNF #3 · Docker Compose | Dockerfile multi-etapa, 15 contenedores, PostgreSQL por contexto con volúmenes, persistencia del ciclo de vida | [#17](https://github.com/santyxswc/Banco_preguntas-ISoftII/pull/17) |
 | [SCRUM-126](https://ingsoft2bancodepreguntas.atlassian.net/browse/SCRUM-126) | RNF #4 · Documento y README | Este documento, diagramas C4 de la iteración 3 y README del repositorio | [#18](https://github.com/santyxswc/Banco_preguntas-ISoftII/pull/18) y [#19](https://github.com/santyxswc/Banco_preguntas-ISoftII/pull/19) |
-| [SCRUM-127](https://ingsoft2bancodepreguntas.atlassian.net/browse/SCRUM-127) | Video de sustentación del Corte 3 | Guion y grabación con los cuatro integrantes | Pendiente |
+| [SCRUM-127](https://ingsoft2bancodepreguntas.atlassian.net/browse/SCRUM-127) | Sustentación presencial del Corte 3 | Demostración del software y preguntas técnicas, con los cuatro integrantes | No aplica |
 
-> Las actividades del Sprint 3 se registraron en Jira el 16 de noviembre de 2026 bajo la épica HE-05, con criterios de aceptación, puntos de historia y las etiquetas `corte-3` y `sprint-3`. SCRUM-122 a SCRUM-125 están finalizadas, SCRUM-126 en curso y SCRUM-127 por hacer. Falta moverlas a un sprint en el tablero y asignar responsables (Anexo A).
+Las actividades del Sprint 3 se registraron en Jira bajo la épica HE-05, con criterios de aceptación, puntos de historia y las etiquetas `corte-3` y `sprint-3`:
+
+![Ilustración 2c. Actividades del Sprint 3 en Jira](arquitectura/diagramas/sprint3-jira-lista.png)
+
+*Ilustración 2c. Vista Lista de Jira (20 de noviembre de 2026): la épica HE-05 y las actividades del Sprint 3. SCRUM-122 a SCRUM-126 están finalizadas y SCRUM-127 (sustentación presencial) queda por hacer.*
 
 ---
 
@@ -753,7 +757,7 @@ Limitación conocida: `notification-service` guarda el historial de avisos en me
 
 - **Repositorio Git:** https://github.com/santyxswc/Banco_preguntas-ISoftII (rama `main`)
 - **Tablero Scrum (Jira):** https://ingsoft2bancodepreguntas.atlassian.net (proyecto SCRUM)
-- **Video de sustentación del Corte 3 (YouTube):** por agregar cuando el equipo lo grabe (Anexo A). Video del Corte 2: https://youtu.be/B-chmKrIsbY
+- **Sustentación del Corte 3:** presencial, con todos los integrantes (el tercer corte no pide video). Video del Corte 2: https://youtu.be/B-chmKrIsbY
 - **Swagger unificado:** http://localhost:8080/swagger-ui.html
 - **Frontend local:** http://localhost:5173
 - **Keycloak local:** http://localhost:8180
@@ -776,12 +780,12 @@ Limitación conocida: `notification-service` guarda el historial de avisos en me
 
 ---
 
-## Anexo A — Pendientes del equipo
+## Anexo A — Notas de la entrega
 
-Todo lo que se podía construir y verificar en el código está hecho. Queda lo que requiere a las personas del equipo:
+Limitaciones conocidas a la fecha de la entrega:
 
-| # | Pendiente | Asociado a |
+| # | Nota | Asociado a |
 |---|---|---|
-| 1 | En Jira: mover SCRUM-122 a SCRUM-127 a un sprint del tablero (requiere permiso de administrador del tablero), asignar responsables y capturar el tablero | Documento |
-| 2 | Grabar el video de sustentación del Corte 3 y agregar el enlace en la sección 15 y en el README | Entrega |
-| 3 | Volver a exportar el PDF después de agregar la captura del tablero y el enlace del video | RNF #4 |
+| 1 | Las actividades del Sprint 3 se agrupan en Jira por la épica HE-05 y la etiqueta `sprint-3`; no tienen responsable asignado | Planificación |
+| 2 | La prueba de carga con k6 se adaptó al JWT pero no se volvió a ejecutar: las cifras de escalabilidad son las del Corte 2 | Escalabilidad |
+| 3 | `notification-service` guarda las notificaciones en memoria: se pierden al reiniciar su contenedor | RNF #3 |
