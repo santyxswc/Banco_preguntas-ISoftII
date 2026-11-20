@@ -59,7 +59,7 @@ La primera construcción tarda unos minutos (descarga las dependencias de Maven)
 | RNF 3 · Docker Compose con volúmenes | [`arquitectura/09-docker-compose.md`](arquitectura/09-docker-compose.md) |
 | Colección de Postman (usuarios y roles en Keycloak, 401/403 y flujo HU-01 a HU-06) | [`microservicios/banco-preguntas-corte3.postman_collection.json`](microservicios/banco-preguntas-corte3.postman_collection.json) |
 | Tablero Scrum (Jira, proyecto SCRUM) | https://ingsoft2bancodepreguntas.atlassian.net |
-| Video de sustentación del corte 3 | Por agregar |
+| Sustentación del corte 3 | Presencial, con todos los integrantes (no requiere video) |
 
 ## Entrega del corte 2
 
