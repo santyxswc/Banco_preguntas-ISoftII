@@ -756,7 +756,6 @@ Limitación conocida: `notification-service` guarda el historial de avisos en me
 
 - **Repositorio Git:** https://github.com/santyxswc/Banco_preguntas-ISoftII (rama `main`)
 - **Tablero Scrum (Jira):** https://ingsoft2bancodepreguntas.atlassian.net (proyecto SCRUM)
-- **Sustentación del Corte 3:** presencial, con todos los integrantes (el tercer corte no pide video). Video del Corte 2: https://youtu.be/B-chmKrIsbY
 - **Swagger unificado:** http://localhost:8080/swagger-ui.html
 - **Frontend local:** http://localhost:5173
 - **Keycloak local:** http://localhost:8180
